@@ -1,168 +1,126 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <title>Gemini 듀얼모드 음성 챗봇</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
-        * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
- body, html {
-      height: 100%;
-    }
-
-        body, input, button { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif; font-size: 16px; }
-        body { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; margin: 0; background-color: #f0f2f5; padding: 10px; box-sizing: border-box;}
-        #container { display: flex; flex-direction: column; width: 100%; max-width: 700px; height: 100vh; }
-        #transcript { height: 75vh; border: 1px solid #ccc; padding: 10px; overflow-y: scroll; margin-bottom: 10px; background-color: #fff; border-radius: 8px; }
-        #input-area { height: auto; display: flex; gap: 10px; margin-bottom: 10px; }
-        #text-input { width: 65vw; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        #recordBtn, #send-btn, #playBtn { width: 15vw; border-radius: 5px; border: none; color: white; cursor: pointer; font-size: 1em; }
-        #recordBtn { background-color: #28a745; }
-        #recordBtn.recording { background-color: #dc3545; }
-        #send-btn { background-color: #007bff; }
-        #playBtn { background-color: #17a2b8; width: 100%; }
-        #playBtn.playing { background-color: #fd7e14; }
-        .hidden { display: none; }
-        .message { margin-bottom: 12px; line-height: 1.5; }
-        .user { color: #005A9C; font-weight: bold; }
-        .ai { color: #444; }
-        .system { color: #6c757d; font-style: italic; text-align: center; }
-      @media (max-width: 700px) {
-      input-area {
-        flex-direction: column;
-        height: auto;
-      }
-
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: sans-serif; }
+        .ar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; pointer-events: none;}
+        .ar-button { padding: 10px 20px; font-size: 1.2em; border-radius: 5px; border: none; background-color: rgba(0,0,0,0.6); color: white; cursor: pointer; pointer-events: all; }
+        #ar-description-box { background-color: rgba(0,0,0,0.7); color: white; padding: 15px; border-radius: 10px; max-height: 40%; overflow-y: auto; pointer-events: all; margin: 0 auto 20px auto; max-width: 90%; }
+        .hide { display: none; }
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 2000; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; font-size: 1.5em; }
+        .spinner { border: 8px solid #f3f3f3; border-top: 8px solid #3498db; border-radius: 50%; width: 60px; height: 60px; animation: spin 2s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
-    <div id="container">
-        <div id="transcript"></div>
-        <div id="input-area">
-            <button id="recordBtn">🎤</button>
-            <input type="text" id="text-input" placeholder="텍스트로 질문하세요...">
-            <button id="send-btn">전송</button>
+    <a-scene id="ar-scene" 
+             mindar-image="imageTargetSrc: /static/targets.mind; autoStart: false;" 
+             color-space="sRGB" 
+             renderer="colorManagement: true, physicallyCorrectLights" 
+             vr-mode-ui="enabled: false" 
+             device-orientation-permission-ui="enabled: false">
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    </a-scene>
+
+    <div class="ar-overlay">
+        <!--div id="loading-overlay">
+            <div class="spinner"></div>
+            <p style="margin-top: 20px;">AR 엔진을 준비 중입니다...</p>
+        </div-->
+        <div></div> 
+        <div id="ar-description-box" class="hide">
+            <p id="ar-text"></p>
+            <button id="ar-tts-btn" class="ar-button" style="margin-top: 10px; width: 100%;">🔊 음성 안내</button>
         </div>
-        <button id="playBtn" class="hidden">▶️ 답변 듣기</button>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const recordBtn = document.getElementById('recordBtn'), playBtn = document.getElementById('playBtn'), transcriptDiv = document.getElementById('transcript'), textInput = document.getElementById('text-input'), sendBtn = document.getElementById('send-btn');
-        let socket, mediaRecorder, audioChunks = [], isRecording = false;
-        let lastInputWasVoice = false, audioContext = null, currentAudioSource = null;
+    document.addEventListener('DOMContentLoaded', async () => {
+    const sceneEl = document.querySelector('a-scene');
+    const descriptionBox = document.getElementById('ar-description-box');
+    const arText = document.getElementById('ar-text');
+    const arTtsBtn = document.getElementById('ar-tts-btn');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    
+    let pdfContent = [];
+    let audioContext;
+    let currentAudio = null; // 현재 재생할 오디오 객체
 
-        function isIOS() { return /iPhone|iPad|iPod/.test(navigator.userAgent) && !window.MSStream; }
-        function addLog(type, text) { const p = document.createElement('p'); p.className = 'message ' + type; p.innerHTML = type === 'user_text' ? `<strong>👤 나:</strong> ${text}` : type === 'ai_text' ? `<strong>🤖 Gemini:</strong> ${text}` : `<span class="system">${text}</span>`; transcriptDiv.appendChild(p); transcriptDiv.scrollTop = transcriptDiv.scrollHeight; }
-        function setInputs(enabled) { recordBtn.disabled = !enabled; sendBtn.disabled = !enabled; textInput.disabled = !enabled; }
+    try {
+        const response = await fetch('/api/pdf-content');
+        pdfContent = await response.json();
+        
+        // ... (이전과 동일한 동적 타겟 생성 로직) ...
+        pdfContent.flatMap(p => p.images).forEach((imageName, index) => {
+            const entity = document.createElement('a-entity');
+            entity.setAttribute('mindar-image-target', `targetIndex: ${index}`);
+            entity.setAttribute('data-image-name', imageName); 
+            sceneEl.appendChild(entity);
+        });
 
-        function connectWebSocket() {
-            const socketURL = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
-            socket = new WebSocket(socketURL);
-            socket.onopen = () => { setInputs(true); addLog('system', '챗봇이 준비되었습니다.'); };
-            socket.onmessage = async (event) => {
-                if (event.data instanceof Blob) {
-                    const audioBlob = event.data;
-                    const shouldAutoplay = lastInputWasVoice && !isIOS();
-                    if (shouldAutoplay) {
-                        playReceivedAudio(audioBlob);
+        const targetEntities = document.querySelectorAll('[mindar-image-target]');
+        targetEntities.forEach(target => {
+            // ✨✨✨ targetFound 이벤트 핸들러 수정 ✨✨✨
+            target.addEventListener("targetfound", async (event) => {
+                const foundImageName = event.target.getAttribute('data-image-name');
+                if (foundImageName) {
+                    // 1. 설명창에 로딩 메시지 표시
+                    arText.textContent = "AI 도슨트가 해설을 생성 중입니다...";
+                    descriptionBox.classList.remove('hidden');
+                    arTtsBtn.classList.add('hidden'); // 음성 버튼은 일단 숨김
+
+                    // 2. 새로운 API 엔드포인트 호출
+                    const queryResponse = await fetch('/api/ar-query', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ image_name: foundImageName })
+                    });
+                    const data = await queryResponse.json();
+
+                    if (data.text && data.audio) {
+                        // 3. AI가 생성한 텍스트를 표시하고, 오디오 데이터 준비
+                        arText.textContent = data.text;
+                        currentAudio = new Audio("data:audio/mp3;base64," + data.audio);
+                        arTtsBtn.classList.remove('hidden'); // 음성 버튼 표시
                     } else {
-                        playBtn.onclick = () => playReceivedAudio(audioBlob);
-                        playBtn.classList.remove('hidden');
-                        setInputs(true);
+                        arText.textContent = "해설을 생성하는 데 실패했습니다.";
                     }
-                } else {
-                    const message = JSON.parse(event.data);
-                    addLog(message.type, message.data);
-                    if (message.type === 'error') { setInputs(false); }
                 }
-            };
-            socket.onclose = () => { addLog('system', '서버 연결이 종료되었습니다.'); setInputs(false); };
-        }
-
-        function sendTextMessage() {
-            const text = textInput.value.trim();
-            if (!text || socket?.readyState !== WebSocket.OPEN) return;
-            lastInputWasVoice = false;
-            socket.send(JSON.stringify({ type: 'text', data: text }));
-            addLog('user_text', text);
-            textInput.value = "";
-            setInputs(false);
-            playBtn.classList.add('hidden');
-        }
-
-        async function startRecording() {
-            lastInputWasVoice = true;
-            setInputs(false); recordBtn.disabled = false;
-            playBtn.classList.add('hidden');
-            try {
-                if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioContext.state === 'suspended') await audioContext.resume();
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const reader = new FileReader();
-                    reader.readAsDataURL(audioBlob);
-                    reader.onloadend = () => {
-                        const base64Audio = reader.result.split(',')[1];
-                        if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: 'audio', data: base64Audio }));
-                    };
-                };
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.textContent = "🎙️";
-                recordBtn.classList.add('recording');
-            } catch (err) { alert("마이크에 접근할 수 없습니다."); setInputs(true); }
-        }
-
-        function stopRecording() { if (mediaRecorder) mediaRecorder.stop(); isRecording = false; recordBtn.textContent = "🎤"; recordBtn.classList.remove('recording'); setInputs(false); }
+            });
+            target.addEventListener("targetlost", event => {
+                descriptionBox.classList.add('hidden');
+                if (currentAudio) {
+                    currentAudio.pause(); // 화면에서 사라지면 오디오 중지
+                    currentAudio = null;
+                }
+            });
+        });
         
-        async function playReceivedAudio(audioBlob) {
-            if (currentAudioSource) currentAudioSource.stop();
-            if (!audioBlob) return;
-            
-            playBtn.classList.remove('hidden');
-            playBtn.textContent = "⏸️ 듣기 중지";
-            playBtn.onclick = stopCurrentAudio;
-            setInputs(false);
+        const arSystem = sceneEl.systems['mindar-image-system'];
+        sceneEl.addEventListener('arready', () => {
+            loadingOverlay.classList.add('hidden');
+        });
+        await arSystem.start();
 
-            if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioContext.state === 'suspended') await audioContext.resume();
-            
-            try {
-                const arrayBuffer = await audioBlob.arrayBuffer();
-                const decodedBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                currentAudioSource = audioContext.createBufferSource();
-                currentAudioSource.buffer = decodedBuffer;
-                currentAudioSource.connect(audioContext.destination);
-                currentAudioSource.start(0);
-                currentAudioSource.onended = () => { if (currentAudioSource) stopCurrentAudio(false); };
-            } catch(e) { console.error("오디오 재생 오류:", e); stopCurrentAudio(false); }
+        } catch (e) {
+      //      loadingOverlay.classList.add('hide');
+            console.error("AR 초기화 오류:", e);
+            alert(e.message || "AR 기능을 시작하는 중 오류가 발생했습니다.");
+            // 오류 발생 시, 사용자가 이 창을 닫을 수 있도록 안내
+            document.body.innerHTML = `<div style="text-align: center; padding-top: 40px; font-size: 1.2em;">오류가 발생했습니다.<br>이 탭을 닫고 챗봇으로 돌아가 다시 시도해주세요.</div>`;
         }
 
-        function stopCurrentAudio(isManualStop = true) {
-            if (currentAudioSource) {
-                currentAudioSource.onended = null;
-                if(isManualStop) currentAudioSource.stop();
-                currentAudioSource = null;
-            }
-            playBtn.classList.add('hidden');
-            playBtn.textContent = "▶️ 답변 듣기";
-            setInputs(true);
+         // ✨ 음성 안내 버튼은 준비된 오디오를 재생만 하도록 수정
+    arTtsBtn.onclick = () => {
+        if (currentAudio) {
+            currentAudio.play();
         }
+    };
 
-        recordBtn.onclick = () => isRecording ? stopRecording() : startRecording();
-        sendBtn.onclick = sendTextMessage;
-        textInput.addEventListener('keyup', e => { if (e.key === 'Enter') sendTextMessage(); });
-        
-        connectWebSocket();
     });
     </script>
 </body>
