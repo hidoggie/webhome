@@ -96,7 +96,18 @@
             opacity: 0;
           }
        }
-
+      .input-wrapper {
+        position: relative;
+        display: inline-block;
+      }        
+      .input-wrapper input {
+        padding-right: 40px;
+      }
+      .input-wrapper button {
+        position: absolute;
+        right: 5px;
+        top: 2px;
+       }
     </style>
 </head>
 <body>
@@ -116,8 +127,10 @@
             <main id="transcript"></main>
             <footer id="input-area">
                 <button id="recordBtn" class="btn"></button>
-                <input type="text" id="text-input" placeholder="텍스트로 질문하세요...">
-                <button id="send-btn" class="btn"></button>
+                <div class="input-wrapper">
+                  <input type="text" id="text-input" placeholder="텍스트로 질문하세요...">
+                  <button id="send-btn" class="btn"></button>
+                </div>
                 <button id="playBtn" class="btn hidden"></button>
             </footer>
         </div>
@@ -316,6 +329,7 @@
 </body>
 
 </html>
+
 
 
 
