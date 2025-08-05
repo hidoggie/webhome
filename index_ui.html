@@ -16,7 +16,7 @@
         #chat-header { display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
         #transcript { flex-grow: 1; padding: 20px; overflow-y: auto; }
         #input-area { display: flex; gap: 5px; padding: 10px; border-top: 1px solid #ddd; flex-shrink: 0; align-items: center; }
-        #text-input { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 1em; }
+        #text-input { width: 100%; flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 20px; font-size: 1em; }
         .message { margin-bottom: 12px; line-height: 1.5; display: flex; flex-direction: column; }
         .user { align-self: flex-end; }
         .user p { background-color: #007bff; color: white; padding: 8px 12px; border-radius: 15px; display: inline-block; max-width: 100%; }
@@ -97,8 +97,9 @@
           }
        }
       .input-wrapper {
+        width: 90%;
         position: relative;
-        display: inline-block;
+        display: flex;
       }        
       .input-wrapper input {
         padding-right: 40px;
@@ -329,6 +330,7 @@
 </body>
 
 </html>
+
 
 
 
