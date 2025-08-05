@@ -33,11 +33,11 @@
         .btn { padding: 10px; width: 50px; height: 50px; border-radius: 50%; border: none; color: white; cursor: pointer; font-size: 1.5em; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
          #goto-ar-btn {
              background-color: transparent;
-             width: 150px;
-             height: 80px;
+             width: 100px;
+             height: 70px;
              background-image: url('./image/ar_logo_150.png');
              background-repeat: no-repeat;
-             background-position: center; /* or specific coordinates */
+             background-position: right; /* or specific coordinates */
              background-size: contain; /* or cover, or specific dimensions */
              font-size: 1em; 
              border-radius: 5px;
@@ -46,13 +46,13 @@
              text-indent: -9999px; 
              overflow: hidden;
          }
-        #recordBtn { background-color: black; 
+        #recordBtn { background-color: #37474F; 
                     background-image: url('./image/mic_bw_35.png');
                     background-repeat: no-repeat;
                     background-position: center; /* or specific coordinates */
                     background-size: auto; /* or cover, or specific dimensions */
-                    width: 50px; /* Adjust as needed */
-                    height: 50px; /* Adjust as needed */
+                    width: 40px; /* Adjust as needed */
+                    height: 40px; /* Adjust as needed */
                     border: none;
                     cursor: pointer;
         /* Optionally hide text if image serves as the sole visual */
@@ -64,20 +64,20 @@
         background-repeat: no-repeat;
         background-position: center; /* or specific coordinates */
         background-size: auto; /* or cover, or specific dimensions */
-        width: 50px; /* Adjust as needed */
-        height: 50px; /* Adjust as needed */
+        width: 40px; /* Adjust as needed */
+        height: 40px; /* Adjust as needed */
         border: none;
         cursor: pointer;
         /* Optionally hide text if image serves as the sole visual */
         text-indent: -9999px; 
         overflow: hidden;}
-        #playBtn { background-color: black; 
+        #playBtn { background-color: #37474F; 
                     background-image: url('./image/play_w1_32.png');
                     background-repeat: no-repeat;
                     background-position: center; /* or specific coordinates */
                     background-size: auto; /* or cover, or specific dimensions */
-                    width: 50px; /* Adjust as needed */
-                    height: 50px; /* Adjust as needed */
+                    width: 40px; /* Adjust as needed */
+                    height: 40px; /* Adjust as needed */
                     border: none;
                     cursor: pointer;
         /* Optionally hide text if image serves as the sole visual */
@@ -91,17 +91,9 @@
     <div id="chatbot-view" class="view active">
         <div id="container">
             <header id="chat-header">
-                <!--h2 style="display: grid; grid-template-columns: 1fr 1fr;">
-                   <div style="grid-column: 1;">
-                     <img src="./image/ardocent_logo_50.png" alt="도슨트봇 로고">
-                   </div>
-                   <div style="grid-column: 2;">
-                     AI 도슨트봇
-                   </div>
-            </h2-->
                 <h2>
                    <div style="overflow: hidden;">
-                   <img src="./image/ardocent_logo_50.png" style="float: left; margin-right: 5px;" alt="도슨트봇 로고">
+                   <img src="./image/ardocent_logo_35.png" style="float: left; margin-right: 10px;" alt="도슨트봇 로고">
                    <span>
                      AI 도슨트봇
                    </span>
@@ -127,7 +119,7 @@
  //             recordBtn.style.backgroundImage = 'url("./image/stop_ww_35.png")';
             } 
        else {
-           recordBtn.style.backgroundColor = 'black';
+           recordBtn.style.backgroundColor = '#37474F';
  //          recordBtn.style.backgroundImage = 'url("./image/mic_bw_35.png")';
        }
        count++;
@@ -307,6 +299,7 @@
 </body>
 
 </html>
+
 
 
 
