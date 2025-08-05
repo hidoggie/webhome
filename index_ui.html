@@ -45,6 +45,7 @@
              cursor: pointer;
              text-indent: -9999px; 
              overflow: hidden;
+             margin-right: 15px;
          }
         #recordBtn { background-color: #37474F; 
                     background-image: url('./image/mic_bw_35.png');
@@ -86,6 +87,16 @@
                     margin-right: 10px;
                  }
         #playBtn:disabled, #recordBtn:disabled, #send-btn:disabled { background-color: #6c757d; cursor: not-allowed; }
+
+        .blink-soft {
+          animation: blinker 1.5s linear infinite;
+        }
+        @keyframes blinker {
+          50% {
+            opacity: 0;
+          }
+       }
+
     </style>
 </head>
 <body>
@@ -94,7 +105,7 @@
             <header id="chat-header">
                 <h2>
                    <div style="overflow: hidden;">
-                   <img src="./image/ardocent_logo_35.png" style="float: left; margin-left: 10px; margin-right: 10px;" alt="도슨트봇 로고">
+                   <img src="./image/ardocent_logo_35.png" style="float: left; margin-left: 15px; margin-right: 15px;" alt="도슨트봇 로고">
                    <span>
                      AI 도슨트봇
                    </span>
@@ -116,17 +127,15 @@
    var count = 1;
    recordBtn.onclick = () => {
        if(count%2 == 0){
-           let flashCount = 0;
-           const interval = setInterval(() => {
-             recordBtn.classList.toggle('hidden');
-             flashCount++;
-             if (flashCount >= 6) clearInterval(interval); // 3번 깜빡 (보였다가 사라짐)
-             }, 300);
+           recordBtn.classList.add('blink-soft');
  //             recordBtn.style.backgroundColor = '#03A9F4';
  //             recordBtn.style.backgroundImage = 'url("./image/stop_ww_35.png")';
             } 
        else {
-           recordBtn.style.backgroundColor = '#37474F';
+           if(count != 1){
+               recordBtn.classList.remove('blink-soft');
+           }
+ //          recordBtn.style.backgroundColor = '#37474F';
  //          recordBtn.style.backgroundImage = 'url("./image/mic_bw_35.png")';
        }
        count++;
@@ -307,6 +316,7 @@
 </body>
 
 </html>
+
 
 
 
