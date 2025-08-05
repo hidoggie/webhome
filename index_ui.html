@@ -148,7 +148,18 @@
        }
        count++;
    }
-
+    
+   const PlayBtn = document.getElementById('playBtn');
+   var Pcount = 1;
+   PlayBtn.onclick = () => {
+       if(Pcount%2 == 1){
+           PlayBtn.classList.add('blink-soft');
+       } 
+       else {
+           PlayBtn.classList.remove('blink-soft');
+       }
+       Pcount++;
+   } 
 </script>
 
     <!--script>
@@ -324,6 +335,7 @@
 </body>
 
 </html>
+
 
 
 
