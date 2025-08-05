@@ -140,17 +140,11 @@
    const recordBtn = document.getElementById('recordBtn');
    var count = 1;
    recordBtn.onclick = () => {
-       if(count%2 == 0){
+       if(count%2 == 1){
            recordBtn.classList.add('blink-soft');
- //             recordBtn.style.backgroundColor = '#03A9F4';
- //             recordBtn.style.backgroundImage = 'url("./image/stop_ww_35.png")';
-            } 
+       } 
        else {
-           if(count != 1){
-               recordBtn.classList.remove('blink-soft');
-           }
- //          recordBtn.style.backgroundColor = '#37474F';
- //          recordBtn.style.backgroundImage = 'url("./image/mic_bw_35.png")';
+           recordBtn.classList.remove('blink-soft');
        }
        count++;
    }
@@ -330,6 +324,7 @@
 </body>
 
 </html>
+
 
 
 
