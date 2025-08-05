@@ -43,7 +43,17 @@
         text-indent: -9999px; 
         overflow: hidden;}
         #recordBtn.recording { background-color: #dc3545; background-image: url('image/stop.png');}
-        #send-btn { background-color: #007bff; }
+        #send-btn { background-color: white; background-image: url('./image/send_skyblue_32.png');
+        background-repeat: no-repeat;
+        background-position: center; /* or specific coordinates */
+        background-size: auto; /* or cover, or specific dimensions */
+        width: 50px; /* Adjust as needed */
+        height: 50px; /* Adjust as needed */
+        border: none;
+        cursor: pointer;
+        /* Optionally hide text if image serves as the sole visual */
+        text-indent: -9999px; 
+        overflow: hidden;}
         #playBtn { background-color: #17a2b8; }
         #playBtn:disabled, #recordBtn:disabled, #send-btn:disabled { background-color: #6c757d; cursor: not-allowed; }
     </style>
@@ -60,13 +70,13 @@
                      도슨트봇
                    </div>
                 </h2>
-                <button id="goto-ar-btn" class="ar-button" style="padding: 10px 20px; font-size: 1em; border-radius: 5px;">AR 도슨트 <img src="./image/send_skyblue_32.png" alt="전송"></button>
+                <button id="goto-ar-btn" class="ar-button" style="padding: 10px 20px; font-size: 1em; border-radius: 5px;">AR 도슨트<img src="./image/goto_50.png" alt="이동"></button>
             </header>
             <main id="transcript"></main>
             <footer id="input-area">
                 <button id="recordBtn" class="btn"></button>
                 <input type="text" id="text-input" placeholder="텍스트로 질문하세요...">
-                <button id="send-btn" class="btn">➤</button>
+                <button id="send-btn" class="btn"></button>
                 <button id="playBtn" class="btn hidden">▶️</button>
             </footer>
         </div>
@@ -239,6 +249,7 @@
 </body>
 
 </html>
+
 
 
 
