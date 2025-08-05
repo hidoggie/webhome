@@ -82,7 +82,8 @@
                     cursor: pointer;
         /* Optionally hide text if image serves as the sole visual */
                     text-indent: -9999px; 
-                    overflow: hidden;                  
+                    overflow: hidden; 
+                    margin-right: 10px;
                  }
         #playBtn:disabled, #recordBtn:disabled, #send-btn:disabled { background-color: #6c757d; cursor: not-allowed; }
     </style>
@@ -93,7 +94,7 @@
             <header id="chat-header">
                 <h2>
                    <div style="overflow: hidden;">
-                   <img src="./image/ardocent_logo_35.png" style="float: left; margin-right: 10px;" alt="도슨트봇 로고">
+                   <img src="./image/ardocent_logo_35.png" style="float: left; margin-left: 10px; margin-right: 10px;" alt="도슨트봇 로고">
                    <span>
                      AI 도슨트봇
                    </span>
@@ -117,7 +118,7 @@
        if(count%2 == 0){
            let flashCount = 0;
            const interval = setInterval(() => {
-             img.classList.toggle('hidden');
+             recordBtn.classList.toggle('hidden');
              flashCount++;
              if (flashCount >= 6) clearInterval(interval); // 3번 깜빡 (보였다가 사라짐)
              }, 300);
@@ -306,6 +307,7 @@
 </body>
 
 </html>
+
 
 
 
