@@ -35,7 +35,7 @@
              background-color: transparent;
              width: 80px;
              height: 60px;
-             background-image: url('./image/ar_logo_150.png');
+             background-image: url('./image/ar_logo_ver2_150.png');
              background-repeat: no-repeat;
              background-position: right; /* or specific coordinates */
              background-size: contain; /* or cover, or specific dimensions */
@@ -115,7 +115,12 @@
    var count = 1;
    recordBtn.onclick = () => {
        if(count%2 == 0){
-           flashImage();
+           let flashCount = 0;
+           const interval = setInterval(() => {
+             img.classList.toggle('hidden');
+             flashCount++;
+             if (flashCount >= 6) clearInterval(interval); // 3번 깜빡 (보였다가 사라짐)
+             }, 300);
  //             recordBtn.style.backgroundColor = '#03A9F4';
  //             recordBtn.style.backgroundImage = 'url("./image/stop_ww_35.png")';
             } 
@@ -126,15 +131,6 @@
        count++;
    }
 
-    function flashImage() {
-      const img = document.getElementById('recordBtn');
-      let flashCount = 0;
-      const interval = setInterval(() => {
-        img.classList.toggle('hidden');
-        flashCount++;
-        if (flashCount >= 6) clearInterval(interval); // 3번 깜빡 (보였다가 사라짐)
-      }, 300);
-    }
 </script>
 
     <!--script>
@@ -310,6 +306,7 @@
 </body>
 
 </html>
+
 
 
 
