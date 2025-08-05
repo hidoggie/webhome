@@ -71,7 +71,7 @@
         /* Optionally hide text if image serves as the sole visual */
         text-indent: -9999px; 
         overflow: hidden;}
-        #playBtn { background-color: #17a2b8; 
+        #playBtn { background-color: black; 
                     background-image: url('./image/play_w1_32.png');
                     background-repeat: no-repeat;
                     background-position: center; /* or specific coordinates */
@@ -100,10 +100,12 @@
                    </div>
             </h2-->
                 <h2>
-                   <img src="./image/ardocent_logo_50.png" alt="도슨트봇 로고">
+                   <div style="overflow: hidden;">
+                   <img src="./image/ardocent_logo_50.png" style="float: left; margin-right: 5px;" alt="도슨트봇 로고">
                    <span>
                      AI 도슨트봇
                    </span>
+                   </div>
                 </h2>
                 <button id="goto-ar-btn" class="ar-button"></button>
             </header>
@@ -121,12 +123,12 @@
    var count = 1;
    recordBtn.onclick = () => {
        if(count%2 == 0){
-              recordBtn.style.backgroundColor = 'red';
-              recordBtn.style.backgroundImage = 'url("./image/stop_ww_35.png")';
+              recordBtn.style.backgroundColor = '#03A9F4';
+ //             recordBtn.style.backgroundImage = 'url("./image/stop_ww_35.png")';
             } 
        else {
            recordBtn.style.backgroundColor = 'black';
-           recordBtn.style.backgroundImage = 'url("./image/mic_bw_35.png")';
+ //          recordBtn.style.backgroundImage = 'url("./image/mic_bw_35.png")';
        }
        count++;
    }
@@ -305,6 +307,7 @@
 </body>
 
 </html>
+
 
 
 
