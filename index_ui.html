@@ -52,8 +52,15 @@
     <div id="chatbot-view" class="view active">
         <div id="container">
             <header id="chat-header">
-                <h2>챗봇 11시06분</h2>
-                <button id="goto-ar-btn" class="ar-button" style="padding: 10px 20px; font-size: 1em; border-radius: 5px;">📷 AR 도슨트</button>
+                <h2 style="display: grid; grid-template-columns: 1fr 1fr;">
+                   <div style="grid-column: 1;">
+                     <img src="./image/ardocent_logo.png" alt="도슨트봇 로고">
+                   </div>
+                   <div style="grid-column: 2;">
+                     도슨트봇
+                   </div>
+                </h2>
+                <button id="goto-ar-btn" class="ar-button" style="padding: 10px 20px; font-size: 1em; border-radius: 5px;">AR 도슨트 <img src="./image/send_skyblue_32.png" alt="전송"></button>
             </header>
             <main id="transcript"></main>
             <footer id="input-area">
@@ -232,6 +239,7 @@
 </body>
 
 </html>
+
 
 
 
