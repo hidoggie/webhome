@@ -38,9 +38,14 @@
             margin: 0 auto 20px auto; max-width: 90%; 
         }
         #tts-info {
-            display: flex;
-            justify-content: center; /* 가로 중앙 정렬 */
-            align-items: center; /* 세로 중앙 정렬 */     
+            display: grid;
+            padding: 2rem;
+            grid-template-columns: 30px 1fr;
+            gap: 1rem;
+            align-items: center;
+            max-width: 800px;
+            margin: 0 auto;
+            font: 500 100%/1.5 system-ui; 
         }
         #capture-button-container { width: 100%; text-align: center; pointer-events: all; }
         #captureBtn { 
@@ -56,6 +61,18 @@
         }
         .hidden { display: none; }
         #progress-bar { width: 0%; height: 5px; background-color: #007bff; transition: width 0.5s; }
+        @media (max-width: 650px) {
+          #tts-info {
+          display: block;
+          font-size: 80%;
+        }
+      p {
+          position: relative;
+          margin: -3rem 0 2rem 1rem;
+          padding: 1rem;
+          background: rgba(white, 0.8);
+      }
+    }
     </style>
 </head>
 <body>
@@ -70,7 +87,7 @@
                 <div class="tts-info">
                   <button id="ar-tts-btn" class="tts-button" style="margin-top: 10px; width: 100%;">
                     <img src="./image/con_play_30.png" style=" vertical-align: middle; float: left; margin-right: 15px;" alt="음성안내">
-                    음성안내
+                    <p>음성안내</p>
                    </button>
                 </div>
                 <p id="ar-text">이것은 UI 테스트용 화면입니다. 화면 배치와 아이콘의 크기 등을 확인하기 위함입니다.</p>
@@ -226,6 +243,7 @@
 </body>
 
 </html>
+
 
 
 
