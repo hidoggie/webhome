@@ -9,18 +9,15 @@
         #video { width: 100%; height: 100%; object-fit: cover; }
         .ar-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10; display: flex; flex-direction: column; justify-content: space-between; padding: 20px; box-sizing: border-box; pointer-events: none; }
         .ar-button { 
-            background-image: url('./image/backto_ar_150.png');
+            background-image: url('./image/backto_ar_100.png');
             background-repeat: no-repeat;
             background-position: center; /* or specific coordinates */
             background-size: auto; /* or cover, or specific dimensions */
-            width: 50px; /* Adjust as needed */
+            width: 100px; /* Adjust as needed */
             height: 50px; /* Adjust as needed */
-            padding: 10px 20px; 
-            font-size: 1.2em; 
             border-radius: 5px; 
             border: none; 
             background-color: rgba(0,0,0,0.6); 
-            color: white; 
             cursor: pointer; 
             pointer-events: all; 
         }
@@ -37,20 +34,20 @@
             border: 4px solid white; 
             background-color: rgba(255,255,255,0.3); 
         }
-        .hidden { display: inline-block; }
+        .hidden { display: none; }
         #progress-bar { width: 0%; height: 5px; background-color: #007bff; transition: width 0.5s; }
     </style>
 </head>
 <body>
     <div id="ar-container">
         <video id="video" playsinline autoplay></video>
-        <canvas id="canvas" class="hidden"></canvas>
+        <canvas id="canvas"></canvas>
         <div class="ar-overlay">
             <div style="display: flex; justify-content: space-between;">
                 <button id="back-to-chat-btn" class="ar-button"></button>
             </div>
             <div id="ar-description-box">
-                <button id="ar-tts-btn" class="ar-button hidden" style="margin-top: 10px; width: 100%;">
+                <button id="ar-tts-btn" class="ar-button" style="margin-top: 10px; width: 100%;">
                     <img src="./image/con_play_15.png" style=" vertical-align: middle; float: left; margin-right: 15px;" alt="음성안내"> 음성 안내</button>
                 <p id="ar-text">이것은 UI 테스트용 화면입니다. 화면 배치와 아이콘의 크기 등을 확인하기 위함입니다.</p>
                 <div id="progress-bar-container" style="background-color: #555; border-radius: 5px;"><div id="progress-bar"></div></div> 
@@ -205,4 +202,5 @@
 </body>
 
 </html>
+
 
