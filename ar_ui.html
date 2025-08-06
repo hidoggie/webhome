@@ -31,7 +31,15 @@
             cursor: pointer;
             pointer-events: all;
         }
-        #ar-description-box { background-color: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 10px; max-height: 40%; overflow-y: auto; pointer-events: all; margin: 0 auto 20px auto; max-width: 90%; }
+        #ar-description-box { 
+            display: flex;
+            justify-content: center; /* 가로 중앙 정렬 */
+            align-items: center; /* 세로 중앙 정렬 */
+            background-color: rgba(0,0,0,0.8); 
+            color: white; padding: 15px; border-radius: 10px; 
+            max-height: 40%; overflow-y: auto; pointer-events: all; 
+            margin: 0 auto 20px auto; max-width: 90%; 
+        }
         #capture-button-container { width: 100%; text-align: center; pointer-events: all; }
         #captureBtn { 
             background-image: url('./image/capture_70.png');
@@ -213,6 +221,7 @@
 </body>
 
 </html>
+
 
 
 
