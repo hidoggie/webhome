@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스탬프 투어 - 행성 여행</title>
+    <style>
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        /* 알림창 스타일 */
+        #modal {
+            display: none;
+            position: fixed;
+            z-index: 10;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .modal-content h2 { margin-top: 0; }
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .modal-buttons button {
+            padding: 10px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            color: white;
+        }
+        .btn-stamp { background-color: #007bff; }
+        .btn-photo { background-color: #28a745; }
+    </style>
+</head>
+<body>
+
+    <div id="map"></div>
+    
+    <div id="modal" style="display: none;">
+        <div class="modal-content">
+            <h2 id="modal-title"></h2>
+            <p>스탬프 존에 도착했습니다! 무엇을 하시겠습니까?</p>
+            <div class="modal-buttons">
+                <button id="modal-stamp-btn" class="btn-stamp">스탬프 투어 참여</button>
+                <button id="modal-photo-btn" class="btn-photo">AR 포토존 가기</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=7806a6d5efd7e1b3cb9c840b147343b5&libraries=services"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mapContainer = document.getElementById('map');
+            const eventCenterPoint = new kakao.maps.LatLng(37.538154, 126.976883); // 국립중앙박물관 근처
+            
+            // 지도 초기화
+            const map = new kakao.maps.Map(mapContainer, {
+                center: eventCenterPoint,
+                level: 5 // 초기 지도 레벨
+            });
+
+            // 2. 행성 여행 테마의 스탬프 존 10곳 정의
+            const stampLocations = [
+                { title: '☀️ 태양', lat: 37.538154, lng: 126.976883, id: 'sun' },
+                { title: '💧 수성', lat: 37.539000, lng: 126.976000, id: 'mercury' },
+                { title: '✨ 금성', lat: 37.539500, lng: 126.977500, id: 'venus' },
+                { title: '🌍 지구', lat: 37.538500, lng: 126.978500, id: 'earth' },
+                { title: '🌕 달',   lat: 37.537500, lng: 126.979000, id: 'moon' },
+                { title: '🔴 화성', lat: 37.537000, lng: 126.978000, id: 'mars' },
+                { title: '🪐 목성', lat: 37.536500, lng: 126.976500, id: 'jupiter' },
+                { title: '💫 토성', lat: 37.537200, lng: 126.975500, id: 'saturn' },
+                { title: '💎 천왕성', lat: 37.540000, lng: 126.979000, id: 'uranus' },
+                { title: '🌊 해왕성', lat: 37.536000, lng: 126.979500, id: 'neptune' }
+            ];
+
+            // 3. 스탬프 존 마커들을 지도에 표시
+            stampLocations.forEach(loc => {
+                const marker = new kakao.maps.Marker({
+                    map: map,
+                    position: new kakao.maps.LatLng(loc.lat, loc.lng),
+                    title: loc.title
+                });
+
+                const infowindow = new kakao.maps.InfoWindow({
+                    content: `<div style="padding:5px;font-size:12px;">${loc.title}</div>`
+                });
+
+                kakao.maps.event.addListener(marker, 'mouseover', () => infowindow.open(map, marker));
+                kakao.maps.event.addListener(marker, 'mouseout', () => infowindow.close());
+            });
+
+            let userMarker = null; // 사용자 위치 마커를 저장할 변수
+
+            // 4. 사용자의 현재 위치를 받아와 지도에 표시
+            function updateUserLocation() {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition((position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        const userPosition = new kakao.maps.LatLng(lat, lng);
+
+                        // 사용자의 위치에 마커 표시
+                        if (userMarker) {
+                            userMarker.setPosition(userPosition);
+                        } else {
+                            const imageSrc = 'https://t1.daumcdn.net/localimg/localimages/07/mapapidoc/markerStar.png';
+                            const imageSize = new kakao.maps.Size(24, 35);
+                            const markerImage = new kakao.maps.MarkerImage(imageSrc, imageSize);
+                            userMarker = new kakao.maps.Marker({
+                                position: userPosition,
+                                image: markerImage,
+                                title: '내 위치'
+                            });
+                            userMarker.setMap(map);
+                        }
+                        
+                        map.setCenter(userPosition); // 지도의 중심을 사용자 위치로 이동
+
+                        // 스탬프 존 접근 확인
+                        checkProximity(userPosition);
+
+                    }, (err) => {
+                        console.warn(`Geolocation 오류: ${err.message}`);
+                        alert("위치 정보를 가져올 수 없습니다. GPS를 켜거나 브라우저의 위치 정보 접근을 허용해주세요.");
+                    });
+                } else {
+                    alert("이 브라우저에서는 위치 정보를 지원하지 않습니다.");
+                }
+            }
+
+            // 5. 스탬프 존 접근(Proximity) 확인 로직
+            function checkProximity(userPosition) {
+                const proximityLimit = 20; // 20미터
+                
+                stampLocations.forEach(loc => {
+                    const targetPosition = new kakao.maps.LatLng(loc.lat, loc.lng);
+                    const polyline = new kakao.maps.Polyline({ path: [userPosition, targetPosition] });
+                    const distance = polyline.getLength();
+
+                    if (distance <= proximityLimit) {
+                        // 이미 획득한 스탬프인지 확인
+                        const collectedStamps = JSON.parse(localStorage.getItem('stamps')) || {};
+                        if (!collectedStamps[loc.id]) {
+                            showProximityModal(loc.title, loc.id);
+                        }
+                    }
+                });
+            }
+
+            // 6. 접근 시 모달(알림창) 표시
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalStampBtn = document.getElementById('modal-stamp-btn');
+            const modalPhotoBtn = document.getElementById('modal-photo-btn');
+            let activeModalId = null;
+
+            function showProximityModal(title, id) {
+                if(activeModalId === id) return; // 이미 해당 장소의 모달이 떠있으면 무시
+                
+                activeModalId = id;
+                modalTitle.textContent = title;
+                modal.style.display = 'flex';
+
+                modalStampBtn.onclick = () => {
+                    window.location.href = `stamptour.html?planet=${id}`;
+                };
+                modalPhotoBtn.onclick = () => {
+                    window.location.href = `photozone.html?planet=${id}`;
+                };
+            }
+
+            // 모달 창 바깥을 클릭하면 닫기
+            window.onclick = (event) => {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                    activeModalId = null;
+                }
+            }
+
+            // 5초마다 사용자 위치 업데이트
+            updateUserLocation();
+            setInterval(updateUserLocation, 5000);
+        });
+    </script>
+</body>
+</html>
