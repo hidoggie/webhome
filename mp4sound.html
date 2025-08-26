@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>소리 켜기 비디오</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #000;
+      text-align: center;
+      color: white;
+    }
+    video {
+      width: 100%;
+      height: auto;
+    }
+    #unmuteBtn {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #ff5722;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <video id="autoplayVideo" playsinline muted>
+    <source src="joayong.mp4" type="video/mp4">
+    브라우저가 비디오 태그를 지원하지 않습니다.
+  </video>
+
+  <button id="unmuteBtn">🔊 소리 켜기</button>
+
+  <script>
+    const video = document.getElementById('autoplayVideo');
+    const unmuteBtn = document.getElementById('unmuteBtn');
+
+    window.addEventListener('load', () => {
+      video.muted = true;
+      video.play().catch(err => {
+        console.warn("자동 재생 실패:", err);
+      });
+    });
+
+    unmuteBtn.addEventListener('click', () => {
+      video.muted = false;
+      video.volume = 1.0;
+      video.play().catch(err => {
+        console.warn("소리 재생 실패:", err);
+      });
+    });
+  </script>
+</body>
+</html>
