@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>GLTF AR 데모</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #videoPlayer {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 320px;
+      display: none;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <video id="videoPlayer" controls>
+    <source src="joayong.mp4" type="video/mp4">
+  </video>
+  <canvas id="arCanvas"></canvas>
+
+ <!-- ✅ 최신 Three.js + GLTFLoader (ES Modules 방식) -->
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.150.1/build/three.module.js';
+    import { GLTFLoader } from 'https://unpkg.com/three@0.150.1/examples/jsm/loaders/GLTFLoader.js';
+
+    const targetLat = 37.489121;
+    const targetLon = 126.955418;
+    const threshold = 0.001;
+    navigator.geolocation.getCurrentPosition((pos) => {
+      const { latitude, longitude } = pos.coords;
+      const isNear = Math.abs(latitude - targetLat) < threshold && Math.abs(longitude - targetLon) < threshold;
+
+      if (isNear) {
+        initARScene();
+      } else {
+        alert("지정된 위치에 도달해야 AR 콘텐츠가 나타납니다.");
+      }
+    });
+
+    function initARScene() {
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('arCanvas'), alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+
+      const light = new THREE.HemisphereLight(0xffffff, 0x444444);
+      light.position.set(0, 20, 0);
+      scene.add(light);
+
+      camera.position.z = 2;
+
+      const loader = new GLTFLoader();
+      let model;
+
+      loader.load('dongbasegi.glb', function (gltf) {
+        model = gltf.scene;
+        model.scale.set(0.5, 0.5, 0.5);
+        scene.add(model);
+      }, undefined, function (error) {
+        console.error('모델 로딩 실패:', error);
+      });
+
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2();
+
+      window.addEventListener('click', (event) => {
+        mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(scene.children, true);
+
+        if (intersects.length > 0) {
+          document.getElementById('videoPlayer').style.display = 'block';
+        }
+      });
+
+      function animate() {
+        requestAnimationFrame(animate);
+        if (model) model.rotation.y += 0.01;
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+  </script>
+</body>
+</html>
