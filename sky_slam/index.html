@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>sky demo2</title>
+
+  <script src="./app.js" defer></script>
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src='./../xr_st/landing-page/landing-page.js'></script>  
+  <script src='./../xr_st/landing-page/coaching-overlay.js'></script>
+  <script src="'./../xr_st/aframe-extras-6.1.1.min.js"></script>
+
+  <link rel="stylesheet" href="./index.css">
+
+</head>
+<body>
+<div id="orientationOverlay">
+  <div id="message">
+    <img src="./assets/rotate.svg" width="100px" />
+    Please rotate the phone to portrait mode for a better experience.
+  </div>
+</div>
+
+<a-scene
+  xrextras-loading
+  xrextras-runtime-error
+  landing-page
+  sky-coaching-overlay
+  recenter
+  renderer="colorManagement: false"
+  xrconfig
+  xrlayers
+  xrweb
+  device-orientation>
+  <a-assets>
+    <!-- Load Hot Air Balloon Model -->
+    <a-asset-item id="balloon" src="./assets/lego_man.glb"></a-asset-item>
+  </a-assets>
+
+  <!-- Sky Effects Scene -->
+  <a-entity
+    id="skyScene"
+    xrlayerscene="name:sky; invertLayerMask:false; edgeSmoothness:0.6"
+    hide-overlay>
+    <!-- Sky Scene Hot Air Balloon -->
+    <a-entity
+      id="skyBalloon"
+      gltf-model="#balloon"
+      animate-balloon
+      position="0 -7 -13"
+      scale=".7 .7 .7"
+      shadow>
+    </a-entity>
+
+    <!-- Ambient and Directional Light with shadows for the Sky Scene -->
+    <a-entity light="type: ambient; intensity: 0.75;"></a-entity>
+    <a-entity
+      id="skyLight"
+      light="
+        type: directional;
+        intensity: 0.8;
+        castShadow: true;
+        shadowMapHeight: 2048;
+        shadowMapWidth: 2048;
+        shadowCameraTop: 10;
+        shadowCameraBottom: -10;
+        shadowCameraRight: 10;
+        shadowCameraLeft: -10;
+        target: #skyBalloon;
+        shadowRadius: 10;"
+      position="1 4.3 2.5"
+      xrextras-attach="target: skyBalloon; offset: 8 8 4"
+      shadow>
+    </a-entity>
+  </a-entity>
+
+  <!-- World Effects Scene -->
+
+  <!-- Scene Camera for Sky Effects and World Effects Scenes -->
+  <a-camera id="camera" wasd-controls-enabled="false" position="0 3 0"></a-camera>
+
+  <!-- Ambient and Directional Light with shadows for the World Scene (consistent with sky scene lighting) -->
+  <a-entity light="type: ambient; intensity: 0.75;"></a-entity>
+  <a-entity
+    id="light"
+    light="
+      type: directional;
+      intensity: 0.8;
+      castShadow: true;
+      shadowMapHeight: 2048;
+      shadowMapWidth: 2048;
+      shadowCameraTop: 10;
+      shadowCameraBottom: -10;
+      shadowCameraRight: 10;
+      shadowCameraLeft: -10;
+      target: #camera;
+      shadowRadius: 10;"
+    position="1 4.3 2.5"
+    xrextras-attach="target: camera; offset: 8 8 4"
+    shadow>
+  </a-entity>
+
+  <!-- Ground Plane to catch shadows -->
+  <a-box
+    id="ground"
+    scale="2000 2 2000"
+    position="0 -1 0"
+    material="shader: shadow; transparent: true; opacity: 0.4"
+    shadow>
+  </a-box>
+</a-scene>
+</body>
+</html>
