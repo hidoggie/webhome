@@ -44,15 +44,16 @@
         <a-entity xrlayerscene="name: sky; edgeSmoothness: 0.6">
             <a-sky material="src: #skyTexture; transparent: true; opacity: 1;"></a-sky>
 
-            <a-box 
-                position="0 10 -10"
-                scale="5 5 5"
-                material="
-                color: #AD50FF; shader: flat; 
-                src: #legoModel"
-                shadow>
-            </a-box>
-
+            <a-entity
+               id="model"
+               gltf-model="#legoModel"
+               class="cantap"
+               xrextras-hold-drag
+               xrextras-two-finger-rotate
+               xrextras-pinch-scale
+               scale="3 3 3"
+               shadow="receive: false">
+            </a-entity>
             <a-entity light="type: ambient; intensity: 1;"></a-entity>
         </sky-scene>
     </a-scene>
