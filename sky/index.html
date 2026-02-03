@@ -33,8 +33,10 @@
         renderer="colorManagement: true"
         xrlayers>
         
-        <a-assets>
-            <img id="skyTexture" src='./space.png'>
+      <a-assets>
+        <a-asset-item id="legoModel" src="lego_main.glb"></a-asset-item>
+      </a-assets>
+
         </a-assets>
 
         <a-camera position="0 3 0"></a-camera>
@@ -47,7 +49,7 @@
                 scale="5 5 5"
                 material="
                 color: #AD50FF; shader: flat; 
-                src: https://cdn.8thwall.com/web/assets/cube-texture.png"
+                src: #legoModel"
                 shadow>
             </a-box>
 
