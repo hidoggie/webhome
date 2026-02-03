@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ar.js@3.4.0/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  </head>
+  <body style="margin:0; overflow:hidden;">
+    <!-- AR.js 씬 -->
+    <a-scene embedded arjs>
+      <a-marker preset="hiro">
+        <a-box id="myBox" position="0 0.5 0" material="color: red;"></a-box>
+      </a-marker>
+      <a-entity camera></a-entity>
+    </a-scene>
+
+    <!-- MediaPipe Hands용 비디오 -->
+    <video id="input_video" style="display:none;"></video>
+
+    <script>
+      // MediaPipe Hands 초기화
+      const hands = new Hands({
+        locateFile: (file) => {
+          return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+        }
+      });
+      hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.7,
+        minTrackingConfidence: 0.7
+      });
+
+      // 손 좌표 결과 처리
+      hands.onResults((results) => {
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+          const landmarks = results.multiHandLandmarks[0];
+          // 예: 검지 끝(index finger tip) 좌표
+          const indexTip = landmarks[8];
+          // 2D 좌표를 AR.js 오브젝트와 매핑 (간단히 x 좌표로 색상 변경)
+          const box = document.querySelector('#myBox');
+          if (indexTip.x < 0.5) {
+            box.setAttribute('material', 'color: blue');
+          } else {
+            box.setAttribute('material', 'color: green');
+          }
+        }
+      });
+
+      // 카메라 연결
+      const videoElement = document.getElementById('input_video');
+      const camera = new Camera(videoElement, {
+        onFrame: async () => {
+          await hands.send({image: videoElement});
+        },
+        width: 640,
+        height: 480
+      });
+      camera.start();
+    </script>
+  </body>
+</html>
