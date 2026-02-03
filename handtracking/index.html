@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <!--meta name="viewport" content="width=device-width, initial-scale=1.0"-->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta charset="UTF-8">
   <title>handtracking</title>
 
@@ -12,7 +12,7 @@
   <script src="./../xr_st/coaching-overlay.js"></script>
   <!--script src="./../xr_st/aframe-extras-6.1.1.min.js"></script-->
 
-  <script async src="./../xr_st/xr.js" data-preload-chunks="face"></script>
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
 
   <link rel="stylesheet" href="./index.css">
 
@@ -20,7 +20,7 @@
 
 <body>
 
-<a-scene
+<!--a-scene
   landing-page
   xrextras-loading
   xrextras-runtime-error
@@ -29,7 +29,15 @@
   renderer="colorManagement:true"
   ui-manager
   xrconfig="cameraDirection:back; allowedDevices:any; mirroredDisplay:false;"
-  xrhand="allowedDevices:any; cameraDirection:back; mirroredDisplay: false; enableWrists: true">
+  xrhand="allowedDevices:any; cameraDirection:back; mirroredDisplay: false; enableWrists: true"-->
+<a-scene
+  xrextras-loading
+  xrextras-runtime-error
+  hand-coaching-overlay
+  renderer="colorManagement: true"
+  landing-page
+  xrhand="allowedDevices:any">
+
   <a-assets>
     <a-asset-item id="diamondRing" src="./assets/ring.glb"></a-asset-item>
     <a-asset-item id="watch" src="./assets/watch.glb"></a-asset-item>
@@ -40,7 +48,9 @@
     look-controls="enabled: false"
     wasd-controls="enabled: false"
     position="0 1.6 0"></a-camera-->
-  <a-camera position="0 1.6 0" camera rotation></a-camera>
+  <a-camera position="0 2 0"> </a-camera>
+  <a-light type="ambient" intensity="1.5"></a-light>
+
 
   <!-- Hand anchor primitive to nest hand tracking objects -->
   <xrextras-hand-anchor id="hand" hand-switched>
@@ -112,6 +122,7 @@
 
 </body>
 </html>
+
 
 
 
