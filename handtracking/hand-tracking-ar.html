@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Tracking AR - 가상 액세서리 체험</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        #container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 10;
+            max-width: 300px;
+        }
+        
+        h1 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+        
+        .mode-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .mode-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .mode-btn.active {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            box-shadow: 0 0 20px rgba(76, 175, 80, 0.5);
+        }
+        
+        #status {
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            text-align: center;
+            max-width: 600px;
+            z-index: 10;
+        }
+        
+        .instruction-text {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="canvas"></canvas>
+        
+        <div id="controls">
+            <h1>🖐️ Hand Tracking AR</h1>
+            <button class="mode-btn active" data-mode="ring">💍 반지 착용</button>
+            <button class="mode-btn" data-mode="bracelet">📿 팔찌 착용</button>
+            <button class="mode-btn" data-mode="ball">⚽ 공 잡기</button>
+            <button class="mode-btn" data-mode="watch">⌚ 시계 착용</button>
+            <div id="status">
+                <div>상태: 초기화 중...</div>
+                <div>손 감지: 대기 중</div>
+            </div>
+        </div>
+        
+        <div id="instructions">
+            <div class="instruction-text">✋ 카메라 앞에 손을 보여주세요</div>
+            <div class="instruction-text">💡 위 버튼을 눌러 다른 액세서리를 체험하세요</div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div>모델 로딩 중...</div>
+        </div>
+    </div>
+
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- MediaPipe Hands -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script>
+        // 전역 변수
+        let camera, scene, renderer;
+        let handObjects = { left: null, right: null };
+        let currentMode = 'ring';
+        let videoElement, canvasElement, canvasCtx;
+        let hands;
+        
+        // 손 랜드마크 인덱스
+        const LANDMARKS = {
+            WRIST: 0,
+            THUMB_TIP: 4,
+            INDEX_TIP: 8,
+            MIDDLE_TIP: 12,
+            RING_TIP: 16,
+            PINKY_TIP: 20,
+            INDEX_MCP: 5,
+            MIDDLE_MCP: 9,
+            RING_MCP: 13,
+            PINKY_MCP: 17
+        };
+        
+        // 초기화
+        function init() {
+            videoElement = document.getElementById('video');
+            canvasElement = document.getElementById('canvas');
+            canvasCtx = canvasElement.getContext('2d');
+            
+            setupThreeJS();
+            setupMediaPipe();
+            setupEventListeners();
+        }
+        
+        // Three.js 설정
+        function setupThreeJS() {
+            scene = new THREE.Scene();
+            
+            camera = new THREE.PerspectiveCamera(
+                75, 
+                window.innerWidth / window.innerHeight, 
+                0.1, 
+                1000
+            );
+            camera.position.z = 5;
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: canvasElement, 
+                alpha: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0x000000, 0);
+            
+            // 조명 설정
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(5, 5, 5);
+            scene.add(directionalLight);
+            
+            createAccessories();
+            
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        // 액세서리 생성
+        function createAccessories() {
+            // 반지
+            const ringGeometry = new THREE.TorusGeometry(0.05, 0.015, 16, 32);
+            const ringMaterial = new THREE.MeshStandardMaterial({
+                color: 0xFFD700,
+                metalness: 0.9,
+                roughness: 0.1,
+                emissive: 0xFFD700,
+                emissiveIntensity: 0.2
+            });
+            const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+            
+            // 팔찌
+            const braceletGeometry = new THREE.TorusGeometry(0.12, 0.02, 16, 32);
+            const braceletMaterial = new THREE.MeshStandardMaterial({
+                color: 0xC0C0C0,
+                metalness: 0.8,
+                roughness: 0.2,
+                emissive: 0xC0C0C0,
+                emissiveIntensity: 0.1
+            });
+            const bracelet = new THREE.Mesh(braceletGeometry, braceletMaterial);
+            
+            // 공
+            const ballGeometry = new THREE.SphereGeometry(0.15, 32, 32);
+            const ballMaterial = new THREE.MeshStandardMaterial({
+                color: 0xFF4444,
+                metalness: 0.3,
+                roughness: 0.7,
+                emissive: 0xFF0000,
+                emissiveIntensity: 0.1
+            });
+            const ball = new THREE.Mesh(ballGeometry, ballMaterial);
+            
+            // 시계
+            const watchGroup = new THREE.Group();
+            const watchBandGeometry = new THREE.CylinderGeometry(0.09, 0.09, 0.15, 32);
+            const watchBandMaterial = new THREE.MeshStandardMaterial({
+                color: 0x222222,
+                metalness: 0.2,
+                roughness: 0.8
+            });
+            const watchBand = new THREE.Mesh(watchBandGeometry, watchBandMaterial);
+            
+            const watchFaceGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.05, 32);
+            const watchFaceMaterial = new THREE.MeshStandardMaterial({
+                color: 0x333333,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            const watchFace = new THREE.Mesh(watchFaceGeometry, watchFaceMaterial);
+            watchFace.position.y = 0.05;
+            
+            const screenGeometry = new THREE.CircleGeometry(0.08, 32);
+            const screenMaterial = new THREE.MeshStandardMaterial({
+                color: 0x1a1a1a,
+                emissive: 0x0088ff,
+                emissiveIntensity: 0.3
+            });
+            const screen = new THREE.Mesh(screenGeometry, screenMaterial);
+            screen.position.set(0, 0.08, 0.051);
+            
+            watchGroup.add(watchBand);
+            watchGroup.add(watchFace);
+            watchGroup.add(screen);
+            watchGroup.rotation.z = Math.PI / 2;
+            
+            // 각 손에 액세서리 할당
+            handObjects.left = {
+                ring: ring.clone(),
+                bracelet: bracelet.clone(),
+                ball: ball.clone(),
+                watch: watchGroup.clone()
+            };
+            
+            handObjects.right = {
+                ring: ring.clone(),
+                bracelet: bracelet.clone(),
+                ball: ball.clone(),
+                watch: watchGroup.clone()
+            };
+            
+            // 씬에 추가
+            Object.values(handObjects.left).forEach(obj => scene.add(obj));
+            Object.values(handObjects.right).forEach(obj => scene.add(obj));
+            
+            updateAccessoryVisibility();
+        }
+        
+        // 액세서리 가시성 업데이트
+        function updateAccessoryVisibility() {
+            ['left', 'right'].forEach(hand => {
+                Object.keys(handObjects[hand]).forEach(mode => {
+                    handObjects[hand][mode].visible = (mode === currentMode);
+                });
+            });
+        }
+        
+        // MediaPipe 설정
+        function setupMediaPipe() {
+            hands = new Hands({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
+                }
+            });
+            
+            hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.7,
+                minTrackingConfidence: 0.7
+            });
+            
+            hands.onResults(onResults);
+            
+            const camera = new Camera(videoElement, {
+                onFrame: async () => {
+                    await hands.send({ image: videoElement });
+                },
+                width: 1280,
+                height: 720
+            });
+            camera.start();
+            
+            document.getElementById('loading').style.display = 'none';
+            updateStatus('준비 완료', 'green');
+        }
+        
+        // 손 추적 결과 처리
+        function onResults(results) {
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+            
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                updateStatus(`손 감지됨 (${results.multiHandLandmarks.length}개)`, 'green');
+                
+                for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+                    const landmarks = results.multiHandLandmarks[i];
+                    const handedness = results.multiHandedness[i].label.toLowerCase();
+                    
+                    // 손 그리기 (선택적)
+                    // drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#00FF00', lineWidth: 2});
+                    // drawLandmarks(canvasCtx, landmarks, {color: '#FF0000', lineWidth: 1, radius: 3});
+                    
+                    updateHandObject(landmarks, handedness);
+                }
+            } else {
+                updateStatus('손을 보여주세요', 'orange');
+            }
+            
+            canvasCtx.restore();
+            
+            renderer.render(scene, camera);
+        }
+        
+        // 손 객체 업데이트
+        function updateHandObject(landmarks, handedness) {
+            const handObj = handObjects[handedness][currentMode];
+            
+            if (!handObj) return;
+            
+            switch (currentMode) {
+                case 'ring':
+                    // 약지에 반지 위치
+                    const ringBase = landmarks[LANDMARKS.RING_MCP];
+                    const ringTip = landmarks[LANDMARKS.RING_TIP];
+                    
+                    const ringPos = {
+                        x: (ringBase.x + ringTip.x) / 2,
+                        y: (ringBase.y + ringTip.y) / 2,
+                        z: (ringBase.z + ringTip.z) / 2
+                    };
+                    
+                    updateObjectPosition(handObj, ringPos, handedness);
+                    
+                    // 반지 회전
+                    const ringDir = new THREE.Vector3(
+                        ringTip.x - ringBase.x,
+                        ringTip.y - ringBase.y,
+                        ringTip.z - ringBase.z
+                    ).normalize();
+                    handObj.quaternion.setFromUnitVectors(
+                        new THREE.Vector3(0, 1, 0),
+                        ringDir
+                    );
+                    break;
+                    
+                case 'bracelet':
+                    // 손목에 팔찌 위치
+                    const wrist = landmarks[LANDMARKS.WRIST];
+                    updateObjectPosition(handObj, wrist, handedness);
+                    
+                    // 팔찌 회전
+                    const indexMCP = landmarks[LANDMARKS.INDEX_MCP];
+                    const braceletDir = new THREE.Vector3(
+                        indexMCP.x - wrist.x,
+                        indexMCP.y - wrist.y,
+                        indexMCP.z - wrist.z
+                    ).normalize();
+                    handObj.quaternion.setFromUnitVectors(
+                        new THREE.Vector3(0, 0, 1),
+                        braceletDir
+                    );
+                    break;
+                    
+                case 'ball':
+                    // 손바닥 중앙에 공 위치 (잡는 모션)
+                    const indexTip = landmarks[LANDMARKS.INDEX_TIP];
+                    const thumbTip = landmarks[LANDMARKS.THUMB_TIP];
+                    
+                    const palmCenter = {
+                        x: (indexTip.x + thumbTip.x) / 2,
+                        y: (indexTip.y + thumbTip.y) / 2,
+                        z: (indexTip.z + thumbTip.z) / 2
+                    };
+                    
+                    updateObjectPosition(handObj, palmCenter, handedness);
+                    
+                    // 핀치 거리 계산
+                    const pinchDist = Math.sqrt(
+                        Math.pow(indexTip.x - thumbTip.x, 2) +
+                        Math.pow(indexTip.y - thumbTip.y, 2) +
+                        Math.pow(indexTip.z - thumbTip.z, 2)
+                    );
+                    
+                    // 공 크기 조절 (잡을 때 작아짐)
+                    const scale = Math.max(0.5, Math.min(1.5, pinchDist * 5));
+                    handObj.scale.set(scale, scale, scale);
+                    break;
+                    
+                case 'watch':
+                    // 손목에 시계 위치
+                    const watchWrist = landmarks[LANDMARKS.WRIST];
+                    const watchIndexMCP = landmarks[LANDMARKS.INDEX_MCP];
+                    
+                    updateObjectPosition(handObj, watchWrist, handedness);
+                    
+                    // 시계 회전
+                    const watchDir = new THREE.Vector3(
+                        watchIndexMCP.x - watchWrist.x,
+                        watchIndexMCP.y - watchWrist.y,
+                        watchIndexMCP.z - watchWrist.z
+                    ).normalize();
+                    
+                    handObj.quaternion.setFromUnitVectors(
+                        new THREE.Vector3(0, 1, 0),
+                        watchDir
+                    );
+                    break;
+            }
+        }
+        
+        // 객체 위치 업데이트 (화면 좌표를 3D 좌표로 변환)
+        function updateObjectPosition(obj, landmark, handedness) {
+            // MediaPipe 좌표는 0~1 범위, 화면의 중심을 0으로 변환
+            const x = (landmark.x - 0.5) * 10;
+            const y = -(landmark.y - 0.5) * 10;
+            const z = -landmark.z * 10;
+            
+            // 왼손/오른손에 따라 x 좌표 조정
+            obj.position.set(handedness === 'left' ? -x : x, y, z);
+        }
+        
+        // 이벤트 리스너 설정
+        function setupEventListeners() {
+            const buttons = document.querySelectorAll('.mode-btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    buttons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentMode = btn.dataset.mode;
+                    updateAccessoryVisibility();
+                });
+            });
+        }
+        
+        // 상태 업데이트
+        function updateStatus(message, color) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `
+                <div style="color: ${color}">상태: ${message}</div>
+                <div>모드: ${getModeText(currentMode)}</div>
+            `;
+        }
+        
+        function getModeText(mode) {
+            const texts = {
+                'ring': '💍 반지',
+                'bracelet': '📿 팔찌',
+                'ball': '⚽ 공',
+                'watch': '⌚ 시계'
+            };
+            return texts[mode] || mode;
+        }
+        
+        // 창 크기 조정
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            canvasElement.width = window.innerWidth;
+            canvasElement.height = window.innerHeight;
+        }
+        
+        // 시작
+        init();
+    </script>
+</body>
+</html>
