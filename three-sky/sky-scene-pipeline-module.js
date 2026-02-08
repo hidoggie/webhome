@@ -2,6 +2,7 @@
 // along with simple interactivity and debug options.
 import * as THREE from './../xr_st/r123-three-min.js';
 // import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFLoader } from 'https://unpkg.com';
 
 export const skySampleScenePipelineModule = () => {
   const textureLoader = new THREE.TextureLoader();
