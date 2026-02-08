@@ -1,6 +1,6 @@
 // Returns a pipeline module that initializes a sky scene with models and textures
 // along with simple interactivity and debug options.
-import * as THREE from './../xr_st/r123-three-min.js';
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 // import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { GLTFLoader } from 'https://unpkg.com';
 
