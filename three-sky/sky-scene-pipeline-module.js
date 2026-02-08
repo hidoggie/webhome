@@ -1,15 +1,29 @@
 // Returns a pipeline module that initializes a sky scene with models and textures
 // along with simple interactivity and debug options.
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+
 export const skySampleScenePipelineModule = () => {
-  const TEXTURE = require('./assets/sky-textures/space.png')
-  const DOTY_MODEL = require('./assets/sky-models/doty.glb')
-  const AIRSHIP_MODEL = require('./assets/sky-models/airship.glb')
+  const textureLoader = new THREE.TextureLoader();
+  const TEXTURE = textureLoader.load('./assets/sky-textures/space.png');
+
+//  const TEXTURE = require('./assets/sky-textures/space.png')
+//  const DOTY_MODEL = require('./assets/sky-models/doty.glb')
+//  const AIRSHIP_MODEL = require('./assets/sky-models/airship.glb')
 
   const loader = new THREE.GLTFLoader()  // This comes from GLTFLoader.js.
   const dracoLoader = new THREE.DRACOLoader()  // DRACOLoader for Draco Compressed Models
   dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.3.6/')
   dracoLoader.preload()  // Pre-fetch Draco WASM/JS module.
   loader.setDRACOLoader(dracoLoader)
+
+  loader.load('./assets/sky-models/doty.glb', (gltf) => { 
+     const DOTY_MODEL = gltf.scene; 
+  });
+
+  loader.load('./assets/sky-models/airship.glb', (gltf) => { 
+     const AIRSHIP_MODEL = gltf.scene; 
+  });
 
   let dotyAnimationMixer
   let airshipAnimationMixer
