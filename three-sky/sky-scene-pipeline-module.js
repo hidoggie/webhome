@@ -1,8 +1,5 @@
-// Returns a pipeline module that initializes a sky scene with models and textures
-// along with simple interactivity and debug options.
-//import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
-// import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-//import { GLTFLoader } from 'https://unpkg.com';
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js'; 
+import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
 export const skySampleScenePipelineModule = () => {
   const textureLoader = new THREE.TextureLoader();
@@ -12,7 +9,7 @@ export const skySampleScenePipelineModule = () => {
 //  const DOTY_MODEL = require('./assets/sky-models/doty.glb')
 //  const AIRSHIP_MODEL = require('./assets/sky-models/airship.glb')
 
-  const loader = new THREE.GLTFLoader()  // This comes from GLTFLoader.js.
+  const loader = new GLTFLoader()  // This comes from GLTFLoader.js.
   const dracoLoader = new THREE.DRACOLoader()  // DRACOLoader for Draco Compressed Models
   dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.3.6/')
   dracoLoader.preload()  // Pre-fetch Draco WASM/JS module.
