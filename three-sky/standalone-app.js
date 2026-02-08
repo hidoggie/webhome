@@ -1,5 +1,8 @@
 // Standalone Three.js application - No 8th Wall dependencies
-// This will work on any server after 8th Wall shuts down
+// ES6 module imports
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 
 const TEXTURE_PATH = './assets/sky-textures/space.png';
 const DOTY_MODEL_PATH = './assets/sky-models/doty.glb';
@@ -103,8 +106,8 @@ function loadSkyDome() {
 }
 
 function loadModels() {
-    const loader = new THREE.GLTFLoader();
-    const dracoLoader = new THREE.DRACOLoader();
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
     dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.3.6/');
     dracoLoader.preload();
     loader.setDRACOLoader(dracoLoader);
