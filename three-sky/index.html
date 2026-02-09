@@ -13,7 +13,8 @@
      </script> 
      <script type="module"> 
         import * as THREE from "three"; 
-        import { skySampleScenePipelineModule } from './sky-scene-pipeline-module.js';
+        import { GLTFLoader } from "https://cdn.jsdelivr.net/npm/three@0.123.0/examples/jsm/loaders/GLTFLoader.js";
+        import { skySampleScenePipelineModule } from "./sky-scene-pipeline-module.js";
 
 const onxrloaded = () => {
   XR8.addCameraPipelineModules([  // Add camera pipeline modules.
