@@ -8,7 +8,7 @@ export const skySampleScenePipelineModule = () => {
 
   const loader = new THREE.GLTFLoader();
   const dracoLoader = new THREE.DRACOLoader();
-  dracoLoader.setDecoderPath("./draco_182/");
+  dracoLoader.setDecoderPath("./draco_132/");
   dracoLoader.preload();
   loader.setDRACOLoader(dracoLoader);
 
@@ -311,4 +311,5 @@ export const skySampleScenePipelineModule = () => {
       {event: 'layerscontroller.layerfound', process: layerFound},
     ],
   };
+
 };
