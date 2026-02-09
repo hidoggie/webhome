@@ -6,7 +6,7 @@ export const skySampleScenePipelineModule = () => {
   const DOTY_MODEL_PATH = './assets/sky-models/doty.glb';
   const AIRSHIP_MODEL_PATH = './assets/sky-models/airship.glb';
 
-  const loader = new GLTFLoader();
+  const loader = new THREE.GLTFLoader();
   const dracoLoader = new THREE.DRACOLoader();
   dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.3.6/');
   dracoLoader.preload();
