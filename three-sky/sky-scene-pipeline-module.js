@@ -109,7 +109,14 @@ export const skySampleScenePipelineModule = () => {
     renderer.outputEncoding = THREE.sRGBEncoding;
 
     // Add soft white light to the scene.
-    scene.add(new THREE.AmbientLight(0x404040, 7));
+//    scene.add(new THREE.AmbientLight(0x404040, 7));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+
+//추가 부분
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1); 
+    directionalLight.position.set(5, 10, 7.5); 
+    scene.add(directionalLight);
+
 
     // Add sky dome.
     const skyGeo = new THREE.SphereGeometry(1000, 25, 25);
@@ -151,8 +158,9 @@ export const skySampleScenePipelineModule = () => {
 
         airshipLoadedModel.position.set(0, 0, -modelDepth);
         airshipLoadedModel.rotation.set(0, 0, 0);
-//        airshipLoadedModel.scale.set(10, 10, 10);
-        airshipLoadedModel.scale.set(1, 1, 1);
+     //   airshipLoadedModel.scale.set(10, 10, 10);
+        airshipLoadedModel.scale.set(0.5, 0.5, 0.5);
+
         airshipLoadedModel.castShadow = true;
 
         airshipPositioningPivot.rotation.y = -horizontalDegrees * (Math.PI / 180);
@@ -194,8 +202,9 @@ export const skySampleScenePipelineModule = () => {
 
         dotyLoadedModel.position.set(0, 0, -modelDepth);
         dotyLoadedModel.rotation.set(0, 0, 0);
-//        dotyLoadedModel.scale.set(100, 100, 100);
-        dotyLoadedModel.scale.set(1, 1, 1);
+  //      dotyLoadedModel.scale.set(100, 100, 100);
+        dotyLoadedModel.scale.set(10, 10, 10);
+
         dotyLoadedModel.castShadow = true;
 
         dotyPositioningPivot.rotation.y = -horizontalDegrees * (Math.PI / 180);
@@ -313,6 +322,4 @@ export const skySampleScenePipelineModule = () => {
       {event: 'layerscontroller.layerfound', process: layerFound},
     ],
   };
-
 };
-
