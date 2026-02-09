@@ -4,13 +4,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Sky Effect</title>
     <link rel="stylesheet" type="text/css" href="./index.css">
-
-    <!-- XR Extras - provides utilities like load screen, almost there, and error handling.
-         See github.com/8thwall/web/tree/master/xrextras -->
-   <script type="module"> 
-       import * as THREE from "https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"; 
-       import {skySampleScenePipelineModule} from './sky-scene-pipeline-module.js'
-
+    <script type="importmap">
+    { 
+       "imports": { 
+          "three": "https://cdn.jsdelivr.net/npm/three@0.123.0/build/three.module.js" 
+        } 
+     } 
+     </script> 
+     <script type="module"> 
+        import * as THREE from "three"; 
+        import { skySampleScenePipelineModule } from './sky-scene-pipeline-module.js';
 
 const onxrloaded = () => {
   XR8.addCameraPipelineModules([  // Add camera pipeline modules.
