@@ -151,7 +151,8 @@ export const skySampleScenePipelineModule = () => {
 
         airshipLoadedModel.position.set(0, 0, -modelDepth);
         airshipLoadedModel.rotation.set(0, 0, 0);
-        airshipLoadedModel.scale.set(10, 10, 10);
+//        airshipLoadedModel.scale.set(10, 10, 10);
+        airshipLoadedModel.scale.set(1, 1, 1);
         airshipLoadedModel.castShadow = true;
 
         airshipPositioningPivot.rotation.y = -horizontalDegrees * (Math.PI / 180);
@@ -193,7 +194,8 @@ export const skySampleScenePipelineModule = () => {
 
         dotyLoadedModel.position.set(0, 0, -modelDepth);
         dotyLoadedModel.rotation.set(0, 0, 0);
-        dotyLoadedModel.scale.set(100, 100, 100);
+//        dotyLoadedModel.scale.set(100, 100, 100);
+        dotyLoadedModel.scale.set(1, 1, 1);
         dotyLoadedModel.castShadow = true;
 
         dotyPositioningPivot.rotation.y = -horizontalDegrees * (Math.PI / 180);
@@ -313,3 +315,4 @@ export const skySampleScenePipelineModule = () => {
   };
 
 };
+
