@@ -6,7 +6,11 @@
   <link rel="stylesheet" href="./index.css">
 
   <!-- 1) three UMD: creates window.THREE (must load BEFORE xr.js) -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r132/three.min.js"></script>
+  <script type="module">
+    // Use the global THREE created by three.min.js
+      const THREE = window.THREE;
+   </script>
 
   <!-- 2) XR 관련 스크립트 (xrextras 등) -->
   <script src="./../xr_st/xrextras.js"></script>
@@ -17,15 +21,17 @@
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
 
   <!-- 4) GLTFLoader UMD (examples/js, not examples/jsm) - attaches to window.THREE -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.123.0/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.rawgit.com/mrdoob/three.js/r132/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="https://cdn.rawgit.com/mrdoob/three.js/r132/examples/js/loaders/DRACOLoader.js"></script>
 
   <!-- 5) Your app logic as a module (but DO NOT import 'three' via importmap) -->
   <script type="module">
-    // Use the global THREE created by three.min.js
-    const THREE = window.THREE;
-
-    // If you need GLTFLoader, the UMD loader attached itself to THREE.GLTFLoader
-    // e.g., const loader = new THREE.GLTFLoader();
+    if (window.THREE) { 
+       if (window.THREE.GLTFLoader) window.GLTFLoader = window.THREE.GLTFLoader; 
+       if (window.THREE.DRACOLoader) window.DRACOLoader = window.THREE.DRACOLoader; 
+    } else { 
+       console.warn('THREE not found when creating loader aliases.'); 
+    }
 
     import { skySampleScenePipelineModule } from "./sky-scene-pipeline-module.js";
 
