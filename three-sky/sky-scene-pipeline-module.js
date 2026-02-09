@@ -8,7 +8,7 @@ export const skySampleScenePipelineModule = () => {
 
   const loader = new THREE.GLTFLoader();
   const dracoLoader = new THREE.DRACOLoader();
-  dracoLoader.setDecoderPath("./draco/");
+  dracoLoader.setDecoderPath("./draco_182/");
   dracoLoader.preload();
   loader.setDRACOLoader(dracoLoader);
 
