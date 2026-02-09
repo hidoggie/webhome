@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sky Effect</title>
+  <link rel="stylesheet" href="./index.css">
+
+  <!-- 1) three UMD: creates window.THREE (must load BEFORE xr.js) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r123/three.min.js"></script>
+
+  <!-- 2) XR 관련 스크립트 (xrextras 등) -->
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>
+  <script src="./../xr_st/coaching-overlay.js"></script>
+
+  <!-- 3) xr.js (ThreeJS pipeline expects window.THREE already present) -->
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+
+  <!-- 4) GLTFLoader UMD (examples/js, not examples/jsm) - attaches to window.THREE -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.123.0/examples/js/loaders/GLTFLoader.js"></script>
+
+  <!-- 5) Your app logic as a module (but DO NOT import 'three' via importmap) -->
+  <script type="module">
+    // Use the global THREE created by three.min.js
+    const THREE = window.THREE;
+
+    // If you need GLTFLoader, the UMD loader attached itself to THREE.GLTFLoader
+    // e.g., const loader = new THREE.GLTFLoader();
+
+    import { skySampleScenePipelineModule } from "./sky-scene-pipeline-module.js";
+
+    const onxrloaded = () => {
+      XR8.addCameraPipelineModules([
+        XR8.GlTextureRenderer.pipelineModule(),
+        XR8.Threejs.pipelineModule(),
+        window.LandingPage.pipelineModule(),
+        XRExtras.FullWindowCanvas.pipelineModule(),
+        XRExtras.Loading.pipelineModule(),
+        XRExtras.RuntimeError.pipelineModule(),
+        XR8.LayersController.pipelineModule(),
+        SkyCoachingOverlay.pipelineModule(),
+        skySampleScenePipelineModule(),
+      ]);
+
+      XR8.LayersController.configure({layers: {sky: {invertLayerMask: false}}});
+      XR8.Threejs.configure({layerScenes: ['sky']});
+
+      document.body.insertAdjacentHTML('beforeend', `
+        <canvas id="camera" width="${window.innerWidth}" height="${window.innerHeight}"></canvas>
+      `);
+
+      XR8.run({
+        canvas: document.getElementById('camera'),
+        verbose: true,
+      });
+    };
+
+    window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
+  </script>
+</head>
+<body>
+  <canvas id="camerafeed"></canvas>
+</body>
+</html>
