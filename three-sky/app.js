@@ -3,7 +3,7 @@
 // app.js is the main entry point for your 8th Wall app. Code here will execute after head.html
 // is loaded, and before body.html is loaded.
 
-import {skySampleScenePipelineModule} from './sky-scene-pipeline-module.js'
+// import {skySampleScenePipelineModule} from './sky-scene-pipeline-module.js'
 
 const onxrloaded = () => {
   XR8.addCameraPipelineModules([  // Add camera pipeline modules.
