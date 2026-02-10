@@ -21,16 +21,6 @@
 
   <!-- 8thWall Web - Replace the app key here with your own app key -->
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
-<script>
-const onxrloaded = () => {
-  XR8.XrController.configure({
-    imageTargetData: [
-      require('./targets/outside.jpg'),
-    ],
-  })
-}
-window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
-</script>
 
   <script src="target-video.js">
   </script>
@@ -69,7 +59,7 @@ window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
 
     <!-- Note: "name:" must be set to the name of the image target uploaded to the 8th Wall Console -->
     <a-entity
-      target-video="name: outside; video: #alpha-video;"
+      target-video="name: lounge-ar; video: #alpha-video;"
       material="shader: chromakey; src: #alpha-video; color: 0.1 0.9 0.2"
       geometry="primitive: plane; height: 0.6; width: 1.38;">
     </a-entity>

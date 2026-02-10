@@ -36,3 +36,12 @@ AFRAME.registerComponent('target-video', {
     this.el.sceneEl.addEventListener('xrimagelost', hideImage)
   },
 })
+
+const onxrloaded = () => {
+  XR8.XrController.configure({
+    imageTargetData: [
+      require('./image-targets/lounge-ar.json'),
+    ],
+  })
+}
+window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
