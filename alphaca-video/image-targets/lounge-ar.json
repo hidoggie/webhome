@@ -1,5 +1,5 @@
 {
-  "imagePath": "image-targets/lounge-ar_target.png",
+  "imagePath": "lounge-ar_target.png",
   "name": "lounge-ar",
   "type": "PLANAR",
   "properties": {
