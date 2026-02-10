@@ -6,7 +6,7 @@
 
   <title>Alpha Video Example</title>
 
-  <script src="./../xr_st/8frame-1.2.0.min.js"></script>
+  <script src="./../xr_st/8frame-1.3.0.min.js"></script>
 
   <script src="./aframe-chromakey-material.min.js"></script>
 
@@ -65,6 +65,20 @@
     </a-entity>
 
   </a-scene>
+  <script> 
+     AFRAME.registerComponent('safe-vr-fix', { 
+        init: function () { 
+           const sceneEl = this.el.sceneEl; 
+           if (sceneEl.enterVRButton) { 
+              const origUpdate = sceneEl.enterVRButton.updateEnterInterfaces; 
+              sceneEl.enterVRButton.updateEnterInterfaces = function () { 
+                 if (origUpdate) origUpdate.apply(this, arguments); 
+                 }; 
+               } 
+            } 
+         }); 
 
+          // 씬에 붙여서 실행되도록 추가 
+         document.querySelector('a-scene').setAttribute('safe-vr-fix', '');
 </body>
 </html>
