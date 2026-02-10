@@ -21,7 +21,16 @@
 
   <!-- 8thWall Web - Replace the app key here with your own app key -->
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
-
+<script>
+const onxrloaded = () => {
+  XR8.XrController.configure({
+    imageTargetData: [
+      require('./targets/outside.jpg');
+    ],
+  })
+}
+window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
+</script>
 
   <script src="target-video.js">
   </script>
