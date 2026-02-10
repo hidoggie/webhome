@@ -1,6 +1,16 @@
 // Copyright (c) 2022 8th Wall, Inc.
 /* globals AFRAME */
 
+const onxrloaded = () => {
+  XR8.XrController.configure({
+    imageTargetData: [
+       './image-targets/lounge-ar.json' 
+    ],
+  })
+}
+window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
+
+
 AFRAME.registerComponent('target-video', {
   schema: {
     name: {type: 'string'},
@@ -37,14 +47,6 @@ AFRAME.registerComponent('target-video', {
   },
 })
 
-const onxrloaded = () => {
-  XR8.XrController.configure({
-    imageTargetData: [
-       './image-targets/lounge-ar.json' 
-    ],
-  })
-}
-window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
 
 
 
