@@ -1,0 +1,18 @@
+{
+  "imagePath": "image-targets/video-target_target.jpeg",
+  "name": "video-target",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 1,
+    "width": 979,
+    "height": 1305,
+    "isRotated": false,
+    "originalWidth": 980,
+    "originalHeight": 1307
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1571863161319,
+  "updated": 1613403946561
+}

@@ -1,0 +1,18 @@
+{
+  "imagePath": "image-targets/lounge-ar_target.png",
+  "name": "lounge-ar",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 1329,
+    "height": 1772,
+    "isRotated": false,
+    "originalWidth": 1772,
+    "originalHeight": 1772
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156802,
+  "updated": 1646873156802
+}
