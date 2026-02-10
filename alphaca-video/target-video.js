@@ -1,11 +1,11 @@
 // Copyright (c) 2022 8th Wall, Inc.
 /* globals AFRAME */
 
-const onxrloaded = () => {
+const onxrloaded = async () => {
+  const res = await fetch('./image-targets/lounge-ar.json')
+  const json = await res.json()
   XR8.XrController.configure({
-    imageTargetData: [
-       './image-targets/lounge-ar.json' 
-    ],
+    imageTargetData: [json],
   })
 }
 window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
