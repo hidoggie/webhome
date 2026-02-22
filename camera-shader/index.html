@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>camera shader</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.147.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.147.0/examples/jsm/"
+    }
+  }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+  import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+  import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+  import { GlitchPass } from 'three/addons/postprocessing/GlitchPass.js';
+  import { TexturePass } from 'three/addons/postprocessing/TexturePass.js';
+  import { AfterimagePass } from 'three/addons/postprocessing/AfterimagePass.js';
+  import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+
+  window.THREE = { ...THREE };
+  window.THREE.GLTFLoader = GLTFLoader;
+  window.THREE.EffectComposer = EffectComposer;
+  window.THREE.RenderPass = RenderPass;
+  window.THREE.GlitchPass = GlitchPass;
+  window.THREE.TexturePass = TexturePass;
+  window.THREE.AfterimagePass = AfterimagePass;
+  window.THREE.ShaderPass = ShaderPass;
+  window.dispatchEvent(new CustomEvent('threeloaded'));
+</script>
+
+  <script type="module" src="./app.js" defer></script>
+  <style>
+  h3 {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);  
+    z-index: 1;
+    font-family: sans-serif;
+    font-weight: 200;
+    color: white;
+    pointer-events: none;
+    -webkit-user-select: none;
+    user-select: none;
+  } 
+  </style>
+</head>
+
+<body>
+<h3>Tap to change shader</h3>
+
+<a-scene
+  zxrextras-tap-recenter
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  xrextras-gesture-detector
+  xrconfig="allowedDevices: any"
+  xrweb
+  camera-shader>
+  <a-entity
+    light="
+      type: directional; 
+      castShadow: true; 
+      color: white; 
+      intensity: 0.5"
+    position="5 10 7">
+  </a-entity>
+
+  <a-light type="ambient" intensity="0.5"></a-light>
+
+  <a-camera position="0 2 2"></a-camera>
+
+  <a-box
+    xrextras-one-finger-rotate
+    position="0 0.5 0"
+    zmaterial="
+      color: #AD50FF; shader: flat; 
+      src: https://cdn.8thwall.com/web/assets/cube-texture.png"
+    shadow>
+  </a-box>
+
+  <a-plane
+    height="2000"
+    width="2000"
+    rotation="-90 0 0"
+    material="shader: shadow; opacity: 0.67"
+    shadow>
+  </a-plane>
+</a-scene>
+</body>
+</html>
+
+
+
