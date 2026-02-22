@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>image-tracking-moving</title>
+
+  <script src="./../xr_st/8frame-1.5.0.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script src="./aframe-hologram-shader.js"></script>
+  <script>
+     const onxrloaded = async () => {
+       const res = await fetch('./target-ar.json')
+       const json = await res.json()
+       XR8.XrController.configure({
+         imageTargetData: [json],
+       })
+     }
+     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
+
+  </script>
+
+</head>
+
+<body>
+<a-scene
+  xrextras-gesture-detector
+  landing-page="backgroundColor: black; mediaSrc: #img; url: 8th.io/birthday-pins"
+  xrextras-loading
+  xrextras-runtime-error
+  renderer="colorManagement:true"
+  xrweb="disableWorldTracking: true"
+>
+  <a-assets>
+    <img id="img" src="./assets/trans.png" />
+  </a-assets>
+
+  <a-camera
+    position="0 4 10"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;"
+  >
+  </a-camera>
+
+  <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
+
+  <a-light type="ambient" intensity="0.7"></a-light>
+
+  <!-- Note: "name:" must be set to the name of the image target uploaded to the 8th Wall Console -->
+  <xrextras-named-image-target name="target-ar">
+    <!-- Add a child entity of the image target. -->
+    <a-circle color="black" radius="0.46"></a-circle>
+    <a-plane
+      src="#img"
+      material="transparent: true; shader: hologram; numGlitchBars: 20"
+      position="0 0 0.5"
+      animation__spin="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; easing: linear; dur: 10000"
+    ></a-plane>
+  </xrextras-named-image-target>
+</a-scene>
+</body>
+</html>
+
+
+
