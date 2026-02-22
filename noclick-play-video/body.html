@@ -1,0 +1,38 @@
+<a-scene
+  xrextras-tap-recenter
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  xrextras-gesture-detector
+  xrweb="allowedDevices: any">
+  <a-assets>
+    <video id="alpha-video" src="./assets/alpaca.mp4" muted loop></video>
+  </a-assets>
+
+  <a-entity
+    light="
+      type: directional; 
+      castShadow: true; 
+      color: white; 
+      intensity: 0.5"
+    position="5 10 7">
+  </a-entity>
+
+  <a-light type="ambient" intensity="0.5"></a-light>
+
+  <a-camera position="0 2 2"></a-camera>
+
+  <a-plane
+    width="1.78"
+    position="0 0.915 0"
+    scale="3 3 3"
+    chromakey-video="src: #alpha-video"></a-plane>
+
+  <a-plane
+    height="2000"
+    width="2000"
+    rotation="-90 0 0"
+    material="shader: shadow; opacity: 0.67"
+    shadow>
+  </a-plane>
+</a-scene>
