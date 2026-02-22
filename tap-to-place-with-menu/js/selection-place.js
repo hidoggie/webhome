@@ -4,10 +4,10 @@ const selectionPlaceComponent = {
     const ground = document.getElementById('ground')
     const scene = document.querySelector('a-scene')
     const entries = [
-      {id: '#benchModel', img: './../assets/icons/bench.jpg'},
-      {id: '#trashcanModel', img: './../assets/icons/trash.jpg'},
-      {id: '#lanternModel', img: './../assets/icons/lamp.jpg'},
-      {id: 'eraser', img: './../assets/icons/eraser.jpg'},
+      {id: '#benchModel', img: './assets/icons/bench.jpg'},
+      {id: '#trashcanModel', img: './assets/icons/trash.jpg'},
+      {id: '#lanternModel', img: './assets/icons/lamp.jpg'},
+      {id: 'eraser', img: './assets/icons/eraser.jpg'},
     ]
 
     let currentEntry = null
