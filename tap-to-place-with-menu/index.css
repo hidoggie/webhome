@@ -1,0 +1,40 @@
+#container {
+  position: absolute;
+  width: 100vw;
+  max-height: 20vw;
+  left: 50%;
+  bottom: 6vh;
+  transform: translateX(-50%);
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+  overflow-x: scroll;
+  white-space: nowrap;
+}
+
+#container::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel {
+  padding: 1.5rem;
+  border: 0.3rem solid #b054fc;
+  margin: 0.5rem;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  pointer-events: auto;
+  transition: box-shadow 0.2s ease-out;
+}
+
+button:focus {
+  outline: none !important;
+}
+
+.carousel.focused {
+  box-shadow: 0px 0px 0px 0.3rem #7035a1;
+  outline: none !important;
+}
+
+.carousel:hover {
+  box-shadow: 0px 0px 0px 0.2rem #7c3ab2;
+}

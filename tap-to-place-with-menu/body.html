@@ -1,0 +1,64 @@
+<!-- Copyright (c) 2022 8th Wall, Inc. -->
+<!-- body.html is optional; elements will be added to your html body after app.js is loaded. -->
+
+<!-- UI Buttons used to change colors -->
+<div id="container"></div>
+
+<a-scene
+  responsive-immersive
+  landing-page
+  xrextras-gesture-detector
+  xrextras-loading
+  xrextras-runtime-error
+  renderer="colorManagement: true"
+  xrweb="
+    allowedDevices: any;
+    defaultEnvironmentFogIntensity: 0.5; 
+    defaultEnvironmentFloorTexture: #groundTex; 
+    defaultEnvironmentFloorColor: #FFF;
+    defaultEnvironmentSkyBottomColor: #B4C4CC; 
+    defaultEnvironmentSkyTopColor: #5ac8fa;
+    defaultEnvironmentSkyGradientStrength: 0.5;">
+  <a-assets>
+    <a-asset-item id="benchModel" src="assets/models/bench.gltf"></a-asset-item>
+    <a-asset-item id="lanternModel" src="assets/models/street_lantern.gltf"></a-asset-item>
+    <a-asset-item id="trashcanModel" src="assets/models/trashcan.gltf"></a-asset-item>
+  </a-assets>
+
+  <a-camera
+    id="camera"
+    position="0 4 4"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;">
+  </a-camera>
+
+  <a-entity
+    light="
+      type: directional;
+      intensity: 0.8;
+      castShadow: true;
+      shadowMapHeight:2048;
+      shadowMapWidth:2048;
+      shadowCameraTop: 40;
+      shadowCameraBottom: -40;
+      shadowCameraRight: 40;
+      shadowCameraLeft: -40;
+      target: #camera"
+    xrextras-attach="target: camera; offset: 8 15 4"
+    position="1 4.3 2.5"
+    shadow>
+  </a-entity>
+
+  <a-light type="ambient" intensity="0.5"></a-light>
+
+  <a-entity selection-place></a-entity>
+
+  <a-box
+    id="ground"
+    class="cantap"
+    scale="1000 2 1000"
+    position="0 -0.99 0"
+    material="shader: shadow; transparent: true; opacity: 0.4"
+    shadow>
+  </a-box>
+</a-scene>
