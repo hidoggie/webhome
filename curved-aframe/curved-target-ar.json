@@ -1,15 +1,25 @@
 {
   "imagePath": "assets/Media/curved-target-image.png",
   "name": "curved-target-ar",
-  "type": "PLANAR",
+  "type": "CONICAL",
   "properties": {
     "top": 0,
-    "left": 0,
+    "left": 376,
     "width": 729,
     "height": 584,
     "isRotated": false,
     "originalWidth": 729,
-    "originalHeight": 584
+    "originalHeight": 584,
+    "cylinderCircumferenceTop": 100,
+    "cylinderCircumferenceBottom": 77.67,
+    "targetCircumferenceTop": 50,
+    "cylinderSideLength": 33.2,
+    "inputMode": "BASIC",
+    "coniness": 0.3645039872358073,
+    "arcAngle": 180,
+    "unit": "mm",
+    "topRadius": 4479,
+    "bottomRadius": 3479
   },
   "userMetadataIsJson": true,
   "loadAutomatically": true,
