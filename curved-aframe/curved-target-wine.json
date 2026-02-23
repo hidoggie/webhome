@@ -1,15 +1,23 @@
 {
   "imagePath": "assets/Media/curved-target-wine-img.png",
   "name": "curved-target-wine",
-  "type": "PLANAR",
+  "type": "CYLINDER",
   "properties": {
-    "top": 0,
+    "top": 30,
     "left": 0,
     "width": 375,
     "height": 457,
-    "isRotated": false,
+    "isRotated": true,
     "originalWidth": 375,
-    "originalHeight": 457
+    "originalHeight": 457,
+    "cylinderCircumferenceTop": 100,
+    "cylinderCircumferenceBottom": 100,
+    "targetCircumferenceTop": 50,
+    "cylinderSideLength": 33.54,
+    "inputMode": "BASIC",
+    "coniness": 0,
+    "arcAngle": 180,
+    "unit": "mm"
   },
   "userMetadataIsJson": true,
   "loadAutomatically": true,
