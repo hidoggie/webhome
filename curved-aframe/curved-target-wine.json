@@ -1,15 +1,15 @@
 {
-  "imagePath": "assets/Media/curved-target-wine-img.png",
+  "imagePath": "assets/Media/curved-target-wine-img.jpg",
   "name": "curved-target-wine",
   "type": "CYLINDER",
   "properties": {
     "top": 0,
     "left": 0,
     "width": 361,
-    "height": 446,
+    "height": 525,
     "isRotated": false,
     "originalWidth": 361,
-    "originalHeight": 446,
+    "originalHeight": 525,
     "cylinderCircumferenceTop": 361,
     "cylinderCircumferenceBottom": 361,
     "targetCircumferenceTop": 150,
