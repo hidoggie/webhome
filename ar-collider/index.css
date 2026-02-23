@@ -1,0 +1,56 @@
+.over {
+  z-index: 10;
+  pointer-events: none;
+  position:absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  
+  text-align: center;
+  color: white;
+  font-family: 'Nunito', monospace;
+  text-shadow: 0px 0px 5px black;
+}
+
+#promptText {
+  font-size: 1.5em;
+  top: 8vh;
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 0);
+}
+
+#resetButton {
+  position: absolute;
+  pointer-events: auto;
+  width: 16vw;
+  bottom: 3vh;
+  left: 3vh;
+}
+
+#gradient-box {
+  background-image: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,0.5));
+  z-index: -1;
+  width: 100vw;
+  height: 20vh;
+  position: absolute;
+  bottom: 0;
+}
+
+@media only screen and (min-width: 768px) { /* For Desktop */
+  #promptText {
+    font-size: 3em;
+  }
+
+  #resetButton {
+    width: 8vw;
+  }
+}
+
+.pulse-once { animation: pulse-once 0.2s cubic-bezier(0.785, 0.135, 0.150, 0.860) both; }
+@keyframes pulse-once {
+  0% {transform: scale(1);}
+  50% {transform: scale(0.8);}
+  100% {transform: scale(1);}
+}

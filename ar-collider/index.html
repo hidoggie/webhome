@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>ar-collider</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script> 
+  <script src="./../xr_st/ammo.wasm.js"></script>  
+  <script src="./../xr_st/aframe-physics-system-4.2.2.min.js"></script>  
+  
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" type="text/css" href="./index.css">
+</head>
+
+<body>
+<div class="over">
+  <span id="promptText"></span>
+  <img id="resetButton" src="./assets/textures/reset.svg">
+  <div id="gradient-box"></div>
+</div>
+
+<a-scene
+  physics="driver: ammo; debug: false"
+  responsive-immersive
+  reset-button
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  xrextras-gesture-detector
+  renderer="colorManagement: true; webgl2: false"
+  xrweb="
+    allowedDevices: any; 
+    defaultEnvironmentFogIntensity: 0.3; 
+    defaultEnvironmentFloorTexture: #grass; 
+    defaultEnvironmentFloorColor: #FFF; 
+    defaultEnvironmentSkyBottomColor: #5ac8fa; 
+    defaultEnvironmentSkyTopColor: #007aff;
+    defaultEnvironmentSkyGradientStrength: 0.25;">
+  
+  <a-assets>
+    <a-asset-item id="pin" src="./assets/models/bowling_pin.glb"></a-asset-item>
+    <a-asset-item id="glove" src="./assets/models/boxing_glove.glb"></a-asset-item>
+    <img id="soccer" src="./assets/textures/soccer.jpg">
+    <img id="grass" src="./assets/textures/grass.jpg">
+  </a-assets>
+  
+  <a-entity 
+    light="
+      type: directional;
+      shadowBias: -0.0001;
+      intensity: 0.8;
+      castShadow: true;
+      shadowMapHeight:2048;
+      shadowMapWidth:2048;
+      shadowCameraTop: 50;
+      shadowCameraBottom: -10;
+      shadowCameraRight: 30;
+      shadowCameraLeft: -30;
+      target: #camera"
+    xrextras-attach="target: camera; offset: 8 15 4"
+    position="1 4.3 2.5">
+  </a-entity>
+
+  <a-light type="ambient" intensity="0.5"></a-light>
+  
+  <!-- Camera + Glove-->
+  <a-camera id="camera" position="0 3 0">
+    <a-entity
+      id="glove-model"
+      punch-tap
+      physics-object="model: #glove; body: kinematic; shape: box"
+      rotation="0 90 -90"
+      position="0 -1 -1">
+    </a-entity>
+  </a-camera>
+
+  <!-- Soccer ball-->
+  <a-sphere 
+    id="soccer-ball"
+    class="physics-object"
+    position="0 2 -3" 
+    radius="0.75"
+    material="shader: flat; src: #soccer"
+    ammo-body="type: dynamic"
+    ammo-shape="type: sphere"
+    shadow>
+  </a-sphere>
+  
+  <!-- Bowling Pins-->
+  <a-entity id="pin1" physics-object="model: #pin; body: dynamic; shape: hull" position="0 3 -7" shadow></a-entity>
+  <a-entity id="pin2" physics-object="model: #pin; body: dynamic; shape: hull" position="-0.5 3 -8.5" shadow></a-entity>
+  <a-entity id="pin3" physics-object="model: #pin; body: dynamic; shape: hull" position="0.5 3 -8.5" shadow></a-entity>
+  <a-entity id="pin4" physics-object="model: #pin; body: dynamic; shape: hull" position="0 3 -10" shadow></a-entity>
+  <a-entity id="pin5" physics-object="model: #pin; body: dynamic; shape: hull" position="-1 3 -10" shadow></a-entity>
+  <a-entity id="pin6" physics-object="model: #pin; body: dynamic; shape: hull" position="1 3 -10" shadow></a-entity>
+
+
+  <a-plane 
+    id="ground"
+    height="2000"
+    width="2000"
+    rotation="-90 0 0"
+    position="0 0.01 0"
+    material="shader: shadow; transparent: true; opacity: 0.4"
+    ammo-body="type: static"
+    ammo-shape="type: box"
+    shadow>
+  </a-plane>  
+  
+</a-scene>
+</body>
+</html>
+
+
+
