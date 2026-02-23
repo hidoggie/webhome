@@ -1,0 +1,37 @@
+{
+  "imagePath": "assets/Media/curved-target-image.png",
+  "name": "curved-target-ar",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 729,
+    "height": 584,
+    "isRotated": false,
+    "originalWidth": 729,
+    "originalHeight": 584
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156803,
+  "updated": 1646873156803
+}
+
+{
+  "imagePath": "assets/Media/curved-target-wine-img.png",
+  "name": "curved-target-wine",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 375,
+    "height": 457,
+    "isRotated": false,
+    "originalWidth": 375,
+    "originalHeight": 457
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156804,
+  "updated": 1646873156804
+}
