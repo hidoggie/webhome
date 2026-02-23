@@ -12,8 +12,8 @@
     "originalHeight": 525,
     "cylinderCircumferenceTop": 361,
     "cylinderCircumferenceBottom": 361,
-    "targetCircumferenceTop": 361,
-    "cylinderSideLength": 200,
+    "targetCircumferenceTop": 100,
+    "cylinderSideLength": 50,
     "inputMode": "BASIC",
     "coniness": 0,
     "arcAngle": 180,
@@ -25,3 +25,4 @@
   "updated": 1646873156804
 
 }
+
