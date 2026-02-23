@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>camera shader</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" type="text/css" href="./index.css">
+</head>
+
+<body>
+<button id="swap-dof-btn" class="toggle">Disable World Tracking: false</button>
+<button id="swap-cam-btn" class="toggle">Camera Direction: back</button>
+
+<a-scene 
+  swap-dof
+  swap-camera
+  xrextras-tap-recenter
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  xrweb="disableWorldTracking: false; cameraDirection: back;">
+  
+  <a-entity light="type:directional; castShadow:true; color:white; intensity:0.5" position="5 10 7"></a-entity>
+  
+  <a-camera position="0 2 2"></a-camera>
+  
+  <a-box position="0 0.5 0" material="color: #AD50FF;" shadow></a-box>
+  
+  <a-plane height="2000" width="2000" rotation="-90 0 0" material="shader: shadow; opacity: 0.67" shadow></a-plane>  
+</a-scene>
+</body>
+</html>
+
+
+
