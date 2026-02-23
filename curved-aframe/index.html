@@ -16,8 +16,11 @@
      const onxrloaded = async () => {
        const res = await fetch('./curved-target-ar.json')
        const json = await res.json()
+       const res1 = await fetch('./curved-target-wine.json')
+       const json1 = await res.json()
+
        XR8.XrController.configure({
-         imageTargetData: [json],
+         imageTargetData: [json, json1],
        })
      }
      window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
