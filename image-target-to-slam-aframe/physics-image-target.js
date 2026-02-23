@@ -71,7 +71,7 @@ const physicsImageTargetComponent = {
       const obj = document.createElement('a-entity')
 
       obj.setAttribute('gltf-model', '#coconut')
-      obj.setAttribute('scale', '2 2 2')
+      obj.setAttribute('scale', '0.1 0.1 0.1')
       obj.setAttribute('shadow', '')
 
       const absPos = new THREE.Vector3().copy(
