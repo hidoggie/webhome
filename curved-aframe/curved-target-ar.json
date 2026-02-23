@@ -1,3 +1,4 @@
+[
 {
   "imagePath": "assets/Media/curved-target-image.png",
   "name": "curved-target-ar",
@@ -15,7 +16,7 @@
   "loadAutomatically": true,
   "created": 1646873156803,
   "updated": 1646873156803
-}
+},
 {
   "imagePath": "assets/Media/curved-target-wine-img.png",
   "name": "curved-target-wine",
@@ -34,3 +35,4 @@
   "created": 1646873156804,
   "updated": 1646873156804
 }
+]
