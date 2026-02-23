@@ -12,7 +12,7 @@
     "originalHeight": 525,
     "cylinderCircumferenceTop": 361,
     "cylinderCircumferenceBottom": 361,
-    "targetCircumferenceTop": 150,
+    "targetCircumferenceTop": 361,
     "cylinderSideLength": 200,
     "inputMode": "BASIC",
     "coniness": 0,
@@ -23,4 +23,5 @@
   "loadAutomatically": true,
   "created": 1646873156804,
   "updated": 1646873156804
+
 }
