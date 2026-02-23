@@ -13,7 +13,7 @@
     "cylinderCircumferenceTop": 361,
     "cylinderCircumferenceBottom": 361,
     "targetCircumferenceTop": 150,
-    "cylinderSideLength": 100,
+    "cylinderSideLength": 200,
     "inputMode": "BASIC",
     "coniness": 0,
     "arcAngle": 180,
