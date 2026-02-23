@@ -2,21 +2,28 @@
 <html lang="ko">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <meta charset="UTF-8">
   <title>이미지인식 코코넛나무</title>
 
-  <!--script src="https://aframe.io/releases/1.7.1/aframe.min.js"></script-->
-
-  <!--script src="./../xr_st/8frame-1.4.1.min.js"></script-->
-  
-  <script src="./../xr_st/aframe-1.1.0-master.js"></script>
-
+  <script src="./../xr_st/8frame-1.5.0.min.js"></script>
   <script src="./../xr_st/xrextras.js"></script>
   <script src="./../xr_st/landing-page.js"></script>  
   <script src="./aframe-extras-4.2.0.min.js"></script>
   <script src="./aframe-physics-system-4.0.1.min.js"></script>
 
-  <!--script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script-->
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script>
+     const onxrloaded = async () => {
+       const res = await fetch('./target-ar.json')
+       const json = await res.json()
+       XR8.XrController.configure({
+         imageTargetData: [json],
+       })
+     }
+     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
+
+  </script>
 
   <script type="module" src="./app.js" defer></script>
 
@@ -41,7 +48,7 @@
     raycaster="objects: .cantap" 
     cursor="fuse: false; rayOrigin: mouse;">
   </a-camera>
-  <a-entity physics-image-target="name: moon" visible="false">
+  <a-entity physics-image-target="name: target-ar" visible="false">
     <a-entity 
       id="palm" 
       gltf-model="#palm-glb"
@@ -81,4 +88,3 @@
 </a-scene>
 </body>
 </html>
-
