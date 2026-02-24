@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>다시하는 손 추적</title>
+
+  <script src="./../xr_st/8frame-1.5.0.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script src="./../xr_st/coaching-overlay.js"></script>
+
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" href="./index.css">
+</head>
+
+<body>
+<a-scene
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  xrextras-pause-on-hidden
+  hand-coaching-overlay
+  renderer="colorManagement:true"
+  ui-manager
+  xrconfig="cameraDirection:back; allowedDevices:any; mirroredDisplay:false;"
+  xrhand="allowedDevices:any; cameraDirection:back; mirroredDisplay: false; enableWrists: true">
+  <a-assets>
+    <a-asset-item id="diamondRing" src="./assets/bigRing.glb"></a-asset-item>
+    <a-asset-item id="watch" src="./assets/watch.glb"></a-asset-item>
+    <a-asset-item id="orb" src="./assets/orb.glb"></a-asset-item>
+  </a-assets>
+
+  <a-camera
+    look-controls="enabled: false"
+    wasd-controls="enabled: false"
+    position="0 1.6 0"></a-camera>
+
+  <!-- Hand anchor primitive to nest hand tracking objects -->
+  <xrextras-hand-anchor id="hand" hand-switched>
+    <!-- Hand occluder made using hider-material and hand-mesh -->
+    <xrextras-hand-occluder show="false" adjustment="0.001"></xrextras-hand-occluder>
+
+    <!-- Hand mesh with indices -->
+    <xrextras-hand-mesh
+      id="handMesh"
+      wireframe="true"
+      material="color:#7611B6; transparent:true; opacity:0"></xrextras-hand-mesh>
+
+    <xrextras-hand-attachment id="ringLower" point="ringLower">
+      <a-entity
+        id="diamondRingEntity"
+        gltf-model="#diamondRing"
+        polygon-offset
+        position="-.004 -.003 0"
+        reflections="type: realtime"
+        scale="0.1 0.1 0.1"
+        visible="false"
+        rotation="0 0 10">
+      </a-entity>
+    </xrextras-hand-attachment>
+
+    <xrextras-hand-attachment id="wrist" point="wristTop">
+      <a-cylinder
+        id="wristOccluder"
+        visible="true"
+        height="0.075"
+        position="0 -.04 .015"
+        wrist-occluder
+        xrextras-hider-material>
+      </a-cylinder>
+
+      <a-entity
+        id="watchEntity"
+        gltf-model="#watch"
+        rotate-watch
+        polygon-offset
+        clock-animation
+        visible="false"
+        position="0 0 0.02"
+        reflections="type: realtime"
+        rotation="0 90 0">
+      </a-entity>
+
+    </xrextras-hand-attachment>
+    
+    <xrextras-hand-attachment id="palm" point="palm" pointType="inner">
+      <a-entity
+        id="orbEntity"
+        gltf-model="#orb"
+        visible="true"
+        scale=".11 .11 .11"
+        position=".005 0.01 0"
+        mirror-x
+        reflections="type: realtime"
+        rotation="0 0 0">
+      </a-entity>
+    </xrextras-hand-attachment>
+
+  <a-light type="directional" target="#hand" position="0 1.8 3" intensity="0.5"></a-light>
+  <a-light type="ambient" intensity="0.8"></a-light>
+</a-scene>
+
+<!-- UI -->
+<div id="nextButton">Next</div>
+
+</body>
+</html>
+
+
+
