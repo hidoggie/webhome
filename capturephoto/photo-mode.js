@@ -1,11 +1,8 @@
-// Copyright (c) 2021 8th Wall, Inc.
-/* globals XR8 */
-
 // add 'Tap + Hold to Add to Photos' prompt when user takes a photo
 window.addEventListener('mediarecorder-photocomplete', () => {
   document.getElementById('overlay') ? document.getElementById('overlay').style.display = 'block'
     : document.body.insertAdjacentHTML('beforeend',
-      '<div id="overlay"><div id="savePrompt">Tap + Hold to Add to Photos</div></div>')
+      '<div id="overlay"><div id="savePrompt">클릭하여 사진을 저장하세요</div></div>')
 })
 
 // hide 'Tap + Hold to Add to Photos' prompt when user dismisses preview modal
