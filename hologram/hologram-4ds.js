@@ -49,7 +49,7 @@ const camera = afscene.camera;
 //
 
     // Set the option to keep the downloaded data in cache, to avoid a new download upon each loop
-    this.model4DS.keepsChunksInCache(false)
+  //  this.model4DS.keepsChunksInCache(false)
 
     this.model4DS.setWaitingGif(  // empty transparent pixel disables waiting GIF
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
