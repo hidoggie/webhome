@@ -10,8 +10,8 @@ const colorPickerComponent = {
     const leftEye = document.getElementById('leftIris')
     this.currentMakeup = document.getElementById(this.data.makeup)
     // custom texture variables
-    const noneIcon = './../../assets/alpha-masks/noneIcon.png'
-    const dropperIcon = './../../assets/alpha-masks/dropper.svg'
+    const noneIcon = './../assets/alpha-masks/noneIcon.png'
+    const dropperIcon = './../assets/alpha-masks/dropper.svg'
 
     this.offset = 0
     this.textureSelected = false
