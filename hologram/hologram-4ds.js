@@ -1,5 +1,7 @@
 /* globals WEB4DS, ResourceManagerXHR, Model4D, Decoder4D */
 
+import {Model4D} from './model4D_Three.js';
+
 const hologram4dsComponent = () => ({
   schema: {
     'main-4ds': {type: 'asset'},                // 4ds video file to play (mobile version)
