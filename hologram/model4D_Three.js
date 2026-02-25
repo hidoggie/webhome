@@ -168,3 +168,5 @@ class Model4D {
     this.audioSound.setVolume(0)
   }
 }
+
+export {Model4D}
