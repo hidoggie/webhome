@@ -1,8 +1,5 @@
 /* globals WEB4DS, ResourceManagerXHR, Model4D, Decoder4D */
 
-AFRAME.registerComponent('holo4ds', hologram4dsComponent())
-AFRAME.registerPrimitive('hologram-4ds', hologram4dsPrimitive())
-
 const hologram4dsComponent = () => ({
   schema: {
     'main-4ds': {type: 'asset'},                // 4ds video file to play (mobile version)
@@ -180,6 +177,10 @@ const hologram4dsPrimitive = () => ({
 })
 
 // export {hologram4dsComponent, hologram4dsPrimitive}
+
+AFRAME.registerComponent('holo4ds', hologram4dsComponent())
+AFRAME.registerPrimitive('hologram-4ds', hologram4dsPrimitive())
+
 
 /// ///////////////////////4DViews web4dvImporter.js///////////////////////////////////////////////
 
