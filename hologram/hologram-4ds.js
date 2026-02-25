@@ -35,7 +35,8 @@ document.querySelector('a-scene').addEventListener('loaded', () => {
 //
 
 //console.log('renderer:', afscene.renderer); 
-//console.log('camera:', afscene.camera);
+console.log('콜 전 this:', this.Model4D);
+console.log('콜 전 그냥:', Model4D);
 
     this.model4DS = new WEB4DS(
       'Welcome',                   // unique id
@@ -50,9 +51,11 @@ document.querySelector('a-scene').addEventListener('loaded', () => {
 //
 });
 
-console.log('this.model4DS class 이후:',this.model4DS)
+console.log('콜 후:',this.model4D)
 
-     console.log('this.Model4D', this.model4D); 
+     console.log('콜 후 this.Model4D:', this.Model4D);     
+     console.log('콜 후 Model4D:', Model4D); 
+
 
 //
 
