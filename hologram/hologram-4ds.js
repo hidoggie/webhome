@@ -560,7 +560,7 @@ console.log('class WEB4DS 내:', this.model4D)  //추가
 
   keepsChunksInCache(booleanVal) {
 //    Decoder4D._keepChunksInCache = booleanVal
-     console.log(model4D', model4D); 
+     console.log('model4D', model4D); 
      console.log('this.model4D', this.model4D); 
 
      if (this.model4D) {   //수정
