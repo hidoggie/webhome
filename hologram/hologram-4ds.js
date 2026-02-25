@@ -1,7 +1,5 @@
 /* globals WEB4DS, ResourceManagerXHR, Model4D, Decoder4D */
 
-import {Model4D} from './model4D_Three.js';
-
 const hologram4dsComponent = () => ({
   schema: {
     'main-4ds': {type: 'asset'},                // 4ds video file to play (mobile version)
@@ -53,6 +51,9 @@ document.querySelector('a-scene').addEventListener('loaded', () => {
 });
 
 console.log('this.model4DS class 이후:',this.model4DS)
+
+     console.log('this.Model4D', this.model4D); 
+
 //
 
     // Set the option to keep the downloaded data in cache, to avoid a new download upon each loop
@@ -560,8 +561,6 @@ console.log('class WEB4DS 내:', this.model4D)  //추가
 
   keepsChunksInCache(booleanVal) {
 //    Decoder4D._keepChunksInCache = booleanVal
-     console.log('model4D', model4D); 
-     console.log('this.model4D', this.model4D); 
 
      if (this.model4D) {   //수정
        this.model4D.keepsChunksInCache(booleanVal);    //수정
