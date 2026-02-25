@@ -34,6 +34,9 @@ const renderer = afscene.renderer;
 const camera = afscene.camera;
 //
 
+console.log('renderer:', afscene.renderer); 
+console.log('camera:', afscene.camera);
+
     this.model4DS = new WEB4DS(
       'Welcome',                   // unique id
       this.data['secondary-4ds'],  // url Desktop format
