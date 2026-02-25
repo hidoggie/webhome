@@ -49,10 +49,12 @@ console.log('camera:', afscene.camera);
     )
 //
 });
+
+console.log('this.model4DS class 이후:',this.model4D)
 //
 
     // Set the option to keep the downloaded data in cache, to avoid a new download upon each loop
-  //  this.model4DS.keepsChunksInCache(false)
+    this.model4DS.keepsChunksInCache(false)
 
     this.model4DS.setWaitingGif(  // empty transparent pixel disables waiting GIF
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -193,6 +195,8 @@ class WEB4DS {
     this.model4D = new Model4D()
     this.sequenceTotalLength = 0
     this.sequenceDecodedFrames = 0
+
+console.log('class WEB4DS 내:', this.model4D)  //추가
 
     // Options
     this.showPlaceholder = false
@@ -554,7 +558,9 @@ class WEB4DS {
 
   keepsChunksInCache(booleanVal) {
 //    Decoder4D._keepChunksInCache = booleanVal
-     this.model4D.keepsChunksInCache(booleanVal);    //수정
+     if (this.model4D) {   //수정
+       this.model4D.keepsChunksInCache(booleanVal);    //수정
+     }
   }
 
   setWaitingGif(url) {
