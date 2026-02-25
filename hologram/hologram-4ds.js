@@ -29,7 +29,7 @@ const hologram4dsComponent = () => ({
   
 // 수정 부분
 //document.querySelector('a-scene').addEventListener('loaded', () => {
-const scene = AFRAME.scenes[0]; 
+//const scene = AFRAME.scenes[0]; 
 const renderer = scene.renderer; 
 const camera = scene.camera;
 //
