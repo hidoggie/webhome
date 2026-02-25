@@ -33,7 +33,7 @@ const hologram4dsComponent = () => ({
       this.data['main-4ds'],       // url Mobile format
       this.data['audio-4ds'],      // url Audio
       [0, 0, 0],                   // position
-      scene.renderer,              // renderer
+      this.renderer,              // renderer  수정한 부분  scene.renderer  를 this.renderer 로 변경
       scene,                       // scene
       scene.camera                 // camera
     )
