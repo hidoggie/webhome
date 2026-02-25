@@ -29,15 +29,6 @@ const hologram4dsComponent = () => ({
   
 // 수정 부분
 document.querySelector('a-scene').addEventListener('loaded', () => {
-//const afscene = AFRAME.scenes[0]; 
-//const renderer = afscene.renderer; 
-//const camera = afscene.camera;
-//
-
-//console.log('renderer:', afscene.renderer); 
-//console.log('콜 전 this:', this.model4DS.model4D);
-console.log('콜 전 그냥:', Model4D);
-
     this.model4DS = new WEB4DS(
       'Welcome',                   // unique id
       this.data['secondary-4ds'],  // url Desktop format
@@ -48,8 +39,6 @@ console.log('콜 전 그냥:', Model4D);
       scene,                       // scene
       camera                 // camera
     )
-//
-});
 
 console.log('콜 후:',this.model4D) 
 
@@ -163,6 +152,10 @@ console.log('콜 후:',this.model4D)
     }
   },
 })
+
+//
+});
+
 
 const hologram4dsPrimitive = () => ({
   defaultComponents: {
