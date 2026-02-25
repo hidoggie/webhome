@@ -550,7 +550,8 @@ class WEB4DS {
   }
 
   keepsChunksInCache(booleanVal) {
-    Decoder4D._keepChunksInCache = booleanVal
+//    Decoder4D._keepChunksInCache = booleanVal
+     this.model4D.keepsChunksInCache(booleanVal);    //수정
   }
 
   setWaitingGif(url) {
