@@ -1,6 +1,6 @@
 /* globals WEB4DS, ResourceManagerXHR, Model4D, Decoder4D */
 
-import Model4D from './model4D_Three.js';
+import {Model4D} from './model4D_Three.js'
 
 const hologram4dsComponent = () => ({
   schema: {
