@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>joystick movement</title>
+
+  <script src="./../xr_st/8frame-1.5.0.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  
+  <script async src="./../../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script src="./../aframe-extras-6.1.1.min.js"></script>
+
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" href="./main.css">
+
+</head>
+
+<body>
+
+<div id="overlay" style="z-index: 2">
+  <img id="recenterBtn" src="assets/reset.svg">
+  <h3>DRAG TO MOVE</h3>
+</div>
+
+<!-- Add the tap-place component to the scene so it has an effect -->
+<a-scene
+  xrextras-gesture-detector
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  renderer="colorManagement:true"
+  xrweb="allowedDevices: any">
+
+  <a-assets>
+    <a-asset-item id="robot_model" src="assets/robot.glb"></a-asset-item>
+  </a-assets>
+
+  <a-camera
+    id="camera"
+    position="0 4 4">
+  </a-camera>
+
+  <a-entity
+    light="
+      type: directional;
+      intensity: 0.9;
+      castShadow: true;
+      shadowMapHeight:2048;
+      shadowMapWidth:2048;
+      target: #character;
+      shadowRadius: 5"
+    xrextras-attach="target: character; offset: 8 15 4"
+    position="1 4.3 2.5"
+    shadow>
+  </a-entity>
+
+  <a-light type="ambient" intensity="0.5"></a-light>
+
+  <a-entity
+    id="character"
+    character-move
+    character-recenter
+    gltf-model="#robot_model"
+    gltf-morph="morphtarget: Surprised; value: 0"
+    animation-mixer="clip: Idle; loop: repeat; crossFadeDuration: 0.4"
+    scale="0.5 0.5 0.5"
+    shadow
+  ></a-entity>
+
+  <a-box
+    id="ground"
+    scale="1000 2 1000"
+    position="0 -1 0"
+    material="shader: shadow; transparent: true; opacity: 0.4"
+    shadow>
+  </a-box>
+</a-scene>
+</body>
+</html>
+
+
+
+
+
+
