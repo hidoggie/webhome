@@ -36,8 +36,8 @@ document.querySelector('a-scene').addEventListener('loaded', () => {
 //const camera = afscene.camera;
 //
 
-console.log('renderer:', afscene.renderer); 
-console.log('camera:', afscene.camera);
+//console.log('renderer:', afscene.renderer); 
+//console.log('camera:', afscene.camera);
 
     this.model4DS = new WEB4DS(
       'Welcome',                   // unique id
@@ -560,6 +560,9 @@ console.log('class WEB4DS 내:', this.model4D)  //추가
 
   keepsChunksInCache(booleanVal) {
 //    Decoder4D._keepChunksInCache = booleanVal
+     console.log(model4D', model4D); 
+     console.log('this.model4D', this.model4D); 
+
      if (this.model4D) {   //수정
        this.model4D.keepsChunksInCache(booleanVal);    //수정
      }
