@@ -28,7 +28,7 @@ const hologram4dsComponent = () => ({
     }
   
 // 수정 부분
-//document.querySelector('a-scene').addEventListener('loaded', () => {
+document.querySelector('a-scene').addEventListener('loaded', () => {
 const afscene = AFRAME.scenes[0]; 
 const renderer = afscene.renderer; 
 const camera = afscene.camera;
@@ -45,7 +45,7 @@ const camera = afscene.camera;
       camera                 // camera
     )
 //
-//});
+});
 //
 
     // Set the option to keep the downloaded data in cache, to avoid a new download upon each loop
