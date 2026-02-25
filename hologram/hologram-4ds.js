@@ -50,7 +50,7 @@ console.log('camera:', afscene.camera);
 //
 });
 
-console.log('this.model4DS class 이후:',this.model4D)
+console.log('this.model4DS class 이후:',this.model4DS)
 //
 
     // Set the option to keep the downloaded data in cache, to avoid a new download upon each loop
