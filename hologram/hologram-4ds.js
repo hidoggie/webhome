@@ -179,7 +179,7 @@ const hologram4dsPrimitive = () => ({
   },
 })
 
-export {hologram4dsComponent, hologram4dsPrimitive}
+// export {hologram4dsComponent, hologram4dsPrimitive}
 
 /// ///////////////////////4DViews web4dvImporter.js///////////////////////////////////////////////
 
