@@ -1,0 +1,122 @@
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  box-sizing: border-box;
+}
+
+#modal{
+  position: absolute;
+  display:grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
+  z-index: 50;
+  width: 100%;
+  max-width: 460px;
+  height: 4vh;
+  transform: translate(-50%);
+  left: 50%;
+  bottom: 0;
+}
+
+#container{
+  grid-column: 1 / 4;
+  grid-row: 2;
+  width: 100%;
+  max-height: 40px;
+  font-family: inherit;
+  margin: auto;
+  margin-bottom: 0;
+  display: block;
+  bottom: 0;
+}
+
+#options{
+  grid-row: 1;
+  grid-column: 2;
+  border-radius: 0.5vh;
+  height: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+#color-input{
+  grid-column: 1;
+  grid-row: 1;
+  opacity: 1;
+  margin: auto;
+}
+
+#visibility{
+  grid-column: 2;
+  width: 50%;
+  grid-row: 1;
+  opacity: 1;
+  margin: auto;
+}
+
+.luna-tab-item{
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.luna-tab-slider{
+  height: 3px;
+  background: #5C0D8F;
+}
+
+.luna-tab-selected{
+  font-weight: 600;
+  color:#5C0D8F;
+}
+
+/* Color Palette */
+#palette {
+  position: absolute;
+  width: 100vw;
+  max-height: 20vw;
+  left: 50%;
+  bottom: 6vh;
+  transform: translateX(-50%);
+  z-index: 10;  
+  text-align: center;
+  pointer-events:none;
+  overflow-x: scroll;
+  white-space: nowrap;
+}
+#palette::-webkit-scrollbar {
+  display: none;
+}
+.carousel {
+  padding: 1.5rem;
+  border: 0.3rem solid white;
+  margin: 0.5rem;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  pointer-events:auto;
+}
+.coaching-overlay-prompt-status {
+  text-shadow: 0px 0px 5px rgba(0,0,0,0.1);
+}
+button:focus {
+  box-shadow: 0px 0px 0px 0.3rem white;
+  outline: none !important;
+}
+
+#color-input{
+  position: absolute;
+  top:0;
+  border-radius: 50%;
+  z-index: 50;
+  opacity: 0;
+  right:0;
+  padding:1.5rem;
+}
+
+#colorParent{
+  display: inline-block;
+  position: relative;
+}
