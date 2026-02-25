@@ -31,9 +31,9 @@ const hologram4dsComponent = () => ({
   
 // 수정 부분
 document.querySelector('a-scene').addEventListener('loaded', () => {
-const afscene = AFRAME.scenes[0]; 
-const renderer = afscene.renderer; 
-const camera = afscene.camera;
+//const afscene = AFRAME.scenes[0]; 
+//const renderer = afscene.renderer; 
+//const camera = afscene.camera;
 //
 
 console.log('renderer:', afscene.renderer); 
@@ -45,8 +45,8 @@ console.log('camera:', afscene.camera);
       this.data['main-4ds'],       // url Mobile format
       this.data['audio-4ds'],      // url Audio
       [0, 0, 0],                   // position
-      renderer,              // renderer    수정 scene.renderer 를  renderer 로 변경
-      afscene,                       // scene
+      scene.renderer,              // renderer    수정 scene.renderer 를  renderer 로 변경
+      scene,                       // scene
       camera                 // camera
     )
 //
