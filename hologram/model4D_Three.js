@@ -169,4 +169,4 @@ class Model4D {
   }
 }
 
-export {Model4D}
+window.Model4D = Model4D
