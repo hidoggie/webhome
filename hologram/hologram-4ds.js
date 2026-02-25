@@ -26,6 +26,13 @@ const hologram4dsComponent = () => ({
       this.prompt.style.display = 'block'
       this.ground.addEventListener('mousedown', this.placeHologram, {once: true})
     }
+  
+// 수정 부분
+document.querySelector('a-scene').addEventListener('loaded', () => {
+const scene = AFRAME.scenes[0]; 
+const renderer = scene.renderer; 
+const camera = scene.camera;
+//
 
     this.model4DS = new WEB4DS(
       'Welcome',                   // unique id
@@ -33,10 +40,13 @@ const hologram4dsComponent = () => ({
       this.data['main-4ds'],       // url Mobile format
       this.data['audio-4ds'],      // url Audio
       [0, 0, 0],                   // position
-      this.renderer,              // renderer  수정한 부분  scene.renderer  를 this.renderer 로 변경
+      scene.renderer,              // renderer    수정 scene.renderer 를  renderer 로 변경
       scene,                       // scene
       scene.camera                 // camera
     )
+//
+});
+//
 
     // Set the option to keep the downloaded data in cache, to avoid a new download upon each loop
     this.model4DS.keepsChunksInCache(false)
