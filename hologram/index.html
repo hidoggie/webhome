@@ -1,0 +1,86 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <title>hologram demo</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src='./../xr_st/landing-page.js'></script>
+
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script src="./model4D_Three.js" crossorigin="anonymous"></script>
+  <script src="./web4dvResource.js" crossorigin="anonymous"></script>
+
+  <script>
+  <!-- dummy audio to unmute iOS devices -->
+    <audio id="myaudio" allow="autoplay" autoplay>
+      <source src="./assets/silence.mp3" type="audio/mpeg">
+    </audio>
+  </script>
+  <script src="./app.js"></script>
+  <link rel="stylesheet" type="text/css" href="./index.css">
+</head>
+
+<body>
+
+  <!-- UI -->
+<div class="over">
+  <span id="promptText">Loading...</span>
+  <div id="progressBar" style="display: none">
+    <div id="playProgress"></div>
+    <div id="loadProgress"></div>
+  </div>
+  <img id="pauseBtn" class="media-btn" src="./assets/icons/pause.svg" style="display: none;">
+  <img id="muteBtn" class="media-btn" src="./assets/icons/sound.svg" style="display: none;">
+  <div id="gradient-box"></div>
+</div>
+
+<a-scene 
+  landing-page="mediaSrc: assets//giphy.mp4"
+  xrextras-gesture-detector
+  xrextras-loading
+  xrextras-runtime-error
+  renderer="webgl2: true;"
+  light="defaultLightsEnabled: false"
+  xrweb="allowedDevices: any">
+
+  <a-camera 
+    id="camera" 
+    position="0 1.5 2"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;">
+  </a-camera>
+
+  <!-- 4Dviews Hologram Samples
+  Speaker main-4ds: https://dev.fourdviews.com/ltd/business_man_-_speech_2_-_take_2_15_00fps_FILTERED_MOBILE_720.4ds 
+  Speaker secondary-4ds: https://dev.fourdviews.com/ltd/business_man_-_speech_2_-_take_2_15_00fps_FILTERED_DESKTOP_720.4ds
+  Speaker audio-4ds: https://dev.fourdviews.com/ltd/business_man_-_speech_2_-_take_2.mp3
+  Fire Warrior main-4ds: https://dev.fourdviews.com/ltd/Fire_8thWall_final_20fps.4ds
+  Fire Warrior secondary-4ds: https://dev.fourdviews.com/ltd/8th Wall_fire_desktop.4ds
+  Fire Warrior audio-4ds: https://dev.fourdviews.com/ltd/8thWall_Fire_export_final.wav -->
+  <hologram-4ds
+    main-4ds="https://dev.fourdviews.com/ltd/Fire_8thWall_final_20fps.4ds"
+    secondary-4ds="https://dev.fourdviews.com/ltd/8th Wall_fire_desktop.4ds"
+    audio-4ds="./assets/Fire_export.wav"
+    touch-target-size="1.8 0.5"
+    xrextras-hold-drag="riseHeight: 0.3"
+    xrextras-pinch-scale
+    xrextras-two-finger-rotate>
+  </hologram-4ds>
+
+  <a-box
+  id="ground"
+  class="cantap"
+  geometry="primitive: box"
+  scale="1000 2 1000"
+  position="0 -1 0"
+  visible="false">
+  </a-box>
+  
+</a-scene>
+
+</body>
+</html>
