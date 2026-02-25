@@ -13,6 +13,8 @@ const hologram4dsComponent = () => ({
   init() {
     this.model4DS = null                        // hologram object
     const scene = document.querySelector('a-scene')
+    const camera = scene.camera;
+
     this.prompt = document.getElementById('promptText')
     this.progressBar = document.getElementById('progressBar')
     this.playProgress = document.getElementById('playProgress')
@@ -38,18 +40,10 @@ document.querySelector('a-scene').addEventListener('loaded', () => {
       scene.renderer,              // renderer    수정 scene.renderer 를  renderer 로 변경
       scene,                       // scene
       camera                 // camera
-    )
-
-console.log('콜 후:',this.model4D) 
-
-     console.log('콜 후 this.Model4D:', this.model4DS.model4D);     
-     console.log('콜 후 Model4D:', Model4D); 
-
-
-//
+    );
 
     // Set the option to keep the downloaded data in cache, to avoid a new download upon each loop
-    this.model4DS.keepsChunksInCache(false)
+    this.model4DS.keepsChunksInCache(false);
 
     this.model4DS.setWaitingGif(  // empty transparent pixel disables waiting GIF
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
@@ -61,6 +55,9 @@ console.log('콜 후:',this.model4D)
       false,       // playOnLoad: play sequence automatically after it has loaded
       readytoplay  // runs after the sequence has been loaded
     )
+//
+});
+
 
     this.placeHologram = (event) => {
       // hide "Tap to Place Hologram" text + show playback UI
@@ -153,9 +150,6 @@ console.log('콜 후:',this.model4D)
   },
 })
 
-//
-});
-
 
 const hologram4dsPrimitive = () => ({
   defaultComponents: {
@@ -198,8 +192,6 @@ class WEB4DS {
     this.model4D = new Model4D()
     this.sequenceTotalLength = 0
     this.sequenceDecodedFrames = 0
-
-console.log('class WEB4DS 내:', this.model4D)  //추가
 
     // Options
     this.showPlaceholder = false
@@ -309,7 +301,12 @@ console.log('class WEB4DS 내:', this.model4D)  //추가
       resourceManager.Open(() => {
         const si = resourceManager._sequenceInfo
 
-        this.initSequence(si.NbFrames, si.NbBlocs, si.Framerate, si.MaxVertices, si.MaxTriangles, si.TextureEncoding, si.TextureSizeX, si.TextureSizeY, this.position)  // Get sequence information
+        this.initSequence(
+           si.NbFrames, si.NbBlocs, si.Framerate, 
+           si.MaxVertices, si.MaxTriangles, 
+           si.TextureEncoding, si.TextureSizeX, si.TextureSizeY, 
+           this.position
+        )  // Get sequence information
 
         this.Decode()  // Start decoding, downloading
 
@@ -560,11 +557,7 @@ console.log('class WEB4DS 내:', this.model4D)  //추가
   }
 
   keepsChunksInCache(booleanVal) {
-//    Decoder4D._keepChunksInCache = booleanVal
-
-     if (this.model4D) {   //수정
-       this.model4D.keepsChunksInCache(booleanVal);    //수정
-     }
+    Decoder4D._keepChunksInCache = booleanVal
   }
 
   setWaitingGif(url) {
