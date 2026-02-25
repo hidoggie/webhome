@@ -41,9 +41,16 @@ class Model4D {
 
   initMesh(vertices, uvs, indices, normals, textureEncoding, textureSizeX, textureSizeY, modelPosition) {
     this.geometry = new THREE.BufferGeometry()
-    this.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3))
-    this.geometry.addAttribute('uv', new THREE.BufferAttribute(uvs, 2))
-    this.geometry.addAttribute('normal', new THREE.BufferAttribute(normals, 3))
+
+//    this.geometry.addAttribute('position', new THREE.BufferAttribute(vertices, 3))
+//    this.geometry.addAttribute('uv', new THREE.BufferAttribute(uvs, 2))
+//    this.geometry.addAttribute('normal', new THREE.BufferAttribute(normals, 3))
+
+    this.geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
+    this.geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
+    this.geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3))
+
+
     this.geometry.setIndex(new THREE.BufferAttribute(indices, 1))
     this.geometry.dynamic = true
 

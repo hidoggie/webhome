@@ -112,8 +112,8 @@ document.querySelector('a-scene').addEventListener('loaded', () => {
     }
 
     // Play/Pause functionality
-    const playImg = require('./assets/icons/play.svg')
-    const pauseImg = require('./assets/icons/pause.svg')
+    const playImg = './assets/icons/play.svg'
+    const pauseImg = './assets/icons/pause.svg'
     const pauseHolo = () => {
       if (this.model4DS.isPlaying) {
         this.pauseBtn.src = playImg
@@ -126,8 +126,8 @@ document.querySelector('a-scene').addEventListener('loaded', () => {
     this.pauseBtn.addEventListener('click', pauseHolo)
 
     // Mute/Unmute functionality
-    const muteImg = require('./assets/icons/mute.svg')
-    const soundImg = require('./assets/icons/sound.svg')
+    const muteImg = './assets/icons/mute.svg'
+    const soundImg = './assets/icons/sound.svg'
     const muteHolo = () => {
       if (!this.model4DS.isMuted) {
         this.muteBtn.src = muteImg
