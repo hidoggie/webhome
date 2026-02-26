@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>face-effect-morph</title>
+
+  <script src="./../../xr_st/8frame-1.5.0.min.js"></script>
+  <script src="./../../xr_st/xrextras.js"></script>
+  <script src="./../../xr_st/landing-page.js"></script>  
+  
+  <script async src="./../../xr_st/xr.js" data-preload-chunks="face"></script>
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" type="text/css" href="./index.css">
+
+</head>
+
+<body>
+<a-scene 
+landing-page
+xrextras-loading
+xrextras-runtime-error
+xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true"
+ui-manager>
+
+  <!-- 3D models, images, videos -->
+  <a-assets>
+    <a-asset-item id="morphTargets" src="./../assets/default/head-occluder.glb"></a-asset-item>
+  </a-assets>
+  
+  <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 2 0"></a-camera>
+
+  <xrextras-faceanchor>
+    <a-entity id="morphTargetModel" animate-face scale="1 1 1" gltf-model="#morphTargets" rotation="0 0 0" position="0 0 0"></a-entity>>
+  </xrextras-faceanchor>
+
+  <a-light type="directional" target="#face" position="0 1.8 3" intensity="0.8"></a-light>
+  <a-light type="ambient" intensity="0.8"></a-light>
+
+</a-scene>
+
+<!-- UI -->
+<div class="modal-content">
+  <div class="modal-header">
+    <span id="reset" class="modal-reset">reset</span>
+  </div>
+  <div class="modal-body">
+    <h3 id="target-name"></h3>
+    <img id="rightArrow" src="./assets/UI/rightArrow.svg">
+    <img id="leftArrow" src="./assets/UI/leftArrow.svg">
+    <div class="slider-container">
+      <input type="range" step="0.05" min="0" max="1" value="0.1" class="slider">
+    </div>
+  </div>
+</div>
+</body>
+</html>
+
+
+
+
+
+
