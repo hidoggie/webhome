@@ -37,7 +37,6 @@
         playsinline
         crossorigin="anonymous"
         loop="true"
-        rotation="0 0 0"
         src="./dongbaegi2.mp4">
       </video>
     </a-assets>
@@ -56,7 +55,8 @@
     <a-entity
       target-video="name: dongbaegi-ar; video: #alpha-video;"
       material="shader: chromakey; src: #alpha-video; color: 0 0 0"
-      geometry="primitive: plane; height: 0.6; width: 1.38;">
+      geometry="primitive: plane; height: 0.6; width: 1.38;"
+      rotation="0 90 0">
     </a-entity>
 
   </a-scene>
