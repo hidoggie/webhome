@@ -1,0 +1,18 @@
+{
+  "imagePath": "image-targets/dongbaegi-flower-marker.jpg",
+  "name": "dongbaegi-ar",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 1170,
+    "height": 1161,
+    "isRotated": false,
+    "originalWidth": 1170,
+    "originalHeight": 1161
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156802,
+  "updated": 1646873156802
+}
