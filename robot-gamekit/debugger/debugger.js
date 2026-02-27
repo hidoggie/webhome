@@ -1,6 +1,6 @@
 import './debugger.css'
 const debuggerHTML = require('./debugger.html')
-import {UIElement, Button, Bar, Label, IconBar, Icon} from 'ui-kit'
+import {UIElement, Button, Bar, Label, IconBar, Icon} from '../ui-kit/module.js'
 
 class Debugger {
   init() {
