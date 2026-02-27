@@ -2,32 +2,11 @@ const animateFaceComponent = {
   init() {
     const faceTextureGltf_ = new THREE.Texture()
 
-    // [Fix] Custom ShaderMaterial: UV를 shader에서 직접 왜곡
-    // uMorphUVOffset: 각 vertex의 UV delta를 texture2D로 전달
-    const vertexShader = `
-      varying vec2 vUv;
-      attribute vec2 morphUVOffset;
-      uniform float morphStrength;
-      void main() {
-        vUv = uv + morphUVOffset * morphStrength;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-      }
-    `
-    const fragmentShader = `
-      uniform sampler2D map;
-      varying vec2 vUv;
-      void main() {
-        gl_FragColor = texture2D(map, vUv);
-      }
-    `
-
-    const materialGltf = new THREE.ShaderMaterial({
-      uniforms: {
-        map: {value: faceTextureGltf_},
-        morphStrength: {value: 0.0},
-      },
-      vertexShader,
-      fragmentShader,
+    // 테스트: 빨간 반투명 material - mesh 위치 확인용
+    const materialGltf = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      opacity: 0.4,
+      transparent: true,
       side: THREE.DoubleSide,
       depthWrite: false,
     })
