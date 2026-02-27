@@ -2,7 +2,6 @@ const animateFaceComponent = {
   init() {
     const faceTextureGltf_ = new THREE.Texture()
 
-    // 테스트: 빨간 반투명 material - mesh 위치 확인용
     const materialGltf = new THREE.MeshBasicMaterial({
       color: 0xff0000,
       opacity: 0.4,
@@ -20,7 +19,7 @@ const animateFaceComponent = {
     let faceMesh = null
     let morphTargets = {}
     let morphInfluences = {}
-    let uvDeltaTargets = {}  // 각 morph별 UV delta Float32Array
+    let uvDeltaTargets = {}
     let geometry = null
     let faceInitialized = false
     let savedIndices = null
@@ -52,8 +51,6 @@ const animateFaceComponent = {
       const uvFW=uArr.length?(Math.max(...uArr)-Math.min(...uArr)):0.5
       const uvFH=vArr.length?(Math.max(...vArr)-Math.min(...vArr)):0.5
       const scaleU=uvFW/fw, scaleV=uvFH/fh
-
-      console.log(`buildMorphTargets: fw=${fw.toFixed(3)} fh=${fh.toFixed(3)} scaleU=${scaleU.toFixed(4)} scaleV=${scaleV.toFixed(4)}`)
 
       const eye_top=cy+fh*0.40, eye_bot=cy+fh*0.10, eye_mid=(eye_top+eye_bot)/2
       const nose_top=cy+fh*0.08, nose_bot=cy-fh*0.15, nose_mid=(nose_top+nose_bot)/2
@@ -101,49 +98,21 @@ const animateFaceComponent = {
         const pd=makeDelta(type)
         morphTargets[type]=pd
         const uvd=new Float32Array(n*2)
-        let maxUV=0
         for (let i=0;i<n;i++) {
           uvd[i*2]  =-pd[i*3]  *scaleU
           uvd[i*2+1]=-pd[i*3+1]*scaleV
-          maxUV=Math.max(maxUV,Math.abs(uvd[i*2]),Math.abs(uvd[i*2+1]))
         }
         uvDeltaTargets[type]=uvd
-        console.log(`  ${type}: maxUVDelta=${maxUV.toFixed(4)}`)
       }
 
       morphInfluences={big_eyes:0,big_nose:0,big_mouth:0,fat_face:0}
-
       window._faceAnimateSetMorph=(name,value)=>{
-        if (name in morphInfluences) {
-          morphInfluences[name]=value
-          // 합산 UV delta를 geometry attribute로 업데이트
-          updateMorphUVAttr()
-        }
+        if (name in morphInfluences) morphInfluences[name]=value
       }
-
       setTimeout(()=>{
         document.dispatchEvent(new CustomEvent('faceMorphReady',{detail:{targetNames:Object.keys(morphTargets)}}))
         console.log('animate-face: morphs ready')
       },100)
-    }
-
-    // 현재 morphInfluences 기준으로 morphUVOffset attribute 갱신
-    const updateMorphUVAttr = () => {
-      if (!geometry) return
-      const attr=geometry.attributes.morphUVOffset
-      if (!attr) return
-      const n=attr.count
-      for (let i=0;i<n;i++) {
-        let du=0,dv=0
-        for (const [name,inf] of Object.entries(morphInfluences)) {
-          if (inf===0||!uvDeltaTargets[name]) continue
-          du+=uvDeltaTargets[name][i*2]  *inf
-          dv+=uvDeltaTargets[name][i*2+1]*inf
-        }
-        attr.array[i*2]  =du
-        attr.array[i*2+1]=dv
-      }
-      attr.needsUpdate=true
     }
 
     const onxrloaded=()=>{
@@ -162,24 +131,24 @@ const animateFaceComponent = {
     window.XR8?onxrloaded():window.addEventListener('xrloaded',onxrloaded)
 
     const show=(event)=>{
-      const {vertices,normals,uvsInCameraFrame}=event.detail
+      const {vertices, normals, uvsInCameraFrame, transform} = event.detail
 
       if (!faceInitialized) {
         faceInitialized=true
         const n=vertices.length
-        console.log(`animate-face: init ${n} verts`)
+        console.log(`animate-face: init ${n} verts, transform:`, JSON.stringify(transform))
 
         geometry=new THREE.BufferGeometry()
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3),3))
         geometry.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(n*3),3))
         geometry.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(n*2),2))
-        // morphUVOffset: shader에서 UV를 왜곡하는 per-vertex offset
-        geometry.setAttribute('morphUVOffset', new THREE.BufferAttribute(new Float32Array(n*2),2))
-
         if (savedIndices?.length>0) geometry.setIndex(new THREE.BufferAttribute(savedIndices,1))
 
-        faceMesh=new THREE.Mesh(geometry,materialGltf)
-        this.el.setObject3D('faceMesh',faceMesh)
+        faceMesh=new THREE.Mesh(geometry, materialGltf)
+
+        // [Fix] xrextras-faceanchor 안이 아닌 scene 루트에 직접 추가
+        this.el.sceneEl.object3D.add(faceMesh)
+        console.log('animate-face: faceMesh added to scene root')
 
         const base=new Float32Array(n*3)
         for (let i=0;i<n;i++){base[i*3]=vertices[i].x;base[i*3+1]=vertices[i].y;base[i*3+2]=vertices[i].z}
@@ -193,7 +162,6 @@ const animateFaceComponent = {
       const uvAttr  =geometry.attributes.uv
       const n=vertices.length
 
-      // position: XR8 + morph delta
       for (let i=0;i<n;i++){
         let px=vertices[i].x,py=vertices[i].y,pz=vertices[i].z
         for (const [name,inf] of Object.entries(morphInfluences)){
@@ -211,13 +179,24 @@ const animateFaceComponent = {
       }
       normAttr.needsUpdate=true
 
-      // UV: XR8 카메라 UV (매 프레임 업데이트)
       for (let i=0;i<uvsInCameraFrame.length;i++){
         uvAttr.array[i*2]=uvsInCameraFrame[i].u
         uvAttr.array[i*2+1]=uvsInCameraFrame[i].v
       }
       uvAttr.needsUpdate=true
-      // morphUVOffset은 _faceAnimateSetMorph 호출 시만 업데이트 (매 프레임 불필요)
+
+      // [Fix] transform 정보로 faceMesh 위치/회전 직접 적용
+      if (transform) {
+        if (transform.position) {
+          faceMesh.position.set(transform.position.x, transform.position.y, transform.position.z)
+        }
+        if (transform.rotation) {
+          faceMesh.rotation.set(transform.rotation.x, transform.rotation.y, transform.rotation.z)
+        }
+        if (transform.scale) {
+          faceMesh.scale.set(transform.scale.x||1, transform.scale.y||1, transform.scale.z||1)
+        }
+      }
     }
 
     this.el.sceneEl.addEventListener('xrfacefound',  show)
