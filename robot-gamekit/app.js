@@ -1,5 +1,5 @@
-import {UI} from './ui/ui'
-import {Debugger} from './debugger/debugger'
+import {UI} from './ui/ui.js'
+import {Debugger} from './debugger/debugger.js'
 
 import {
   GameElementComponent,
@@ -9,9 +9,9 @@ import {
   CoinComponent,
   EnergyComponent,
   FloorComponent,
-} from './components/sample-game-components'
-import {Utils} from './utils'
-import {GameKit, COLLISION_ENTER, COLLISION_EXIT, COLLIDING} from 'game-kit'
+} from './components/sample-game-components.js'
+import {Utils} from './utils.js'
+import {GameKit, COLLISION_ENTER, COLLISION_EXIT, COLLIDING} from './game-kit/module.js'
 // import {UIElement, Button, Bar, Label, IconBar, Icon} from 'ui-kit'
 
 const gameElementData = 'simple-game-element'
