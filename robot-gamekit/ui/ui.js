@@ -1,6 +1,6 @@
 import './index.css'
 const uiHTML = require('./ui.html')
-import {UIElement, Button, Bar, Label, IconBar, Icon} from 'ui-kit'
+import {UIElement, Button, Bar, Label, IconBar, Icon} from './../ui-kit/module.js'
 
 const powerUpImageOn = require('../assets/img/powerup.png')
 const powerUpImageOff = require('../assets/img/powerup--consumed.png')
