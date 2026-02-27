@@ -1,11 +1,11 @@
 import './index.css'
-const uiHTML = require('./ui.html')
-import {UIElement, Button, Bar, Label, IconBar, Icon} from './../ui-kit/module.js'
+import uiHTML from './ui.html?raw'
+import { UIElement, Button, Bar, Label, IconBar, Icon } from './../ui-kit/module.js'
 
-const powerUpImageOn = require('../assets/img/powerup.png')
-const powerUpImageOff = require('../assets/img/powerup--consumed.png')
+import powerUpImageOn from './../assets/img/powerup.png'
+import powerUpImageOff from './../assets/img/powerup--consumed.png'
 
-const energyIconImage = require('../assets/img/energybar--icon.png')
+import energyIconImage from './../assets/img/energybar--icon.png'
 
 class UI {
   init(gameState) {
