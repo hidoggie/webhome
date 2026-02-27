@@ -1,5 +1,5 @@
-import './debugger.css'
-const debuggerHTML = require('./debugger.html')
+const debuggerHTML = await fetch('./debugger.html').then(r => r.text());
+
 import {UIElement, Button, Bar, Label, IconBar, Icon} from '../ui-kit/module.js'
 
 class Debugger {
