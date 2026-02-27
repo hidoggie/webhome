@@ -114,7 +114,6 @@ const animateFaceComponent = {
 
       if (!initialized) {
         initialized = true
-        console.log(`animate-face: first frame ${n} verts, transform:`, transform?.position)
 
         geometry = new THREE.BufferGeometry()
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3))
@@ -125,28 +124,38 @@ const animateFaceComponent = {
         }
 
         faceMesh = new THREE.Mesh(geometry, materialGltf)
-        // scene의 Three.js object3D에 직접 추가
-        this.el.sceneEl.object3D.add(faceMesh)
-        console.log('animate-face: faceMesh added to scene.object3D')
+
+        // XR8이 Three.js 카메라를 직접 제어함
+        // → XR8 카메라 오브젝트를 찾아서 거기 추가
+        const cam = this.el.sceneEl.camera
+        if (cam && cam.parent) {
+          cam.parent.add(faceMesh)
+          console.log('added to camera.parent:', cam.parent.type)
+        } else {
+          this.el.sceneEl.object3D.add(faceMesh)
+          console.log('added to scene.object3D (fallback)')
+        }
 
         const base = new Float32Array(n*3)
         for (let i=0;i<n;i++){
           base[i*3]=vertices[i].x; base[i*3+1]=vertices[i].y; base[i*3+2]=vertices[i].z
         }
         buildMorphTargets(base, n)
+        console.log(`animate-face: init done, ${n} verts`)
       }
 
       if (!faceMesh) return
 
-      // transform을 faceMesh에 직접 적용 (xrextras-faceanchor 없이)
-      if (transform) {
-        const {position, rotation, scale} = transform
-        if (position) faceMesh.position.set(position.x, position.y, position.z)
-        if (rotation) {
-          _quat.set(rotation.x, rotation.y, rotation.z, rotation.w)
-          faceMesh.quaternion.copy(_quat)
-        }
-        faceMesh.scale.setScalar(typeof scale === 'number' ? scale : 1)
+      // transform → faceMesh world position
+      if (transform?.position) {
+        faceMesh.position.set(transform.position.x, transform.position.y, transform.position.z)
+      }
+      if (transform?.rotation) {
+        _quat.set(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w)
+        faceMesh.quaternion.copy(_quat)
+      }
+      if (transform?.scale != null) {
+        faceMesh.scale.setScalar(typeof transform.scale === 'number' ? transform.scale : 1)
       }
 
       const posAttr  = geometry.attributes.position
