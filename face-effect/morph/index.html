@@ -16,12 +16,12 @@
 </head>
 
 <body>
+<!-- [Fix] a-scene에서 ui-manager 제거 -->
 <a-scene 
 landing-page
 xrextras-loading
 xrextras-runtime-error
-xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true"
-ui-manager>
+xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true">
 
   <!-- 3D models, images, videos -->
   <a-assets>
@@ -31,7 +31,8 @@ ui-manager>
   <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 2 0"></a-camera>
 
   <xrextras-faceanchor>
-    <a-entity id="morphTargetModel" animate-face scale="1 1 1" gltf-model="#morphTargets" rotation="0 0 0" position="0 0 0"></a-entity>
+    <!-- [Fix] ui-manager를 모델 entity에 직접 붙임 → object3dset 타이밍 확실히 보장 -->
+    <a-entity id="morphTargetModel" animate-face ui-manager scale="1 1 1" gltf-model="#morphTargets" rotation="0 0 0" position="0 0 0"></a-entity>
   </xrextras-faceanchor>
 
   <a-light type="directional" target="#face" position="0 1.8 3" intensity="0.8"></a-light>
@@ -49,7 +50,7 @@ ui-manager>
     <img id="rightArrow" src="./assets/UI/rightArrow.svg">
     <img id="leftArrow" src="./assets/UI/leftArrow.svg">
     <div class="slider-container">
-      <!-- [Fix] value="0.1" → value="0" 으로 수정: 처음부터 왜곡 방지 -->
+      <!-- [Fix] value="0.1" → value="0": 처음부터 왜곡 방지 -->
       <input type="range" step="0.05" min="0" max="1" value="0" class="slider">
     </div>
   </div>
