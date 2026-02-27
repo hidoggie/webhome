@@ -8,34 +8,26 @@
   <script src="./../../xr_st/8frame-1.5.0.min.js"></script>
   <script src="./../../xr_st/xrextras.js"></script>
   <script src="./../../xr_st/landing-page.js"></script>  
-  
   <script async src="./../../xr_st/xr.js" data-preload-chunks="face"></script>
   <script type="module" src="./app.js" defer></script>
   <link rel="stylesheet" type="text/css" href="./index.css">
-
 </head>
 
 <body>
-<!-- [Fix] a-scene에서 ui-manager 제거 -->
-<a-scene 
-landing-page
-xrextras-loading
-xrextras-runtime-error
-xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true">
+<a-scene
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true">
 
-  <!-- 3D models, images, videos -->
-  <a-assets>
-    <a-asset-item id="morphTargets" src="./assets/models/morphTargets.glb"></a-asset-item>
-  </a-assets>
-  
   <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 2 0"></a-camera>
 
   <xrextras-faceanchor>
-    <!-- [Fix] ui-manager를 모델 entity에 직접 붙임 → object3dset 타이밍 확실히 보장 -->
-    <a-entity id="morphTargetModel" animate-face ui-manager scale="1 1 1" gltf-model="#morphTargets" rotation="0 0 0" position="0 0 0"></a-entity>
+    <!-- gltf-model 제거: animate-face가 직접 geometry 생성 -->
+    <a-entity id="morphTargetModel" animate-face ui-manager></a-entity>
   </xrextras-faceanchor>
 
-  <a-light type="directional" target="#face" position="0 1.8 3" intensity="0.8"></a-light>
+  <a-light type="directional" position="0 1.8 3" intensity="0.8"></a-light>
   <a-light type="ambient" intensity="0.8"></a-light>
 
 </a-scene>
@@ -50,7 +42,6 @@ xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true">
     <img id="rightArrow" src="./assets/UI/rightArrow.svg">
     <img id="leftArrow" src="./assets/UI/leftArrow.svg">
     <div class="slider-container">
-      <!-- [Fix] value="0.1" → value="0": 처음부터 왜곡 방지 -->
       <input type="range" step="0.05" min="0" max="1" value="0" class="slider">
     </div>
   </div>
