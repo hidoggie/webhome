@@ -18,20 +18,17 @@ const uiManagerComponent = {
     }
 
     const applyMorph = (name, value) => {
+      console.log(`applyMorph: ${name} = ${value}, _faceAnimateSetMorph exists: ${!!window._faceAnimateSetMorph}`)
       if (window._faceAnimateSetMorph) {
         window._faceAnimateSetMorph(name, value)
       }
     }
 
-    // animate-face.js가 준비되면 이 이벤트를 발생시킴
     document.addEventListener('faceMorphReady', (e) => {
       targetNames = e.detail.targetNames
       console.log('ui-manager: received targetNames:', targetNames)
 
-      targetNames.forEach(name => {
-        sliderValues[name] = 0
-      })
-
+      targetNames.forEach(name => { sliderValues[name] = 0 })
       currentIndex = 0
       updateUI()
 
@@ -47,12 +44,16 @@ const uiManagerComponent = {
         updateUI()
       })
 
-      slider.addEventListener('input', (e) => {
+      // input + change 둘 다 등록 (모바일 호환)
+      const onSliderChange = (e) => {
         const value = parseFloat(e.target.value)
         const name = targetNames[currentIndex]
         sliderValues[name] = value
+        console.log(`slider event(${e.type}): ${name} = ${value}`)
         applyMorph(name, value)
-      })
+      }
+      slider.addEventListener('input',  onSliderChange)
+      slider.addEventListener('change', onSliderChange)
 
       resetButton.addEventListener('click', () => {
         slider.value = 0
