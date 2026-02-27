@@ -2,10 +2,10 @@ import './index.css'
 import uiHTML from './ui.html?raw'
 import { UIElement, Button, Bar, Label, IconBar, Icon } from './../ui-kit/module.js'
 
-import powerUpImageOn from './../assets/img/powerup.png'
-import powerUpImageOff from './../assets/img/powerup--consumed.png'
+const powerUpImageOn = './../assets/img/powerup.png'
+const powerUpImageOff = './../assets/img/powerup--consumed.png'
 
-import energyIconImage from './../assets/img/energybar--icon.png'
+const energyIconImage = './../assets/img/energybar--icon.png'
 
 class UI {
   init(gameState) {
