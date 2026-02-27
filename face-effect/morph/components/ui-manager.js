@@ -1,126 +1,94 @@
 const uiManagerComponent = {
   init() {
-    // Get a reference to the GLTF model
     const morphTargetModel = document.getElementById('morphTargetModel')
-    let morphTargetMesh = morphTargetModel.getObject3D('mesh')
 
     const handleUI = () => {
-      // Grab Array of Morph Targets //
-      morphTargetMesh = morphTargetModel.getObject3D('mesh')
+      const morphTargetMesh = morphTargetModel.getObject3D('mesh')
+      if (!morphTargetMesh) {
+        console.warn('ui-manager: mesh not ready')
+        return
+      }
 
-      // Define an array to store the target names
+      // Grab morph target names
       const targetNames = []
-
-      // Traverse the mesh object to find the morph targets and target names
       morphTargetMesh.traverse((object) => {
         if (object.morphTargetInfluences && object.userData.targetNames) {
           targetNames.push(...object.userData.targetNames)
         }
       })
+      console.log('Morph targets:', targetNames)
 
-      // Log the target names to the console
-      console.log(targetNames)
+      if (targetNames.length === 0) {
+        console.warn('ui-manager: no morph targets found')
+        return
+      }
 
-      // Arrow Functionality //
-      // Get the arrow elements
       const leftArrow = document.getElementById('leftArrow')
       const rightArrow = document.getElementById('rightArrow')
-
-      // Get the target name element
       const targetName = document.querySelector('#target-name')
-
-      // Get the slider element
       const slider = document.querySelector('.slider')
 
-      // Initialize the index of the current target
       let currentTargetIndex = 0
-
-      // Object to store the slider values for each morph target
       const sliderValues = {}
 
-      // Function to update the target name and slider value
+      // [Fix] gltf-morph 컴포넌트를 모든 타겟에 대해 미리 등록해 둠
+      // setAttribute만으로는 multiple 컴포넌트가 처음 등록 안 될 수 있어서
+      const registerMorphComponent = (name, value) => {
+        const attributeName = `gltf-morph__${name}`
+        // 이미 등록된 컴포넌트면 update, 없으면 새로 등록
+        morphTargetModel.setAttribute(attributeName, `morphTarget: ${name}; value: ${value}`)
+      }
+
+      // 모든 타겟을 0으로 초기 등록
+      targetNames.forEach((name) => {
+        sliderValues[name] = 0
+        registerMorphComponent(name, 0)
+      })
+
       function updateTargetNameAndSliderValue() {
-        // Get the name of the current morph target
         const currentTargetName = targetNames[currentTargetIndex]
-
-        // Get the current slider value for the current morph target from the sliderValues object
         const currentSliderValue = sliderValues[currentTargetName] || 0
-
-        // Update the target name and slider value
         targetName.textContent = currentTargetName
         slider.value = currentSliderValue
       }
 
-      updateTargetNameAndSliderValue()  // Set initial morph target
+      updateTargetNameAndSliderValue()
 
-      // When the user clicks the left arrow, go to the previous target
       leftArrow.addEventListener('click', () => {
-        // Save the current slider value for the current morph target in the sliderValues object
-        const currentTargetName = targetNames[currentTargetIndex]
-        sliderValues[currentTargetName] = slider.value
-
-        // Go to the previous target
-        currentTargetIndex--
-        if (currentTargetIndex < 0) {
-          // If we've reached the beginning of the array, wrap around to the end
-          currentTargetIndex = targetNames.length - 1
-        }
-
+        sliderValues[targetNames[currentTargetIndex]] = parseFloat(slider.value)
+        currentTargetIndex = (currentTargetIndex - 1 + targetNames.length) % targetNames.length
         updateTargetNameAndSliderValue()
       })
 
-      // When the user clicks the right arrow, go to the next target
       rightArrow.addEventListener('click', () => {
-        // Save the current slider value for the current morph target in the sliderValues object
-        const currentTargetName = targetNames[currentTargetIndex]
-        sliderValues[currentTargetName] = slider.value
-
-        // Go to the next target
-        currentTargetIndex++
-        if (currentTargetIndex >= targetNames.length) {
-          // If we've reached the end of the array, wrap around to the beginning
-          currentTargetIndex = 0
-        }
-
+        sliderValues[targetNames[currentTargetIndex]] = parseFloat(slider.value)
+        currentTargetIndex = (currentTargetIndex + 1) % targetNames.length
         updateTargetNameAndSliderValue()
       })
 
-      // Slider Functionality //
       slider.addEventListener('input', (event) => {
         const value = parseFloat(event.target.value)
         const name = targetNames[currentTargetIndex]
-        const attributeName = `gltf-morph__${name}`
-        morphTargetModel.setAttribute(attributeName, {morphTarget: name, value})
+        sliderValues[name] = value
+        registerMorphComponent(name, value)
       })
 
-      // Add an event listener to the reset button
       const resetButton = document.getElementById('reset')
       resetButton.addEventListener('click', () => {
-        // Reset current slider to 0
-
         slider.value = 0
-
-        // Reset the other sliders to 0
         Object.keys(sliderValues).forEach((key) => {
           sliderValues[key] = 0
-        })
-
-        // Reset Morph Target Values to 0
-        morphTargetMesh.traverse((object) => {
-          if (object.morphTargetInfluences) {
-            for (let i = 0; i < object.morphTargetInfluences.length; i++) {
-              object.morphTargetInfluences[i] = 0
-            }
-          }
+          registerMorphComponent(key, 0)
         })
       })
     }
 
-    if (morphTargetMesh) {
+    // [Fix] 모델 로드 타이밍 문제: 이미 로드됐을 수도 있으므로 양쪽 모두 처리
+    const mesh = morphTargetModel.getObject3D('mesh')
+    if (mesh) {
       handleUI()
     } else {
-      // Wait for the model to load
-      morphTargetModel.addEventListener('model-loaded', handleUI)
+      morphTargetModel.addEventListener('model-loaded', handleUI, {once: true})
     }
   },
 }
