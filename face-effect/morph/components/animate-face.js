@@ -14,20 +14,54 @@ const animateFaceComponent = {
       renderer.outputColorSpace = THREE.LinearSRGBColorSpace
     }
 
-    let faceMesh = null
+    let posArr = null   // Float32Array for position
+    let normArr = null  // Float32Array for normal
     let geometry = null
+    let faceMesh = null
     let morphTargets = {}
     let morphInfluences = {}
-    let savedIndices = null
-    let initialized = false
-    const _quat = new THREE.Quaternion()
+    let savedLoadingDetail = null  // xrfaceloading 전체 detail 저장
 
-    this.el.sceneEl.addEventListener('xrfaceloading', (e) => {
-      const {indices} = e.detail
-      if (indices) {
-        savedIndices = indices instanceof Uint32Array ? indices : new Uint32Array(indices)
-        console.log(`xrfaceloading: ${savedIndices.length} indices`)
+    // xrextras faceMesh와 동일하게 xrfaceloading detail 저장
+    this.el.sceneEl.addEventListener('xrfaceloading', ({detail}) => {
+      savedLoadingDetail = detail
+      console.log('xrfaceloading: indices', detail.indices?.length, 'uvs', detail.uvs?.length)
+
+      // xrextras faceMesh 방식 그대로: loading 시점에 geometry 생성
+      const n = detail.pointsPerDetection
+      const geo = new THREE.BufferGeometry()
+
+      posArr  = new Float32Array(3 * n)
+      normArr = new Float32Array(3 * n)
+      geo.setAttribute('position', new THREE.BufferAttribute(posArr, 3))
+      geo.setAttribute('normal',   new THREE.BufferAttribute(normArr, 3))
+
+      // UV 설정 (xrextras와 동일)
+      const uvFlat = new Float32Array(2 * detail.uvs.length)
+      for (let i = 0; i < detail.uvs.length; i++) {
+        uvFlat[2*i]   = detail.uvs[i].u
+        uvFlat[2*i+1] = detail.uvs[i].v
       }
+      geo.setAttribute('uv', new THREE.BufferAttribute(uvFlat, 2))
+
+      // indices: [{a,b,c}] → flat array (xrextras 방식)
+      const idxFlat = new Array(3 * detail.indices.length)
+      for (let i = 0; i < detail.indices.length; i++) {
+        idxFlat[3*i]   = detail.indices[i].a
+        idxFlat[3*i+1] = detail.indices[i].b
+        idxFlat[3*i+2] = detail.indices[i].c
+      }
+      geo.setIndex(idxFlat)
+      console.log('geometry built:', n, 'verts,', idxFlat.length/3, 'triangles')
+
+      geometry = geo
+      faceMesh = new THREE.Mesh(geo, materialGltf)
+      faceMesh.frustumCulled = false
+
+      // xrextras와 동일: setObject3D('mesh') + emit('model-loaded')
+      this.el.setObject3D('mesh', faceMesh)
+      this.el.emit('model-loaded')
+      console.log('faceMesh set via setObject3D + model-loaded emitted')
     })
 
     const buildMorphTargets = (verts, n) => {
@@ -79,11 +113,10 @@ const animateFaceComponent = {
         return d
       }
 
-      morphTargets={
-        big_eyes:makeDelta('big_eyes'), big_nose:makeDelta('big_nose'),
-        big_mouth:makeDelta('big_mouth'), fat_face:makeDelta('fat_face'),
-      }
+      morphTargets={big_eyes:makeDelta('big_eyes'),big_nose:makeDelta('big_nose'),
+                    big_mouth:makeDelta('big_mouth'),fat_face:makeDelta('fat_face')}
       morphInfluences={big_eyes:0,big_nose:0,big_mouth:0,fat_face:0}
+
       window._faceAnimateSetMorph=(name,value)=>{
         if (name in morphInfluences) morphInfluences[name]=value
       }
@@ -108,60 +141,25 @@ const animateFaceComponent = {
     }
     window.XR8?onxrloaded():window.addEventListener('xrloaded',onxrloaded)
 
-    const show=(event)=>{
-      const {vertices, normals, uvsInCameraFrame, transform} = event.detail
+    let morphBuilt = false
+
+    const show = ({detail}) => {
+      if (!posArr || !geometry) return
+
+      const {vertices, normals, uvsInCameraFrame} = detail
       const n = vertices.length
 
-      if (!initialized) {
-        initialized = true
-
-        geometry = new THREE.BufferGeometry()
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3))
-        geometry.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(n*3), 3))
-        geometry.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(n*2), 2))
-        if (savedIndices?.length > 0) {
-          geometry.setIndex(new THREE.BufferAttribute(savedIndices, 1))
-        }
-
-        faceMesh = new THREE.Mesh(geometry, materialGltf)
-
-        // XR8이 Three.js 카메라를 직접 제어함
-        // → XR8 카메라 오브젝트를 찾아서 거기 추가
-        const cam = this.el.sceneEl.camera
-        if (cam && cam.parent) {
-          cam.parent.add(faceMesh)
-          console.log('added to camera.parent:', cam.parent.type)
-        } else {
-          this.el.sceneEl.object3D.add(faceMesh)
-          console.log('added to scene.object3D (fallback)')
-        }
-
+      // 첫 프레임: morph 빌드
+      if (!morphBuilt) {
+        morphBuilt = true
         const base = new Float32Array(n*3)
         for (let i=0;i<n;i++){
           base[i*3]=vertices[i].x; base[i*3+1]=vertices[i].y; base[i*3+2]=vertices[i].z
         }
         buildMorphTargets(base, n)
-        console.log(`animate-face: init done, ${n} verts`)
       }
 
-      if (!faceMesh) return
-
-      // transform → faceMesh world position
-      if (transform?.position) {
-        faceMesh.position.set(transform.position.x, transform.position.y, transform.position.z)
-      }
-      if (transform?.rotation) {
-        _quat.set(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w)
-        faceMesh.quaternion.copy(_quat)
-      }
-      if (transform?.scale != null) {
-        faceMesh.scale.setScalar(typeof transform.scale === 'number' ? transform.scale : 1)
-      }
-
-      const posAttr  = geometry.attributes.position
-      const normAttr = geometry.attributes.normal
-      const uvAttr   = geometry.attributes.uv
-
+      // position 업데이트 (xrextras show()와 동일 방식)
       for (let i=0;i<n;i++){
         let px=vertices[i].x, py=vertices[i].y, pz=vertices[i].z
         for (const [name,inf] of Object.entries(morphInfluences)){
@@ -170,26 +168,32 @@ const animateFaceComponent = {
           py+=morphTargets[name][i*3+1]*inf
           pz+=morphTargets[name][i*3+2]*inf
         }
-        posAttr.array[i*3]=px; posAttr.array[i*3+1]=py; posAttr.array[i*3+2]=pz
+        posArr[3*i]=px; posArr[3*i+1]=py; posArr[3*i+2]=pz
       }
-      posAttr.needsUpdate=true
+      geometry.attributes.position.needsUpdate = true
 
+      // normal 업데이트
       for (let i=0;i<normals.length;i++){
-        normAttr.array[i*3]=normals[i].x
-        normAttr.array[i*3+1]=normals[i].y
-        normAttr.array[i*3+2]=normals[i].z
+        normArr[3*i]=normals[i].x; normArr[3*i+1]=normals[i].y; normArr[3*i+2]=normals[i].z
       }
-      normAttr.needsUpdate=true
+      geometry.attributes.normal.needsUpdate = true
 
+      // UV: 카메라 피드 UV로 교체 (xrextras는 UV를 고정하지만 우리는 카메라 UV 사용)
+      const uvAttr = geometry.attributes.uv
       for (let i=0;i<uvsInCameraFrame.length;i++){
-        uvAttr.array[i*2]=uvsInCameraFrame[i].u
-        uvAttr.array[i*2+1]=uvsInCameraFrame[i].v
+        uvAttr.array[2*i]=uvsInCameraFrame[i].u
+        uvAttr.array[2*i+1]=uvsInCameraFrame[i].v
       }
-      uvAttr.needsUpdate=true
+      uvAttr.needsUpdate = true
+
+      faceMesh.visible = true
     }
 
     this.el.sceneEl.addEventListener('xrfacefound',  show)
     this.el.sceneEl.addEventListener('xrfaceupdated',show)
+    this.el.sceneEl.addEventListener('xrfacelost', ()=>{
+      if (faceMesh) faceMesh.visible = false
+    })
   },
 }
 
