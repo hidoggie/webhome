@@ -7,7 +7,9 @@ const animateFaceComponent = {
     const faceTextureGltf_ = new THREE.Texture()
     const materialGltf = new THREE.MeshBasicMaterial({
       map: faceTextureGltf_,
-      side: THREE.DoubleSide
+      side: THREE.DoubleSide,
+      color: new THREE.Color(1, 1, 1),  // 노란 tint 제거: 흰색 = 텍스처 색상 그대로
+      toneMapped: false,                 // tone mapping 끄기
     })
 
     let faceMesh = null
