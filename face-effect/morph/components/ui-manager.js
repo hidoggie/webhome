@@ -1,35 +1,41 @@
 const uiManagerComponent = {
   init() {
-    // [Fix] ui-manager가 붙은 element 자체가 morphTargetModel
-    // index.html에서 a-scene 대신 모델 entity에 붙여야 함
-    // 하지만 기존 html 구조(a-scene에 붙어있음)와의 호환을 위해
-    // 여기선 morphTargetModel을 id로 찾되, object3dset 이벤트로 확실히 대기
     const morphTargetModel = document.getElementById('morphTargetModel')
 
     const handleUI = () => {
       const morphTargetMesh = morphTargetModel.getObject3D('mesh')
       if (!morphTargetMesh) {
-        console.warn('ui-manager: mesh still not ready after model-loaded')
+        console.warn('ui-manager: mesh not ready')
         return
       }
 
+      // [Fix] Three.js r158: morphTargetDictionary 우선, userData.targetNames fallback
       const targetNames = []
       morphTargetMesh.traverse((object) => {
-        if (object.morphTargetInfluences && object.userData.targetNames) {
+        if (!object.isMesh || !object.morphTargetInfluences) return
+        if (object.morphTargetDictionary) {
+          // morphTargetDictionary는 {name: index} 형태 → index 순으로 정렬
+          const entries = Object.entries(object.morphTargetDictionary)
+            .sort((a, b) => a[1] - b[1])
+            .map(e => e[0])
+          targetNames.push(...entries)
+        } else if (object.userData.targetNames) {
           targetNames.push(...object.userData.targetNames)
         }
       })
+
       console.log('Morph targets:', targetNames)
 
       if (targetNames.length === 0) {
-        console.warn('ui-manager: no morph targets found - GLB에 morphTarget userData가 없을 수 있음')
+        console.warn('ui-manager: no morph targets found')
         return
       }
 
-      const leftArrow = document.getElementById('leftArrow')
-      const rightArrow = document.getElementById('rightArrow')
-      const targetName = document.querySelector('#target-name')
-      const slider = document.querySelector('.slider')
+      const leftArrow   = document.getElementById('leftArrow')
+      const rightArrow  = document.getElementById('rightArrow')
+      const targetName  = document.querySelector('#target-name')
+      const slider      = document.querySelector('.slider')
+      const resetButton = document.getElementById('reset')
 
       let currentTargetIndex = 0
       const sliderValues = {}
@@ -38,8 +44,8 @@ const uiManagerComponent = {
         morphTargetModel.setAttribute(`gltf-morph__${name}`, `morphTarget: ${name}; value: ${value}`)
       }
 
-      // 모든 타겟을 0으로 초기 등록
-      targetNames.forEach((name) => {
+      // 모든 타겟 0으로 초기 등록
+      targetNames.forEach(name => {
         sliderValues[name] = 0
         applyMorph(name, 0)
       })
@@ -49,7 +55,6 @@ const uiManagerComponent = {
         targetName.textContent = name
         slider.value = sliderValues[name] || 0
       }
-
       updateUI()
 
       leftArrow.addEventListener('click', () => {
@@ -64,16 +69,16 @@ const uiManagerComponent = {
         updateUI()
       })
 
-      slider.addEventListener('input', (event) => {
-        const value = parseFloat(event.target.value)
+      slider.addEventListener('input', (e) => {
+        const value = parseFloat(e.target.value)
         const name = targetNames[currentTargetIndex]
         sliderValues[name] = value
         applyMorph(name, value)
       })
 
-      document.getElementById('reset').addEventListener('click', () => {
+      resetButton.addEventListener('click', () => {
         slider.value = 0
-        Object.keys(sliderValues).forEach((key) => {
+        Object.keys(sliderValues).forEach(key => {
           sliderValues[key] = 0
           applyMorph(key, 0)
         })
@@ -81,11 +86,9 @@ const uiManagerComponent = {
       })
     }
 
-    // [Fix] object3dset 이벤트: gltf-model이 mesh를 set할 때 발생 → model-loaded보다 확실
+    // object3dset 이벤트: gltf-model이 mesh를 set할 때 발생
     morphTargetModel.addEventListener('object3dset', (e) => {
-      if (e.detail.type === 'mesh') {
-        handleUI()
-      }
+      if (e.detail.type === 'mesh') handleUI()
     })
   },
 }
