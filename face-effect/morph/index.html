@@ -247,12 +247,17 @@
     const scene = document.getElementById('scene')
     scene.addEventListener('realityready', () => {
       xr8Ready = true
-      XR8.MediaRecorder.configure({ maxDurationMs: MAX_VIDEO_MS, enableEndCard: false })
-      try {
-        XR8.addCameraPipelineModule(XR8.MediaRecorder.pipelineModule())
-      } catch(e) {}
       console.log('capture: ready')
     }, { once: true })
+
+    // 브라우저 내장 MediaRecorder - canvas stream 직접 녹화
+    let nativeRecorder = null
+    let recordedChunks = []
+
+    function getBestMimeType() {
+      const types = ['video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm', 'video/mp4']
+      return types.find(t => MediaRecorder.isTypeSupported(t)) || ''
+    }
 
     // 진행 링 업데이트
     const CIRCUMFERENCE = 2 * Math.PI * 42  // ≈ 263.9
@@ -294,43 +299,80 @@
       })
     }
 
-    // 녹화 시작
+    // 녹화 시작 - 브라우저 내장 MediaRecorder로 canvas stream 직접 녹화
     function startRecording() {
       if (!xr8Ready || isRecording) return
+      const canvas = document.querySelector('canvas')
+      if (!canvas) { showToast('녹화 불가'); return }
+
+      recordedChunks = []
+      const mimeType = getBestMimeType()
+      let stream
+
+      try {
+        stream = canvas.captureStream(30)
+      } catch(e) {
+        showToast('녹화 불가: ' + e.message)
+        return
+      }
+
+      try {
+        nativeRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {})
+      } catch(e) {
+        showToast('녹화 불가: ' + e.message)
+        return
+      }
+
+      nativeRecorder.ondataavailable = e => {
+        if (e.data && e.data.size > 0) recordedChunks.push(e.data)
+      }
+
+      nativeRecorder.onstop = () => {
+        // 중지 즉시 호출 → 즉시 미리보기
+        const ext = mimeType.includes('mp4') ? 'mp4' : 'webm'
+        currentBlob = new Blob(recordedChunks, { type: mimeType || 'video/webm' })
+        currentType = 'video'
+        recordedChunks = []
+        nativeRecorder = null
+        showPreview()
+      }
+
+      nativeRecorder.onerror = e => {
+        console.error('record error', e)
+        stopRecordingUI()
+        showToast('녹화 실패')
+      }
+
+      nativeRecorder.start(100) // 100ms 단위로 chunk 수집
       isRecording = true
       recordStart = Date.now()
       btn.classList.add('recording')
       resetRing()
 
-      XR8.MediaRecorder.recordVideo({
-        onVideoReady: ({ videoBlob }) => {
-          currentBlob = videoBlob
-          currentType = 'video'
-          stopRecordingUI()
-          showPreview()
-        },
-        onStart: () => {
-          // 링 애니메이션
-          function tick() {
-            if (!isRecording) return
-            updateRing(Date.now() - recordStart)
-            animFrame = requestAnimationFrame(tick)
-          }
-          tick()
-        },
-        onStop: () => stopRecordingUI(),
-        onError: (e) => {
-          console.error('record error', e)
-          stopRecordingUI()
-          showToast('녹화 실패')
-        },
-      })
+      // 링 애니메이션
+      function tick() {
+        if (!isRecording) return
+        updateRing(Date.now() - recordStart)
+        // 최대 시간 도달 시 자동 중지
+        if (Date.now() - recordStart >= MAX_VIDEO_MS) {
+          stopRecording()
+          return
+        }
+        animFrame = requestAnimationFrame(tick)
+      }
+      tick()
     }
 
-    // 녹화 중지
+    // 녹화 중지 - 즉시 UI 리셋, onstop에서 미리보기 표시
     function stopRecording() {
       if (!isRecording) return
-      XR8.MediaRecorder.stopRecording()
+      isRecording = false
+      btn.classList.remove('recording')
+      cancelAnimationFrame(animFrame)
+      resetRing()
+      if (nativeRecorder && nativeRecorder.state !== 'inactive') {
+        nativeRecorder.stop()
+      }
     }
 
     function stopRecordingUI() {
