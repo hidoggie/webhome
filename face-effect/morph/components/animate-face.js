@@ -20,6 +20,7 @@ const animateFaceComponent = {
     let morphInfluences = {}
     let savedIndices = null
     let initialized = false
+    const _quat = new THREE.Quaternion()
 
     this.el.sceneEl.addEventListener('xrfaceloading', (e) => {
       const {indices} = e.detail
@@ -107,15 +108,13 @@ const animateFaceComponent = {
     }
     window.XR8?onxrloaded():window.addEventListener('xrloaded',onxrloaded)
 
-    const _quat = new THREE.Quaternion()
-
     const show=(event)=>{
       const {vertices, normals, uvsInCameraFrame, transform} = event.detail
       const n = vertices.length
 
       if (!initialized) {
         initialized = true
-        console.log(`animate-face: first frame, ${n} verts`)
+        console.log(`animate-face: first frame ${n} verts, transform:`, transform?.position)
 
         geometry = new THREE.BufferGeometry()
         geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3))
@@ -126,11 +125,9 @@ const animateFaceComponent = {
         }
 
         faceMesh = new THREE.Mesh(geometry, materialGltf)
-
-        // [핵심] this.el.object3D에 직접 추가 (setObject3D 아님)
-        // xrextras-faceanchor가 this.el.object3D의 position/rotation을 자동 업데이트함
-        this.el.object3D.add(faceMesh)
-        console.log('animate-face: faceMesh added to el.object3D')
+        // scene의 Three.js object3D에 직접 추가
+        this.el.sceneEl.object3D.add(faceMesh)
+        console.log('animate-face: faceMesh added to scene.object3D')
 
         const base = new Float32Array(n*3)
         for (let i=0;i<n;i++){
@@ -141,18 +138,15 @@ const animateFaceComponent = {
 
       if (!faceMesh) return
 
-      // transform이 있으면 el.object3D 위치/회전을 직접 적용
-      // (xrextras-faceanchor가 안 해주는 경우 대비)
+      // transform을 faceMesh에 직접 적용 (xrextras-faceanchor 없이)
       if (transform) {
         const {position, rotation, scale} = transform
-        if (position) this.el.object3D.position.set(position.x, position.y, position.z)
+        if (position) faceMesh.position.set(position.x, position.y, position.z)
         if (rotation) {
           _quat.set(rotation.x, rotation.y, rotation.z, rotation.w)
-          this.el.object3D.quaternion.copy(_quat)
+          faceMesh.quaternion.copy(_quat)
         }
-        // scale은 scalar 값
-        const s = typeof scale === 'number' ? scale : 1
-        this.el.object3D.scale.setScalar(s)
+        faceMesh.scale.setScalar(typeof scale === 'number' ? scale : 1)
       }
 
       const posAttr  = geometry.attributes.position
