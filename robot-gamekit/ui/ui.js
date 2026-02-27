@@ -1,4 +1,4 @@
-const uiHTML = await fetch('./ui.html').then(r => r.text());
+const uiHTML = await fetch('./ui/ui.html').then(r => r.text());
 import { UIElement, Button, Bar, Label, IconBar, Icon } from '../ui-kit/module.js'
 
 const powerUpImageOn = './../assets/img/powerup.png'
@@ -52,5 +52,4 @@ class UI {
 export {
   UI,
 }
-
 
