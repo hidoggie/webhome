@@ -11,6 +11,7 @@
   <script type="module" src="./app.js" defer></script>
   <link rel="stylesheet" type="text/css" href="./index.css">
   <style>
+    /* 카메라 전환 버튼 */
     #camera-switch {
       position: fixed; top: 20px; right: 20px; z-index: 9999;
       background: rgba(0,0,0,0.45); border: none; border-radius: 50%;
@@ -19,6 +20,129 @@
       backdrop-filter: blur(4px); touch-action: manipulation;
     }
     #camera-switch svg { width: 28px; height: 28px; fill: white; pointer-events: none; }
+
+    /* 캡쳐 버튼 */
+    #capture-btn {
+      position: fixed;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 4px solid white;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      touch-action: manipulation;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 0.1s, background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    #capture-btn-inner {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: white;
+      transition: width 0.15s, height 0.15s, border-radius 0.15s, background 0.15s;
+    }
+    /* 녹화 중 상태 */
+    #capture-btn.recording #capture-btn-inner {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      background: #ff3b30;
+    }
+    #capture-btn.recording {
+      border-color: #ff3b30;
+    }
+
+    /* 녹화 진행 링 */
+    #capture-progress {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9998;
+      width: 96px; height: 96px;
+      pointer-events: none;
+    }
+    #capture-progress circle {
+      fill: none;
+      stroke: #ff3b30;
+      stroke-width: 3;
+      stroke-linecap: round;
+      stroke-dasharray: 263;
+      stroke-dashoffset: 263;
+      transform-origin: 50% 50%;
+      transform: rotate(-90deg);
+      transition: stroke-dashoffset 0.1s linear;
+    }
+
+    /* 플래시 효과 */
+    #flash {
+      position: fixed; inset: 0;
+      background: white;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 99999;
+      transition: opacity 0.05s;
+    }
+    #flash.flash-on { opacity: 1; }
+
+    /* 저장 토스트 */
+    #save-toast {
+      position: fixed;
+      bottom: 130px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: rgba(0,0,0,0.7);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      z-index: 99999;
+      opacity: 0;
+      transition: opacity 0.3s, transform 0.3s;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    #save-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* 미리보기 오버레이 */
+    #preview-overlay {
+      position: fixed; inset: 0;
+      background: black;
+      z-index: 99990;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #preview-overlay.show { display: flex; }
+    #preview-img, #preview-video {
+      max-width: 100%; max-height: 75vh;
+      border-radius: 12px;
+      display: none;
+    }
+    #preview-img.show, #preview-video.show { display: block; }
+    .preview-actions {
+      margin-top: 20px;
+      display: flex; gap: 16px;
+    }
+    .preview-btn {
+      padding: 12px 28px;
+      border-radius: 24px;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    #preview-save { background: white; color: black; }
+    #preview-close { background: rgba(255,255,255,0.2); color: white; }
   </style>
 </head>
 <body>
@@ -36,10 +160,38 @@
 
 </a-scene>
 
+<!-- 카메라 전환 -->
 <button id="camera-switch" title="카메라 전환">
   <svg viewBox="0 0 24 24"><path d="M20 5h-3.17L15 3H9L7.17 5H4C2.9 5 2 5.9 2 7v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/><path d="M15 8l2-2-2-2v1.5h-3V7h3V8zm-6 8l-2 2 2 2v-1.5h3V17H9V16z"/></svg>
 </button>
 
+<!-- 녹화 진행 링 -->
+<svg id="capture-progress" viewBox="0 0 96 96">
+  <circle cx="48" cy="48" r="42"/>
+</svg>
+
+<!-- 캡쳐 버튼 -->
+<button id="capture-btn" title="짧게: 사진 / 길게: 동영상">
+  <div id="capture-btn-inner"></div>
+</button>
+
+<!-- 플래시 -->
+<div id="flash"></div>
+
+<!-- 저장 토스트 -->
+<div id="save-toast"></div>
+
+<!-- 미리보기 오버레이 -->
+<div id="preview-overlay">
+  <img id="preview-img" alt="캡쳐 사진">
+  <video id="preview-video" playsinline loop muted controls></video>
+  <div class="preview-actions">
+    <button class="preview-btn" id="preview-save">저장</button>
+    <button class="preview-btn" id="preview-close">닫기</button>
+  </div>
+</div>
+
+<!-- UI 슬라이더 -->
 <div class="modal-content">
   <div class="modal-header"><span id="reset" class="modal-reset">reset</span></div>
   <div class="modal-body">
@@ -53,6 +205,7 @@
 </div>
 
 <script>
+  // 카메라 전환
   (function() {
     const params = new URLSearchParams(window.location.search)
     const currentCamera = params.get('camera') || 'front'
@@ -63,6 +216,201 @@
       params.set('camera', currentCamera === 'front' ? 'back' : 'front')
       window.location.search = params.toString()
     })
+  })()
+</script>
+
+<script>
+  // 캡쳐 / 녹화 버튼
+  (function() {
+    const btn         = document.getElementById('capture-btn')
+    const progressEl  = document.getElementById('capture-progress').querySelector('circle')
+    const flash       = document.getElementById('flash')
+    const toast       = document.getElementById('save-toast')
+    const overlay     = document.getElementById('preview-overlay')
+    const previewImg  = document.getElementById('preview-img')
+    const previewVid  = document.getElementById('preview-video')
+    const saveBtn     = document.getElementById('preview-save')
+    const closeBtn    = document.getElementById('preview-close')
+
+    const LONG_PRESS_MS = 350   // 이 시간 이상 누르면 녹화
+    const MAX_VIDEO_MS  = 15000 // 최대 15초
+
+    let pressTimer    = null
+    let isRecording   = false
+    let recordStart   = 0
+    let animFrame     = null
+    let currentBlob   = null
+    let currentType   = null  // 'photo' | 'video'
+    let xr8Ready      = false
+
+    // XR8 준비 대기
+    window.addEventListener('xrloaded', () => {
+      xr8Ready = true
+      // MediaRecorder 설정
+      XR8.MediaRecorder.configure({
+        maxDurationMs: MAX_VIDEO_MS,
+        enableEndCard: false,
+      })
+    }, { once: true })
+
+    // 진행 링 업데이트
+    const CIRCUMFERENCE = 2 * Math.PI * 42  // ≈ 263.9
+    function updateRing(elapsed) {
+      const progress = Math.min(elapsed / MAX_VIDEO_MS, 1)
+      const offset = CIRCUMFERENCE * (1 - progress)
+      progressEl.style.strokeDashoffset = offset
+    }
+
+    function resetRing() {
+      progressEl.style.transition = 'none'
+      progressEl.style.strokeDashoffset = CIRCUMFERENCE
+    }
+
+    // 토스트 표시
+    function showToast(msg) {
+      toast.textContent = msg
+      toast.classList.add('show')
+      setTimeout(() => toast.classList.remove('show'), 2000)
+    }
+
+    // 사진 촬영
+    function takePhoto() {
+      if (!xr8Ready) return
+      // 플래시
+      flash.classList.add('flash-on')
+      setTimeout(() => flash.classList.remove('flash-on'), 150)
+
+      XR8.CanvasScreenshot.takeScreenshot().then(base64 => {
+        const byteStr = atob(base64)
+        const buf = new ArrayBuffer(byteStr.length)
+        const arr = new Uint8Array(buf)
+        for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i)
+        currentBlob = new Blob([buf], { type: 'image/jpeg' })
+        currentType = 'photo'
+        showPreview()
+      }).catch(e => {
+        console.error('screenshot failed', e)
+        showToast('사진 촬영 실패')
+      })
+    }
+
+    // 녹화 시작
+    function startRecording() {
+      if (!xr8Ready || isRecording) return
+      isRecording = true
+      recordStart = Date.now()
+      btn.classList.add('recording')
+      resetRing()
+
+      XR8.MediaRecorder.recordVideo({
+        onVideoReady: ({ videoBlob }) => {
+          currentBlob = videoBlob
+          currentType = 'video'
+          stopRecordingUI()
+          showPreview()
+        },
+        onStart: () => {
+          // 링 애니메이션
+          function tick() {
+            if (!isRecording) return
+            updateRing(Date.now() - recordStart)
+            animFrame = requestAnimationFrame(tick)
+          }
+          tick()
+        },
+        onStop: () => stopRecordingUI(),
+        onError: (e) => {
+          console.error('record error', e)
+          stopRecordingUI()
+          showToast('녹화 실패')
+        },
+      })
+    }
+
+    // 녹화 중지
+    function stopRecording() {
+      if (!isRecording) return
+      XR8.MediaRecorder.stopRecording()
+    }
+
+    function stopRecordingUI() {
+      isRecording = false
+      btn.classList.remove('recording')
+      cancelAnimationFrame(animFrame)
+      resetRing()
+    }
+
+    // 미리보기
+    function showPreview() {
+      const url = URL.createObjectURL(currentBlob)
+      if (currentType === 'photo') {
+        previewImg.src = url
+        previewImg.classList.add('show')
+        previewVid.classList.remove('show')
+      } else {
+        previewVid.src = url
+        previewVid.classList.add('show')
+        previewImg.classList.remove('show')
+        previewVid.play()
+      }
+      overlay.classList.add('show')
+    }
+
+    function closePreview() {
+      overlay.classList.remove('show')
+      previewImg.classList.remove('show')
+      previewVid.classList.remove('show')
+      previewVid.pause()
+      previewVid.src = ''
+      previewImg.src = ''
+      currentBlob = null
+    }
+
+    // 저장
+    saveBtn.addEventListener('click', () => {
+      if (!currentBlob) return
+      const ext  = currentType === 'photo' ? 'jpg' : 'mp4'
+      const url  = URL.createObjectURL(currentBlob)
+      const a    = document.createElement('a')
+      const ts   = new Date().toISOString().replace(/[:.]/g,'-').slice(0,19)
+      a.href     = url
+      a.download = `face-effect-${ts}.${ext}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      showToast(currentType === 'photo' ? '사진 저장됨' : '동영상 저장됨')
+      closePreview()
+    })
+
+    closeBtn.addEventListener('click', closePreview)
+
+    // 버튼 이벤트 (touch + mouse 모두 지원)
+    function onPressStart(e) {
+      e.preventDefault()
+      pressTimer = setTimeout(() => {
+        pressTimer = null
+        startRecording()
+      }, LONG_PRESS_MS)
+    }
+
+    function onPressEnd(e) {
+      e.preventDefault()
+      if (pressTimer !== null) {
+        // 짧게 눌림 → 사진
+        clearTimeout(pressTimer)
+        pressTimer = null
+        takePhoto()
+      } else if (isRecording) {
+        // 길게 눌렸다가 뗌 → 녹화 중지
+        stopRecording()
+      }
+    }
+
+    btn.addEventListener('touchstart', onPressStart, { passive: false })
+    btn.addEventListener('touchend',   onPressEnd,   { passive: false })
+    btn.addEventListener('mousedown',  onPressStart)
+    btn.addEventListener('mouseup',    onPressEnd)
   })()
 </script>
 </body>
