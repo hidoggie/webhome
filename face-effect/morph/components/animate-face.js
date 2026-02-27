@@ -15,6 +15,10 @@ const animateFaceComponent = {
         if (!faceMesh && node.isMesh && node.geometry) {
           faceMesh = node
           console.log('animate-face: faceMesh found -', faceMesh.name)
+          // DEBUG: morph target 구조 확인용 로그
+          console.log('morphTargetInfluences:', faceMesh.morphTargetInfluences)
+          console.log('morphTargetDictionary:', faceMesh.morphTargetDictionary)
+          console.log('userData:', JSON.stringify(faceMesh.userData))
         }
         if (node.material) {
           node.material = materialGltf
