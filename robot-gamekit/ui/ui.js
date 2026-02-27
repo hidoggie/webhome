@@ -1,5 +1,5 @@
 const uiHTML = await fetch('./ui.html').then(r => r.text());
-import { UIElement, Button, Bar, Label, IconBar, Icon } from './../ui-kit/module.js'
+import { UIElement, Button, Bar, Label, IconBar, Icon } from './ui-kit/module.js'
 
 const powerUpImageOn = './../assets/img/powerup.png'
 const powerUpImageOff = './../assets/img/powerup--consumed.png'
