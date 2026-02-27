@@ -1,4 +1,4 @@
-import uiHTML from './ui.html?raw'
+const uiHTML = await fetch('./ui.html').then(r => r.text());
 import { UIElement, Button, Bar, Label, IconBar, Icon } from './../ui-kit/module.js'
 
 const powerUpImageOn = './../assets/img/powerup.png'
@@ -8,7 +8,7 @@ const energyIconImage = './../assets/img/energybar--icon.png'
 
 class UI {
   init(gameState) {
-    document.getElementById('uiHolder').innerHTML = uiHTML
+    document.getElementById('uiHolder').innerHTML = uiHTML;
 
     this.btnPlay = new Button('#btnPlay').onClick(() => this.onBtnPlayClick())
     this.btnPause = new Button('#btnPause').onClick(() => this.onBtnPauseClick())
