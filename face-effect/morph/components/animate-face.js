@@ -115,7 +115,13 @@ const animateFaceComponent = {
           if (dx !== 0 || dy !== 0 || dz !== 0) affected++
           d[i*3] = dx; d[i*3+1] = dy; d[i*3+2] = dz
         }
-        console.log(`  ${type}: ${affected}/${n} vertices affected`)
+        // max delta 확인
+        let maxD = 0
+        for (let i = 0; i < n; i++) {
+          const m = Math.sqrt(d[i*3]**2 + d[i*3+1]**2 + d[i*3+2]**2)
+          if (m > maxD) maxD = m
+        }
+        console.log(`  ${type}: ${affected}/${n} vertices affected, maxDelta=${maxD.toFixed(4)}`)
         return d
       }
 
@@ -128,12 +134,18 @@ const animateFaceComponent = {
       morphInfluences = {big_eyes: 0, big_nose: 0, big_mouth: 0, fat_face: 0}
 
       window._faceAnimateSetMorph = (name, value) => {
-        if (name in morphInfluences) morphInfluences[name] = value
+        if (name in morphInfluences) {
+          morphInfluences[name] = value
+          console.log(`setMorph: ${name} = ${value}, delta max sample: ${morphTargets[name] ? morphTargets[name][0].toFixed(4) : 'N/A'}`)
+        }
       }
-      document.dispatchEvent(new CustomEvent('faceMorphReady', {
-        detail: {targetNames: Object.keys(morphTargets)}
-      }))
-      console.log('animate-face: morphs ready', Object.keys(morphTargets))
+      // [Fix] 다음 tick에 이벤트 발송 → ui-manager 리스너가 먼저 등록되도록
+      setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('faceMorphReady', {
+          detail: {targetNames: Object.keys(morphTargets)}
+        }))
+        console.log('animate-face: morphs ready', Object.keys(morphTargets))
+      }, 100)
     }
 
     const onxrloaded = () => {
@@ -189,6 +201,7 @@ const animateFaceComponent = {
       const n = vertices.length
 
       // position = XR8 vertex + morph delta * influence
+      let morphApplied = false
       for (let i = 0; i < n; i++) {
         let px = vertices[i].x
         let py = vertices[i].y
@@ -196,6 +209,7 @@ const animateFaceComponent = {
 
         for (const [name, inf] of Object.entries(morphInfluences)) {
           if (inf === 0) continue
+          morphApplied = true
           px += morphTargets[name][i*3]   * inf
           py += morphTargets[name][i*3+1] * inf
           pz += morphTargets[name][i*3+2] * inf
@@ -204,6 +218,13 @@ const animateFaceComponent = {
         posAttr.array[i*3]   = px
         posAttr.array[i*3+1] = py
         posAttr.array[i*3+2] = pz
+      }
+      // 1초에 한번만 로그
+      if (morphApplied && !show._logged) {
+        show._logged = true
+        setTimeout(() => { show._logged = false }, 1000)
+        const activeInfluences = Object.entries(morphInfluences).filter(([,v])=>v>0)
+        console.log('morph applying:', activeInfluences, '| vertex[0]:', posAttr.array[0].toFixed(4), posAttr.array[1].toFixed(4))
       }
       posAttr.needsUpdate = true
 
