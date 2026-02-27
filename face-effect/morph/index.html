@@ -31,12 +31,7 @@
       -webkit-backdrop-filter: blur(4px);
       touch-action: manipulation;
     }
-    #camera-switch svg {
-      width: 28px;
-      height: 28px;
-      fill: white;
-      pointer-events: none;
-    }
+    #camera-switch svg { width: 28px; height: 28px; fill: white; pointer-events: none; }
   </style>
 </head>
 
@@ -49,24 +44,27 @@
   id="scene"
   xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true">
 
+  <a-assets>
+    <a-asset-item id="morphTargets" src="./assets/models/morphTargets.glb"></a-asset-item>
+  </a-assets>
+
   <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 2 0"></a-camera>
 
   <xrextras-faceanchor>
-    <a-entity id="morphTargetModel" animate-face ui-manager></a-entity>
+    <!-- GLB는 렌더링 컨테이너 역할, animate-face가 geometry를 XR8 데이터로 교체 -->
+    <a-entity id="morphTargetModel" animate-face ui-manager
+      gltf-model="#morphTargets"></a-entity>
   </xrextras-faceanchor>
 
 </a-scene>
 
-<!-- 카메라 전환 버튼 (front ↔ back) -->
 <button id="camera-switch" title="카메라 전환">
-  <!-- 카메라 전환 아이콘 -->
   <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
     <path d="M20 5h-3.17L15 3H9L7.17 5H4C2.9 5 2 5.9 2 7v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
     <path d="M15 8l2-2-2-2v1.5h-3V7h3V8zm-6 8l-2 2 2 2v-1.5h3V17H9V16z"/>
   </svg>
 </button>
 
-<!-- UI -->
 <div class="modal-content">
   <div class="modal-header">
     <span id="reset" class="modal-reset">reset</span>
@@ -82,22 +80,14 @@
 </div>
 
 <script>
-  // [Fix] XR8은 런타임 중 카메라 변경 불가 → URL 파라미터로 재로드
   (function() {
     const params = new URLSearchParams(window.location.search)
     const currentCamera = params.get('camera') || 'front'
-
-    // scene xrface 속성을 현재 파라미터에 맞게 즉시 적용
     const scene = document.getElementById('scene')
     const mirrored = currentCamera === 'front' ? 'true' : 'false'
-    scene.setAttribute('xrface',
-      `allowedDevices: any; cameraDirection: ${currentCamera}; mirroredDisplay: ${mirrored}`)
-
-    // 버튼 클릭 시 반대 카메라로 URL 재로드
-    const btn = document.getElementById('camera-switch')
-    btn.addEventListener('click', () => {
-      const nextCamera = currentCamera === 'front' ? 'back' : 'front'
-      params.set('camera', nextCamera)
+    scene.setAttribute('xrface', `allowedDevices: any; cameraDirection: ${currentCamera}; mirroredDisplay: ${mirrored}`)
+    document.getElementById('camera-switch').addEventListener('click', () => {
+      params.set('camera', currentCamera === 'front' ? 'back' : 'front')
       window.location.search = params.toString()
     })
   })()
