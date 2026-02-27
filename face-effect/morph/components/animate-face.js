@@ -21,9 +21,11 @@ const animateFaceComponent = {
     let geometry = null
     let faceInitialized = false
     let savedIndices = null
-    let loadingUVs = null  // xrfaceloading에서 받은 고정 UV
 
-    // xrfaceloading: indices + 고정 UV 모두 저장
+    // UV delta: position delta를 UV 공간으로 변환하기 위한 스케일 저장
+    let uvDeltaTargets = {}  // { name: Float32Array of uv deltas }
+    let baseUVs = null       // xrfaceloading에서 받은 기준 UV
+
     this.el.sceneEl.addEventListener('xrfaceloading', (e) => {
       const {indices, uvs} = e.detail
       if (indices) {
@@ -31,8 +33,16 @@ const animateFaceComponent = {
         console.log('xrfaceloading: indices', savedIndices.length, '→', savedIndices.length/3, 'triangles')
       }
       if (uvs) {
-        loadingUVs = uvs  // [{u,v}, ...] 형태 또는 flat array
-        console.log('xrfaceloading: uvs length', Array.isArray(uvs) ? uvs.length : 'typed:'+uvs.length)
+        // uvs는 [{u,v}] 또는 flat Float32Array
+        if (Array.isArray(uvs)) {
+          baseUVs = uvs
+        } else {
+          baseUVs = []
+          for (let i = 0; i < uvs.length; i += 2) {
+            baseUVs.push({u: uvs[i], v: uvs[i+1]})
+          }
+        }
+        console.log('xrfaceloading: baseUVs', baseUVs.length)
       }
     })
 
@@ -42,104 +52,102 @@ const animateFaceComponent = {
         x.push(verts[i*3])
         y.push(verts[i*3+1])
       }
-
       const cx = x.reduce((a,b)=>a+b,0)/n
       const cy = y.reduce((a,b)=>a+b,0)/n
-      const yArr = [...y], xArr = [...x]
-      const fh = Math.max(...yArr) - Math.min(...yArr)
-      const fw = Math.max(...xArr) - Math.min(...xArr)
+      const fh = Math.max(...y) - Math.min(...y)
+      const fw = Math.max(...x) - Math.min(...x)
 
       console.log(`buildMorphTargets: n=${n}, fw=${fw.toFixed(3)}, fh=${fh.toFixed(3)}, cy=${cy.toFixed(3)}`)
 
-      // 얼굴 영역 (실제 vertex 분포 기반)
-      const eye_top   = cy + fh * 0.40
-      const eye_bot   = cy + fh * 0.10
-      const eye_mid   = (eye_top + eye_bot) / 2
-      const nose_top  = cy + fh * 0.08
-      const nose_bot  = cy - fh * 0.15
-      const nose_mid  = (nose_top + nose_bot) / 2
-      const mouth_top = cy - fh * 0.05
-      const mouth_bot = cy - fh * 0.40
-      const mouth_mid = (mouth_top + mouth_bot) / 2
-      const cheek_top = cy + fh * 0.25
-      const cheek_bot = cy - fh * 0.10
+      const eye_top   = cy + fh*0.40,  eye_bot   = cy + fh*0.10,  eye_mid   = (cy+fh*0.40+cy+fh*0.10)/2
+      const nose_top  = cy + fh*0.08,  nose_bot  = cy - fh*0.15,  nose_mid  = (cy+fh*0.08+cy-fh*0.15)/2
+      const mouth_top = cy - fh*0.05,  mouth_bot = cy - fh*0.40,  mouth_mid = (cy-fh*0.05+cy-fh*0.40)/2
+      const cheek_top = cy + fh*0.25,  cheek_bot = cy - fh*0.10
 
       const makeDelta = (type) => {
-        const d = new Float32Array(n * 3)
-        let affected = 0
+        const d = new Float32Array(n*3)
         for (let i = 0; i < n; i++) {
           const xi = x[i], yi = y[i]
-          let dx = 0, dy = 0, dz = 0
-
+          let dx=0, dy=0, dz=0
           if (type === 'big_eyes') {
-            // 눈 영역: 좌우 각각
-            for (const [ecx, test] of [
-              [cx - fw * 0.22, xi < cx],
-              [cx + fw * 0.22, xi >= cx]
-            ]) {
-              if (!test) continue
-              if (yi < eye_bot || yi > eye_top) continue
-              const dist = Math.sqrt((xi - ecx) ** 2 + (yi - eye_mid) ** 2)
-              const radius = fw * 0.25
-              const w = Math.max(0, 1.0 - dist / radius)
-              dx += w * (xi - ecx) * 1.2
-              dy += w * (yi - eye_mid) * 1.2
+            for (const [ecx, test] of [[cx-fw*0.22, xi<cx],[cx+fw*0.22, xi>=cx]]) {
+              if (!test || yi<eye_bot || yi>eye_top) continue
+              const dist = Math.sqrt((xi-ecx)**2+(yi-eye_mid)**2)
+              const w = Math.max(0, 1-(dist/(fw*0.25)))
+              dx += w*(xi-ecx)*1.2; dy += w*(yi-eye_mid)*1.2
             }
           } else if (type === 'big_nose') {
-            if (yi > nose_bot && yi < nose_top && Math.abs(xi - cx) < fw * 0.22) {
-              const dist = Math.sqrt((xi - cx) ** 2 + (yi - nose_mid) ** 2)
-              const w = Math.max(0, 1.0 - dist / (fw * 0.22))
-              dx = w * (xi - cx) * 1.5
-              dy = w * (yi - nose_mid) * 0.5
-              dz = -w * fh * 0.10
+            if (yi>nose_bot && yi<nose_top && Math.abs(xi-cx)<fw*0.22) {
+              const dist = Math.sqrt((xi-cx)**2+(yi-nose_mid)**2)
+              const w = Math.max(0, 1-(dist/(fw*0.22)))
+              dx=w*(xi-cx)*1.5; dy=w*(yi-nose_mid)*0.5; dz=-w*fh*0.10
             }
           } else if (type === 'big_mouth') {
-            if (yi > mouth_bot && yi < mouth_top) {
-              const dist = Math.sqrt((xi - cx) ** 2 + (yi - mouth_mid) ** 2)
-              const w = Math.max(0, 1.0 - dist / (fw * 0.45))
-              dx = w * (xi - cx) * 1.6
-              dy = w * (yi - mouth_mid) * 1.0
+            if (yi>mouth_bot && yi<mouth_top) {
+              const dist = Math.sqrt((xi-cx)**2+(yi-mouth_mid)**2)
+              const w = Math.max(0, 1-(dist/(fw*0.45)))
+              dx=w*(xi-cx)*1.6; dy=w*(yi-mouth_mid)*1.0
             }
           } else if (type === 'fat_face') {
-            if (yi > cheek_bot && yi < cheek_top) {
-              const fromCenter = Math.abs(xi - cx)
-              const w = Math.min(1, fromCenter / (fw * 0.4))
-              dx = Math.sign(xi - cx) * w * fw * 0.35
-            } else if (yi <= cheek_bot) {
-              const jw = Math.min(1, (cheek_bot - yi) / (fh * 0.2))
-              dx = Math.sign(xi - cx) * jw * fw * 0.15
-              dy = -jw * fh * 0.06
+            if (yi>cheek_bot && yi<cheek_top) {
+              const w = Math.min(1,Math.abs(xi-cx)/(fw*0.4))
+              dx=Math.sign(xi-cx)*w*fw*0.35
+            } else if (yi<=cheek_bot) {
+              const jw = Math.min(1,(cheek_bot-yi)/(fh*0.2))
+              dx=Math.sign(xi-cx)*jw*fw*0.15; dy=-jw*fh*0.06
             }
           }
-
-          if (dx !== 0 || dy !== 0 || dz !== 0) affected++
-          d[i*3] = dx; d[i*3+1] = dy; d[i*3+2] = dz
+          d[i*3]=dx; d[i*3+1]=dy; d[i*3+2]=dz
         }
-        // max delta 확인
-        let maxD = 0
-        for (let i = 0; i < n; i++) {
-          const m = Math.sqrt(d[i*3]**2 + d[i*3+1]**2 + d[i*3+2]**2)
-          if (m > maxD) maxD = m
-        }
-        console.log(`  ${type}: ${affected}/${n} vertices affected, maxDelta=${maxD.toFixed(4)}`)
         return d
       }
 
-      morphTargets = {
+      // UV delta 계산: 3D delta를 UV 스케일로 변환
+      // fw/fh 대 UV 범위(0~1) 비율로 변환
+      const makeUVDelta = (posDelta) => {
+        const uvd = new Float32Array(n*2)
+        // UV 공간에서의 얼굴 범위 계산
+        const uArr = baseUVs ? baseUVs.map(uv=>uv.u) : []
+        const vArr = baseUVs ? baseUVs.map(uv=>uv.v) : []
+        const uvFW = uArr.length ? (Math.max(...uArr) - Math.min(...uArr)) : 1
+        const uvFH = vArr.length ? (Math.max(...vArr) - Math.min(...vArr)) : 1
+
+        // 3D position delta → UV delta 비율 변환
+        const scaleU = uvFW / fw   // 3D x → UV u
+        const scaleV = uvFH / fh   // 3D y → UV v
+
+        for (let i = 0; i < n; i++) {
+          // UV는 텍스처 좌표라 position과 반대로 이동해야 왜곡 효과가 나옴
+          // vertex가 오른쪽으로 가면 UV는 왼쪽 텍스처를 샘플링해야 늘어 보임
+          uvd[i*2]   = -posDelta[i*3]   * scaleU
+          uvd[i*2+1] = -posDelta[i*3+1] * scaleV
+        }
+        return uvd
+      }
+
+      const posTargets = {
         big_eyes:  makeDelta('big_eyes'),
         big_nose:  makeDelta('big_nose'),
         big_mouth: makeDelta('big_mouth'),
         fat_face:  makeDelta('fat_face'),
       }
-      morphInfluences = {big_eyes: 0, big_nose: 0, big_mouth: 0, fat_face: 0}
+
+      morphTargets = posTargets
+      uvDeltaTargets = {}
+      for (const [name, pd] of Object.entries(posTargets)) {
+        uvDeltaTargets[name] = makeUVDelta(pd)
+        // 검증 로그
+        let maxUV = 0
+        for (let i=0;i<n;i++) maxUV = Math.max(maxUV, Math.abs(uvDeltaTargets[name][i*2]), Math.abs(uvDeltaTargets[name][i*2+1]))
+        console.log(`  ${name}: maxUVDelta=${maxUV.toFixed(4)}`)
+      }
+
+      morphInfluences = {big_eyes:0, big_nose:0, big_mouth:0, fat_face:0}
 
       window._faceAnimateSetMorph = (name, value) => {
-        if (name in morphInfluences) {
-          morphInfluences[name] = value
-          console.log(`setMorph: ${name} = ${value}, delta max sample: ${morphTargets[name] ? morphTargets[name][0].toFixed(4) : 'N/A'}`)
-        }
+        if (name in morphInfluences) morphInfluences[name] = value
       }
-      // [Fix] 다음 tick에 이벤트 발송 → ui-manager 리스너가 먼저 등록되도록
+
       setTimeout(() => {
         document.dispatchEvent(new CustomEvent('faceMorphReady', {
           detail: {targetNames: Object.keys(morphTargets)}
@@ -183,12 +191,9 @@ const animateFaceComponent = {
         faceMesh = new THREE.Mesh(geometry, materialGltf)
         this.el.setObject3D('faceMesh', faceMesh)
 
-        // 기준 vertex 위치로 morph delta 계산
         const base = new Float32Array(n*3)
-        for (let i = 0; i < n; i++) {
-          base[i*3]   = vertices[i].x
-          base[i*3+1] = vertices[i].y
-          base[i*3+2] = vertices[i].z
+        for (let i=0;i<n;i++) {
+          base[i*3]=vertices[i].x; base[i*3+1]=vertices[i].y; base[i*3+2]=vertices[i].z
         }
         buildMorphTargets(base, n)
       }
@@ -199,45 +204,43 @@ const animateFaceComponent = {
       const normAttr = geometry.attributes.normal
       const uvAttr   = geometry.attributes.uv
       const n = vertices.length
+      const anyActive = Object.values(morphInfluences).some(v => v > 0)
 
-      // position = XR8 vertex + morph delta * influence
-      let morphApplied = false
-      for (let i = 0; i < n; i++) {
-        let px = vertices[i].x
-        let py = vertices[i].y
-        let pz = vertices[i].z
-
-        for (const [name, inf] of Object.entries(morphInfluences)) {
-          if (inf === 0) continue
-          morphApplied = true
-          px += morphTargets[name][i*3]   * inf
-          py += morphTargets[name][i*3+1] * inf
-          pz += morphTargets[name][i*3+2] * inf
+      // position 업데이트 + morph delta 적용
+      for (let i=0; i<n; i++) {
+        let px=vertices[i].x, py=vertices[i].y, pz=vertices[i].z
+        if (anyActive) {
+          for (const [name, inf] of Object.entries(morphInfluences)) {
+            if (inf===0) continue
+            px += morphTargets[name][i*3]   * inf
+            py += morphTargets[name][i*3+1] * inf
+            pz += morphTargets[name][i*3+2] * inf
+          }
         }
-
-        posAttr.array[i*3]   = px
-        posAttr.array[i*3+1] = py
-        posAttr.array[i*3+2] = pz
-      }
-      // 1초에 한번만 로그
-      if (morphApplied && !show._logged) {
-        show._logged = true
-        setTimeout(() => { show._logged = false }, 1000)
-        const activeInfluences = Object.entries(morphInfluences).filter(([,v])=>v>0)
-        console.log('morph applying:', activeInfluences, '| vertex[0]:', posAttr.array[0].toFixed(4), posAttr.array[1].toFixed(4))
+        posAttr.array[i*3]=px; posAttr.array[i*3+1]=py; posAttr.array[i*3+2]=pz
       }
       posAttr.needsUpdate = true
 
-      for (let i = 0; i < normals.length; i++) {
-        normAttr.array[i*3]   = normals[i].x
-        normAttr.array[i*3+1] = normals[i].y
-        normAttr.array[i*3+2] = normals[i].z
+      // normal 업데이트
+      for (let i=0; i<normals.length; i++) {
+        normAttr.array[i*3]=normals[i].x
+        normAttr.array[i*3+1]=normals[i].y
+        normAttr.array[i*3+2]=normals[i].z
       }
       normAttr.needsUpdate = true
 
-      for (let i = 0; i < uvsInCameraFrame.length; i++) {
-        uvAttr.array[i*2]   = uvsInCameraFrame[i].u
-        uvAttr.array[i*2+1] = uvsInCameraFrame[i].v
+      // UV 업데이트: XR8 UV + morph UV delta
+      for (let i=0; i<uvsInCameraFrame.length; i++) {
+        let u = uvsInCameraFrame[i].u
+        let v = uvsInCameraFrame[i].v
+        if (anyActive) {
+          for (const [name, inf] of Object.entries(morphInfluences)) {
+            if (inf===0) continue
+            u += uvDeltaTargets[name][i*2]   * inf
+            v += uvDeltaTargets[name][i*2+1] * inf
+          }
+        }
+        uvAttr.array[i*2]=u; uvAttr.array[i*2+1]=v
       }
       uvAttr.needsUpdate = true
     }
