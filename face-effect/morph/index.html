@@ -11,27 +11,58 @@
   <script async src="./../../xr_st/xr.js" data-preload-chunks="face"></script>
   <script type="module" src="./app.js" defer></script>
   <link rel="stylesheet" type="text/css" href="./index.css">
+
+  <style>
+    #camera-switch {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      background: rgba(0,0,0,0.45);
+      border: none;
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    #camera-switch svg {
+      width: 26px;
+      height: 26px;
+      fill: white;
+    }
+  </style>
 </head>
 
 <body>
+<!-- [Fix] renderer="colorManagement: false" → tone mapping 끄기 (노란색 제거) -->
 <a-scene
+  renderer="colorManagement: false"
   landing-page
   xrextras-loading
   xrextras-runtime-error
-  xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true">
+  xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true"
+  id="scene">
 
   <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 2 0"></a-camera>
 
   <xrextras-faceanchor>
-    <!-- gltf-model 제거: animate-face가 직접 geometry 생성 -->
     <a-entity id="morphTargetModel" animate-face ui-manager></a-entity>
   </xrextras-faceanchor>
 
-  <!-- MeshBasicMaterial은 라이팅 영향 안 받으므로 light 불필요 -->
-  <!-- <a-light type="directional" position="0 1.8 3" intensity="0.8"></a-light> -->
-  <!-- <a-light type="ambient" intensity="0.8"></a-light> -->
-
 </a-scene>
+
+<!-- 카메라 전환 버튼 -->
+<button id="camera-switch" title="카메라 전환">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 5h-3.17L15 3H9L7.17 5H4C2.9 5 2 5.9 2 7v13c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm-8 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+    <path d="M12 9.5c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z" opacity="0.4"/>
+    <path d="M17.5 8.5l1.5-1.5-1.5-1.5V7h-2v1h2v.5z" transform="rotate(45,18,7)"/>
+  </svg>
+</button>
 
 <!-- UI -->
 <div class="modal-content">
@@ -47,5 +78,22 @@
     </div>
   </div>
 </div>
+
+<script>
+  // 카메라 전환 (front ↔ back)
+  ;(function() {
+    let currentCamera = 'front'
+    const btn = document.getElementById('camera-switch')
+    const scene = document.getElementById('scene')
+
+    btn.addEventListener('click', () => {
+      currentCamera = currentCamera === 'front' ? 'back' : 'front'
+      const mirrored = currentCamera === 'front' ? 'true' : 'false'
+      scene.setAttribute('xrface',
+        `allowedDevices: any; cameraDirection: ${currentCamera}; mirroredDisplay: ${mirrored}`)
+      console.log('카메라 전환:', currentCamera)
+    })
+  })()
+</script>
 </body>
 </html>
