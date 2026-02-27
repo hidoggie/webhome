@@ -31,7 +31,7 @@ ui-manager>
   <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 2 0"></a-camera>
 
   <xrextras-faceanchor>
-    <a-entity id="morphTargetModel" animate-face scale="1 1 1" gltf-model="#morphTargets" rotation="0 0 0" position="0 0 0"></a-entity>>
+    <a-entity id="morphTargetModel" animate-face scale="1 1 1" gltf-model="#morphTargets" rotation="0 0 0" position="0 0 0"></a-entity>
   </xrextras-faceanchor>
 
   <a-light type="directional" target="#face" position="0 1.8 3" intensity="0.8"></a-light>
@@ -49,16 +49,10 @@ ui-manager>
     <img id="rightArrow" src="./assets/UI/rightArrow.svg">
     <img id="leftArrow" src="./assets/UI/leftArrow.svg">
     <div class="slider-container">
-      <input type="range" step="0.05" min="0" max="1" value="0.1" class="slider">
+      <!-- [Fix] value="0.1" → value="0" 으로 수정: 처음부터 왜곡 방지 -->
+      <input type="range" step="0.05" min="0" max="1" value="0" class="slider">
     </div>
   </div>
 </div>
 </body>
 </html>
-
-
-
-
-
-
-
