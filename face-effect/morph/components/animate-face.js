@@ -20,13 +20,22 @@ const animateFaceComponent = {
     let morphInfluences = {}
     let geometry = null
     let faceInitialized = false
+    let savedIndices = null
+
+    // xrfaceloading 이벤트에서 indices 추출 시도
+    this.el.sceneEl.addEventListener('xrfaceloading', (e) => {
+      console.log('xrfaceloading keys:', Object.keys(e.detail))
+      if (e.detail.indices) {
+        console.log('xrfaceloading indices found! length:', e.detail.indices.length)
+        savedIndices = new Uint32Array(e.detail.indices)
+      } else {
+        console.log('xrfaceloading detail:', JSON.stringify(e.detail).slice(0, 300))
+      }
+    })
 
     const buildMorphTargets = (verts, n) => {
       const x = [], y = []
-      for (let i = 0; i < n; i++) {
-        x.push(verts[i*3])
-        y.push(verts[i*3+1])
-      }
+      for (let i = 0; i < n; i++) { x.push(verts[i*3]); y.push(verts[i*3+1]) }
       const cy = y.reduce((a,b)=>a+b,0)/n
       const fh = Math.max(...y) - Math.min(...y)
       const fw = Math.max(...x) - Math.min(...x)
@@ -74,20 +83,16 @@ const animateFaceComponent = {
       }
 
       morphTargets = {
-        big_eyes:  makeDelta('big_eyes'),
-        big_nose:  makeDelta('big_nose'),
-        big_mouth: makeDelta('big_mouth'),
-        fat_face:  makeDelta('fat_face'),
+        big_eyes: makeDelta('big_eyes'), big_nose: makeDelta('big_nose'),
+        big_mouth: makeDelta('big_mouth'), fat_face: makeDelta('fat_face'),
       }
       morphInfluences = {big_eyes:0, big_nose:0, big_mouth:0, fat_face:0}
-
       window._faceAnimateSetMorph = (name, value) => {
         if (name in morphInfluences) morphInfluences[name] = value
       }
       document.dispatchEvent(new CustomEvent('faceMorphReady', {
         detail: {targetNames: Object.keys(morphTargets)}
       }))
-      console.log('animate-face: morphs ready', Object.keys(morphTargets))
     }
 
     const onxrloaded = () => {
@@ -105,52 +110,148 @@ const animateFaceComponent = {
     }
     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
 
+    const initGeometry = (vertices, uvsInCameraFrame) => {
+      const n = vertices.length
+      geometry = new THREE.BufferGeometry()
+      geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3))
+      geometry.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(n*3), 3))
+      geometry.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(uvsInCameraFrame.length*2), 2))
+
+      if (savedIndices && savedIndices.length > 0) {
+        // savedIndices가 있으면 (xrfaceloading에서 가져온 경우) 사용
+        geometry.setIndex(new THREE.BufferAttribute(savedIndices, 1))
+        console.log('animate-face: using savedIndices from xrfaceloading,', savedIndices.length)
+      } else {
+        // [핵심 Fix] index 없이 UV 좌표로 Delaunay triangulation
+        // UV는 0~1 범위의 2D 좌표 → 이걸로 삼각형 연결
+        console.log('animate-face: no indices, building from UV triangulation')
+        const triIndices = buildDelaunayFromUV(uvsInCameraFrame)
+        if (triIndices) {
+          geometry.setIndex(new THREE.BufferAttribute(triIndices, 1))
+          savedIndices = triIndices
+          console.log('animate-face: triangulation done,', triIndices.length/3, 'triangles')
+        }
+      }
+
+      faceMesh = new THREE.Mesh(geometry, materialGltf)
+      this.el.setObject3D('faceMesh', faceMesh)
+
+      const base = new Float32Array(n*3)
+      for (let i=0; i<n; i++) {
+        base[i*3]=vertices[i].x; base[i*3+1]=vertices[i].y; base[i*3+2]=vertices[i].z
+      }
+      buildMorphTargets(base, n)
+    }
+
+    // UV 좌표 기반 Delaunay triangulation
+    // ear-clipping 대신 간단한 Bowyer-Watson 알고리즘
+    const buildDelaunayFromUV = (uvs) => {
+      const n = uvs.length
+      const pts = uvs.map((uv, i) => [uv.u, uv.v, i])
+
+      // 간단한 구현: super-triangle에서 시작하는 Bowyer-Watson
+      // Three.js r158에 포함된 기능 활용
+      try {
+        // pts를 Float32Array로 변환 (x,y 쌍)
+        const coords = new Float32Array(n * 2)
+        for (let i = 0; i < n; i++) {
+          coords[i*2]   = uvs[i].u
+          coords[i*2+1] = uvs[i].v
+        }
+
+        // Delaunay class (Three.js에 없으면 수동 구현)
+        if (typeof THREE.Delaunay !== 'undefined') {
+          const delaunay = new THREE.Delaunay(coords)
+          return new Uint32Array(delaunay.triangles)
+        }
+
+        // Fallback: 직접 Bowyer-Watson
+        return bowyerWatson(uvs)
+      } catch(e) {
+        console.error('Delaunay error:', e)
+        return bowyerWatson(uvs)
+      }
+    }
+
+    // Bowyer-Watson Delaunay triangulation
+    const bowyerWatson = (uvs) => {
+      const n = uvs.length
+      const points = uvs.map((uv, i) => ({x: uv.u, y: uv.v, i}))
+
+      // super triangle
+      const minX = Math.min(...points.map(p=>p.x)) - 1
+      const minY = Math.min(...points.map(p=>p.y)) - 1
+      const maxX = Math.max(...points.map(p=>p.x)) + 1
+      const maxY = Math.max(...points.map(p=>p.y)) + 1
+      const dx = maxX - minX, dy = maxY - minY
+      const deltaMax = Math.max(dx, dy) * 10
+
+      const sp1 = {x: minX - deltaMax, y: minY - deltaMax, i: n}
+      const sp2 = {x: minX + deltaMax*2, y: minY - deltaMax, i: n+1}
+      const sp3 = {x: minX, y: minY + deltaMax*2, i: n+2}
+
+      let triangles = [[sp1, sp2, sp3]]
+
+      const circumcircle = (a, b, c) => {
+        const ax = a.x - c.x, ay = a.y - c.y
+        const bx = b.x - c.x, by = b.y - c.y
+        const D = 2 * (ax*by - ay*bx)
+        if (Math.abs(D) < 1e-10) return null
+        const ux = (by*(ax*ax+ay*ay) - ay*(bx*bx+by*by)) / D
+        const uy = (ax*(bx*bx+by*by) - bx*(ax*ax+ay*ay)) / D
+        const cx2 = c.x + ux, cy2 = c.y + uy
+        const r = Math.sqrt(ux*ux + uy*uy)
+        return {x: cx2, y: cy2, r}
+      }
+
+      for (const p of points) {
+        const badTris = []
+        for (const tri of triangles) {
+          const cc = circumcircle(...tri)
+          if (cc && Math.sqrt((p.x-cc.x)**2 + (p.y-cc.y)**2) < cc.r + 1e-10) {
+            badTris.push(tri)
+          }
+        }
+
+        // 경계 polygon
+        const boundary = []
+        for (const tri of badTris) {
+          for (let e = 0; e < 3; e++) {
+            const edge = [tri[e], tri[(e+1)%3]]
+            const shared = badTris.some(t => t !== tri &&
+              t.some(v => v.i === edge[0].i) && t.some(v => v.i === edge[1].i))
+            if (!shared) boundary.push(edge)
+          }
+        }
+
+        triangles = triangles.filter(t => !badTris.includes(t))
+        for (const edge of boundary) {
+          triangles.push([edge[0], edge[1], p])
+        }
+      }
+
+      // super triangle vertex 포함된 삼각형 제거
+      triangles = triangles.filter(t =>
+        !t.some(v => v.i >= n)
+      )
+
+      const result = new Uint32Array(triangles.length * 3)
+      for (let i = 0; i < triangles.length; i++) {
+        result[i*3]   = triangles[i][0].i
+        result[i*3+1] = triangles[i][1].i
+        result[i*3+2] = triangles[i][2].i
+      }
+      console.log(`Bowyer-Watson: ${n} points → ${triangles.length} triangles`)
+      return result
+    }
+
     const show = (event) => {
-      const {vertices, normals, uvsInCameraFrame, indices} = event.detail
+      const {vertices, normals, uvsInCameraFrame} = event.detail
 
       if (!faceInitialized) {
         faceInitialized = true
-
-        // 첫 프레임 구조 로그
-        console.log('=== XR8 face event detail keys:', Object.keys(event.detail))
-        console.log('vertices count:', vertices ? vertices.length : 'none')
-        console.log('vertices[0]:', vertices ? JSON.stringify(vertices[0]) : 'none')
-        console.log('indices type:', indices ? (Array.isArray(indices) ? 'Array' : indices.constructor.name) : 'none')
-        console.log('indices length:', indices ? indices.length : 'none')
-        console.log('indices[0..5]:', indices ? Array.from(indices.slice ? indices.slice(0,6) : [indices[0],indices[1],indices[2],indices[3],indices[4],indices[5]]) : 'none')
-        console.log('uvsInCameraFrame[0]:', uvsInCameraFrame ? JSON.stringify(uvsInCameraFrame[0]) : 'none')
-
-        const n = vertices.length
-        geometry = new THREE.BufferGeometry()
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3))
-        geometry.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(n*3), 3))
-        geometry.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(uvsInCameraFrame.length*2), 2))
-
-        // indices 처리 - 타입에 따라 다르게
-        if (indices) {
-          let idxArr
-          if (indices instanceof Uint16Array || indices instanceof Uint32Array) {
-            idxArr = indices
-          } else if (Array.isArray(indices)) {
-            idxArr = new Uint32Array(indices)
-          } else {
-            // flat number array object
-            idxArr = new Uint32Array(Object.values(indices))
-          }
-          console.log('setIndex with', idxArr.length, 'indices, max=', Math.max(...Array.from(idxArr).slice(0,100)))
-          geometry.setIndex(new THREE.BufferAttribute(idxArr, 1))
-        } else {
-          console.warn('indices is null/undefined - no index buffer set')
-        }
-
-        faceMesh = new THREE.Mesh(geometry, materialGltf)
-        this.el.setObject3D('faceMesh', faceMesh)
-
-        const base = new Float32Array(n*3)
-        for (let i=0; i<n; i++) {
-          base[i*3]=vertices[i].x; base[i*3+1]=vertices[i].y; base[i*3+2]=vertices[i].z
-        }
-        buildMorphTargets(base, n)
+        console.log(`animate-face: init ${vertices.length} verts`)
+        initGeometry(vertices, uvsInCameraFrame)
       }
 
       if (!faceMesh) return
