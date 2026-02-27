@@ -14,20 +14,33 @@ const animateFaceComponent = {
       renderer.outputColorSpace = THREE.LinearSRGBColorSpace
     }
 
-    let faceMesh = null
+    let faceGeometry = null   // GLB에서 가져온 geometry (원본 방식)
     let morphTargets = {}
     let morphInfluences = {}
-    let geometry = null
-    let faceInitialized = false
     let savedIndices = null
+    let indicesReplaced = false
 
-    // xrfaceloading에서 올바른 indices 저장
+    // xrfaceloading: XR8의 올바른 face indices 저장
     this.el.sceneEl.addEventListener('xrfaceloading', (e) => {
       const {indices} = e.detail
       if (indices) {
         savedIndices = indices instanceof Uint32Array ? indices : new Uint32Array(indices)
-        console.log(`xrfaceloading: ${savedIndices.length} indices (${savedIndices.length/3} triangles)`)
+        console.log(`xrfaceloading: ${savedIndices.length} indices`)
       }
+    })
+
+    // 원본과 동일: model-loaded 후 GLB geometry + material 교체
+    this.el.addEventListener('model-loaded', () => {
+      const mesh = this.el.getObject3D('mesh')
+      if (!mesh) { console.error('no mesh after model-loaded'); return }
+
+      mesh.traverse((node) => {
+        if (node.isMesh) {
+          node.material = materialGltf
+          faceGeometry = node.geometry
+          console.log('animate-face: GLB geometry captured,', faceGeometry.attributes.position.count, 'verts')
+        }
+      })
     })
 
     const buildMorphTargets = (verts, n) => {
@@ -89,7 +102,7 @@ const animateFaceComponent = {
       }
       setTimeout(()=>{
         document.dispatchEvent(new CustomEvent('faceMorphReady',{detail:{targetNames:Object.keys(morphTargets)}}))
-        console.log('animate-face: morphs ready', Object.keys(morphTargets))
+        console.log('animate-face: morphs ready')
       },100)
     }
 
@@ -100,7 +113,7 @@ const animateFaceComponent = {
           if (!processCpuResult) return
           const result=processCpuResult.processCpuResult
           if (result.facecontroller&&result.facecontroller.cameraFeedTexture){
-            const texProps=this.el.sceneEl.renderer.properties.get(faceTextureGltf_)
+            const texProps=renderer.properties.get(faceTextureGltf_)
             texProps.__webglTexture=result.facecontroller.cameraFeedTexture
           }
         },
@@ -108,68 +121,66 @@ const animateFaceComponent = {
     }
     window.XR8?onxrloaded():window.addEventListener('xrloaded',onxrloaded)
 
+    let morphBuilt = false
+
     const show=(event)=>{
-      const {vertices,normals,uvsInCameraFrame}=event.detail
+      if (!faceGeometry) return  // GLB 아직 로드 안 됨
 
-      if (!faceInitialized){
-        faceInitialized=true
-        const n=vertices.length
-        console.log(`animate-face: init ${n} verts, savedIndices: ${savedIndices?.length}`)
+      const {vertices, normals, uvsInCameraFrame} = event.detail
+      const n = vertices.length
 
-        geometry=new THREE.BufferGeometry()
-        geometry.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3),3))
-        geometry.setAttribute('normal',  new THREE.BufferAttribute(new Float32Array(n*3),3))
-        geometry.setAttribute('uv',      new THREE.BufferAttribute(new Float32Array(n*2),2))
+      // 첫 프레임: GLB index를 XR8 index로 교체 + morph 빌드
+      if (!indicesReplaced && savedIndices?.length > 0) {
+        indicesReplaced = true
+        faceGeometry.setIndex(new THREE.BufferAttribute(savedIndices, 1))
+        console.log(`animate-face: replaced GLB index with XR8 index (${savedIndices.length})`)
+      }
 
-        // xrfaceloading에서 받은 올바른 indices 사용
-        if (savedIndices?.length>0){
-          geometry.setIndex(new THREE.BufferAttribute(savedIndices,1))
-        }
-
-        faceMesh=new THREE.Mesh(geometry,materialGltf)
-
-        // 원래 방식: xrextras-faceanchor entity에 mesh로 등록
-        this.el.setObject3D('mesh', faceMesh)
-        console.log('animate-face: faceMesh set on entity')
-
-        const base=new Float32Array(n*3)
+      // 첫 프레임: vertex 크기가 맞으면 morph 빌드
+      if (!morphBuilt && n === faceGeometry.attributes.position.count) {
+        morphBuilt = true
+        const base = new Float32Array(n*3)
         for (let i=0;i<n;i++){
           base[i*3]=vertices[i].x; base[i*3+1]=vertices[i].y; base[i*3+2]=vertices[i].z
         }
-        buildMorphTargets(base,n)
+        buildMorphTargets(base, n)
+        console.log(`animate-face: morphs built for ${n} verts`)
       }
 
-      if (!faceMesh) return
-
-      const posAttr=geometry.attributes.position
-      const normAttr=geometry.attributes.normal
-      const uvAttr=geometry.attributes.uv
-      const n=vertices.length
-
-      for (let i=0;i<n;i++){
-        let px=vertices[i].x,py=vertices[i].y,pz=vertices[i].z
+      // position 업데이트
+      const posAttr = faceGeometry.attributes.position
+      for (let i=0;i<n && i<posAttr.count;i++){
+        let px=vertices[i].x, py=vertices[i].y, pz=vertices[i].z
         for (const [name,inf] of Object.entries(morphInfluences)){
           if (inf===0) continue
-          px+=morphTargets[name][i*3]*inf
-          py+=morphTargets[name][i*3+1]*inf
-          pz+=morphTargets[name][i*3+2]*inf
+          px+=morphTargets[name]?.[i*3]*inf||0
+          py+=morphTargets[name]?.[i*3+1]*inf||0
+          pz+=morphTargets[name]?.[i*3+2]*inf||0
         }
         posAttr.array[i*3]=px; posAttr.array[i*3+1]=py; posAttr.array[i*3+2]=pz
       }
       posAttr.needsUpdate=true
 
-      for (let i=0;i<normals.length;i++){
-        normAttr.array[i*3]=normals[i].x
-        normAttr.array[i*3+1]=normals[i].y
-        normAttr.array[i*3+2]=normals[i].z
+      // normal 업데이트
+      if (faceGeometry.attributes.normal) {
+        const normAttr=faceGeometry.attributes.normal
+        for (let i=0;i<normals.length && i<normAttr.count;i++){
+          normAttr.array[i*3]=normals[i].x
+          normAttr.array[i*3+1]=normals[i].y
+          normAttr.array[i*3+2]=normals[i].z
+        }
+        normAttr.needsUpdate=true
       }
-      normAttr.needsUpdate=true
 
-      for (let i=0;i<uvsInCameraFrame.length;i++){
-        uvAttr.array[i*2]=uvsInCameraFrame[i].u
-        uvAttr.array[i*2+1]=uvsInCameraFrame[i].v
+      // UV 업데이트
+      if (faceGeometry.attributes.uv) {
+        const uvAttr=faceGeometry.attributes.uv
+        for (let i=0;i<uvsInCameraFrame.length && i<uvAttr.count;i++){
+          uvAttr.array[i*2]=uvsInCameraFrame[i].u
+          uvAttr.array[i*2+1]=uvsInCameraFrame[i].v
+        }
+        uvAttr.needsUpdate=true
       }
-      uvAttr.needsUpdate=true
     }
 
     this.el.sceneEl.addEventListener('xrfacefound',  show)
