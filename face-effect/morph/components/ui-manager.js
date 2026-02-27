@@ -1,77 +1,55 @@
 const uiManagerComponent = {
   init() {
-    const morphTargetModel = document.getElementById('morphTargetModel')
+    const leftArrow   = document.getElementById('leftArrow')
+    const rightArrow  = document.getElementById('rightArrow')
+    const targetName  = document.querySelector('#target-name')
+    const slider      = document.querySelector('.slider')
+    const resetButton = document.getElementById('reset')
 
-    const handleUI = () => {
-      const morphTargetMesh = morphTargetModel.getObject3D('mesh')
-      if (!morphTargetMesh) {
-        console.warn('ui-manager: mesh not ready')
-        return
+    let targetNames = []
+    let currentIndex = 0
+    const sliderValues = {}
+
+    const updateUI = () => {
+      if (targetNames.length === 0) return
+      const name = targetNames[currentIndex]
+      targetName.textContent = name
+      slider.value = sliderValues[name] || 0
+    }
+
+    const applyMorph = (name, value) => {
+      if (window._faceAnimateSetMorph) {
+        window._faceAnimateSetMorph(name, value)
       }
+    }
 
-      // [Fix] Three.js r158: morphTargetDictionary 우선, userData.targetNames fallback
-      const targetNames = []
-      morphTargetMesh.traverse((object) => {
-        if (!object.isMesh || !object.morphTargetInfluences) return
-        if (object.morphTargetDictionary) {
-          // morphTargetDictionary는 {name: index} 형태 → index 순으로 정렬
-          const entries = Object.entries(object.morphTargetDictionary)
-            .sort((a, b) => a[1] - b[1])
-            .map(e => e[0])
-          targetNames.push(...entries)
-        } else if (object.userData.targetNames) {
-          targetNames.push(...object.userData.targetNames)
-        }
-      })
+    // animate-face.js가 준비되면 이 이벤트를 발생시킴
+    document.addEventListener('faceMorphReady', (e) => {
+      targetNames = e.detail.targetNames
+      console.log('ui-manager: received targetNames:', targetNames)
 
-      console.log('Morph targets:', targetNames)
-
-      if (targetNames.length === 0) {
-        console.warn('ui-manager: no morph targets found')
-        return
-      }
-
-      const leftArrow   = document.getElementById('leftArrow')
-      const rightArrow  = document.getElementById('rightArrow')
-      const targetName  = document.querySelector('#target-name')
-      const slider      = document.querySelector('.slider')
-      const resetButton = document.getElementById('reset')
-
-      let currentTargetIndex = 0
-      const sliderValues = {}
-
-      const applyMorph = (name, value) => {
-        morphTargetModel.setAttribute(`gltf-morph__${name}`, `morphTarget: ${name}; value: ${value}`)
-      }
-
-      // 모든 타겟 0으로 초기 등록
       targetNames.forEach(name => {
         sliderValues[name] = 0
-        applyMorph(name, 0)
       })
 
-      const updateUI = () => {
-        const name = targetNames[currentTargetIndex]
-        targetName.textContent = name
-        slider.value = sliderValues[name] || 0
-      }
+      currentIndex = 0
       updateUI()
 
       leftArrow.addEventListener('click', () => {
-        sliderValues[targetNames[currentTargetIndex]] = parseFloat(slider.value)
-        currentTargetIndex = (currentTargetIndex - 1 + targetNames.length) % targetNames.length
+        sliderValues[targetNames[currentIndex]] = parseFloat(slider.value)
+        currentIndex = (currentIndex - 1 + targetNames.length) % targetNames.length
         updateUI()
       })
 
       rightArrow.addEventListener('click', () => {
-        sliderValues[targetNames[currentTargetIndex]] = parseFloat(slider.value)
-        currentTargetIndex = (currentTargetIndex + 1) % targetNames.length
+        sliderValues[targetNames[currentIndex]] = parseFloat(slider.value)
+        currentIndex = (currentIndex + 1) % targetNames.length
         updateUI()
       })
 
       slider.addEventListener('input', (e) => {
         const value = parseFloat(e.target.value)
-        const name = targetNames[currentTargetIndex]
+        const name = targetNames[currentIndex]
         sliderValues[name] = value
         applyMorph(name, value)
       })
@@ -84,11 +62,6 @@ const uiManagerComponent = {
         })
         updateUI()
       })
-    }
-
-    // object3dset 이벤트: gltf-model이 mesh를 set할 때 발생
-    morphTargetModel.addEventListener('object3dset', (e) => {
-      if (e.detail.type === 'mesh') handleUI()
     })
   },
 }
