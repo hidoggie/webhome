@@ -14,11 +14,12 @@ const animateFaceComponent = {
       renderer.outputColorSpace = THREE.LinearSRGBColorSpace
     }
 
-    let targetMesh = null      // GLB에서 가져온 Mesh 오브젝트
+    let faceMesh = null
+    let geometry = null
     let morphTargets = {}
     let morphInfluences = {}
     let savedIndices = null
-    let morphBuilt = false
+    let initialized = false
 
     this.el.sceneEl.addEventListener('xrfaceloading', (e) => {
       const {indices} = e.detail
@@ -26,21 +27,6 @@ const animateFaceComponent = {
         savedIndices = indices instanceof Uint32Array ? indices : new Uint32Array(indices)
         console.log(`xrfaceloading: ${savedIndices.length} indices`)
       }
-    })
-
-    // model-loaded: GLB Mesh를 찾아서 material 교체
-    // geometry는 나중에 xrfacefound에서 XR8 데이터로 완전 교체
-    this.el.addEventListener('model-loaded', () => {
-      const meshObj = this.el.getObject3D('mesh')
-      if (!meshObj) { console.error('no mesh'); return }
-
-      meshObj.traverse((node) => {
-        if (node.isMesh && !targetMesh) {
-          targetMesh = node
-          targetMesh.material = materialGltf
-          console.log('animate-face: GLB mesh found, original verts:', node.geometry.attributes.position.count)
-        }
-      })
     })
 
     const buildMorphTargets = (verts, n) => {
@@ -121,31 +107,30 @@ const animateFaceComponent = {
     }
     window.XR8?onxrloaded():window.addEventListener('xrloaded',onxrloaded)
 
-    const show=(event)=>{
-      if (!targetMesh) return
+    const _quat = new THREE.Quaternion()
 
-      const {vertices, normals, uvsInCameraFrame} = event.detail
+    const show=(event)=>{
+      const {vertices, normals, uvsInCameraFrame, transform} = event.detail
       const n = vertices.length
 
-      // 첫 프레임: geometry를 XR8 크기(478)에 맞게 완전히 새로 교체
-      if (!morphBuilt) {
-        morphBuilt = true
-        console.log(`animate-face: rebuilding geometry for ${n} XR8 verts`)
+      if (!initialized) {
+        initialized = true
+        console.log(`animate-face: first frame, ${n} verts`)
 
-        const newGeo = new THREE.BufferGeometry()
-        newGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3))
-        newGeo.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(n*3), 3))
-        newGeo.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(n*2), 2))
-
+        geometry = new THREE.BufferGeometry()
+        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3))
+        geometry.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(n*3), 3))
+        geometry.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(n*2), 2))
         if (savedIndices?.length > 0) {
-          newGeo.setIndex(new THREE.BufferAttribute(savedIndices, 1))
-          console.log('animate-face: XR8 indices set:', savedIndices.length)
+          geometry.setIndex(new THREE.BufferAttribute(savedIndices, 1))
         }
 
-        // 기존 geometry를 새것으로 교체
-        const oldGeo = targetMesh.geometry
-        targetMesh.geometry = newGeo
-        oldGeo.dispose()
+        faceMesh = new THREE.Mesh(geometry, materialGltf)
+
+        // [핵심] this.el.object3D에 직접 추가 (setObject3D 아님)
+        // xrextras-faceanchor가 this.el.object3D의 position/rotation을 자동 업데이트함
+        this.el.object3D.add(faceMesh)
+        console.log('animate-face: faceMesh added to el.object3D')
 
         const base = new Float32Array(n*3)
         for (let i=0;i<n;i++){
@@ -154,10 +139,25 @@ const animateFaceComponent = {
         buildMorphTargets(base, n)
       }
 
-      const geo = targetMesh.geometry
-      const posAttr  = geo.attributes.position
-      const normAttr = geo.attributes.normal
-      const uvAttr   = geo.attributes.uv
+      if (!faceMesh) return
+
+      // transform이 있으면 el.object3D 위치/회전을 직접 적용
+      // (xrextras-faceanchor가 안 해주는 경우 대비)
+      if (transform) {
+        const {position, rotation, scale} = transform
+        if (position) this.el.object3D.position.set(position.x, position.y, position.z)
+        if (rotation) {
+          _quat.set(rotation.x, rotation.y, rotation.z, rotation.w)
+          this.el.object3D.quaternion.copy(_quat)
+        }
+        // scale은 scalar 값
+        const s = typeof scale === 'number' ? scale : 1
+        this.el.object3D.scale.setScalar(s)
+      }
+
+      const posAttr  = geometry.attributes.position
+      const normAttr = geometry.attributes.normal
+      const uvAttr   = geometry.attributes.uv
 
       for (let i=0;i<n;i++){
         let px=vertices[i].x, py=vertices[i].y, pz=vertices[i].z
