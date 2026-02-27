@@ -243,14 +243,30 @@
     let currentType   = null  // 'photo' | 'video'
     let xr8Ready      = false
 
-    // XR8 준비 대기
-    window.addEventListener('xrloaded', () => {
+    // XR8 파이프라인이 완전히 초기화된 후에 ready
+    // 'realityready' = 카메라 피드 + 파이프라인 모두 준비 완료
+    const scene = document.getElementById('scene')
+    scene.addEventListener('realityready', () => {
       xr8Ready = true
-      // MediaRecorder 설정
-      XR8.MediaRecorder.configure({
-        maxDurationMs: MAX_VIDEO_MS,
-        enableEndCard: false,
-      })
+      console.log('capture: xr8 ready')
+      // MediaRecorder 파이프라인 등록
+      window.addEventListener('xrloaded', () => {
+        XR8.MediaRecorder.configure({
+          maxDurationMs: MAX_VIDEO_MS,
+          enableEndCard: false,
+        })
+        XR8.addCameraPipelineModule(XR8.MediaRecorder.pipelineModule())
+        console.log('capture: MediaRecorder pipeline added')
+      }, { once: true })
+      // xrloaded가 이미 됐을 경우
+      if (window.XR8) {
+        XR8.MediaRecorder.configure({
+          maxDurationMs: MAX_VIDEO_MS,
+          enableEndCard: false,
+        })
+        try { XR8.addCameraPipelineModule(XR8.MediaRecorder.pipelineModule()) } catch(e) {}
+        console.log('capture: MediaRecorder pipeline added (sync)')
+      }
     }, { once: true })
 
     // 진행 링 업데이트
