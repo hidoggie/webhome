@@ -1,4 +1,3 @@
-import './index.css'
 import uiHTML from './ui.html?raw'
 import { UIElement, Button, Bar, Label, IconBar, Icon } from './../ui-kit/module.js'
 
