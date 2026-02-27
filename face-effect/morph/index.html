@@ -14,21 +14,11 @@
 
   <style>
     #camera-switch {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 9999;
-      background: rgba(0,0,0,0.45);
-      border: none;
-      border-radius: 50%;
-      width: 52px;
-      height: 52px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      position: fixed; top: 20px; right: 20px; z-index: 9999;
+      background: rgba(0,0,0,0.45); border: none; border-radius: 50%;
+      width: 52px; height: 52px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
       touch-action: manipulation;
     }
     #camera-switch svg { width: 28px; height: 28px; fill: white; pointer-events: none; }
@@ -44,16 +34,11 @@
   id="scene"
   xrface="allowedDevices: any; cameraDirection: front; mirroredDisplay: true">
 
-  <a-assets>
-    <a-asset-item id="morphTargets" src="./assets/models/morphTargets.glb"></a-asset-item>
-  </a-assets>
-
   <a-camera look-controls="enabled: false" wasd-controls="enabled: false" position="0 2 0"></a-camera>
 
   <xrextras-faceanchor>
-    <!-- GLB는 렌더링 컨테이너 역할, animate-face가 geometry를 XR8 데이터로 교체 -->
-    <a-entity id="morphTargetModel" animate-face ui-manager
-      gltf-model="#morphTargets"></a-entity>
+    <!-- GLB 없이 animate-face가 geometry를 직접 생성, el.object3D에 추가 -->
+    <a-entity id="morphTargetModel" animate-face ui-manager></a-entity>
   </xrextras-faceanchor>
 
 </a-scene>
@@ -66,9 +51,7 @@
 </button>
 
 <div class="modal-content">
-  <div class="modal-header">
-    <span id="reset" class="modal-reset">reset</span>
-  </div>
+  <div class="modal-header"><span id="reset" class="modal-reset">reset</span></div>
   <div class="modal-body">
     <h3 id="target-name"></h3>
     <img id="rightArrow" src="./assets/UI/rightArrow.svg">
