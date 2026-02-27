@@ -5,29 +5,35 @@ const animateFaceComponent = {
     const faceTextureGltf_ = new THREE.Texture()
     const materialGltf = new THREE.MeshBasicMaterial({map: faceTextureGltf_, side: THREE.DoubleSide})
 
-    let faceGltf
+    let faceMesh  // [Fix] children[0] 대신 실제 geometry가 있는 Mesh를 직접 찾아 저장
+
     this.el.addEventListener('model-loaded', () => {
-      faceGltf = this.el.getObject3D('mesh')
-      let materialReplaced = false
+      const faceGltf = this.el.getObject3D('mesh')
+
+      // [Fix] traverse로 실제 geometry가 있는 첫번째 Mesh를 찾음
       faceGltf.traverse((node) => {
-        if (!materialReplaced || node.material) {
+        if (!faceMesh && node.isMesh && node.geometry) {
+          faceMesh = node
+          console.log('animate-face: faceMesh found -', faceMesh.name)
+        }
+        if (node.material) {
           node.material = materialGltf
-          materialReplaced = true
         }
       })
+
+      if (!faceMesh) {
+        console.warn('animate-face: no mesh with geometry found in model')
+      }
     })
 
     const onxrloaded = () => {
       window.XR8.addCameraPipelineModule({
         name: 'cameraFeedPipeline',
         onUpdate: (processCpuResult) => {
-          if (!processCpuResult) {
-            console.log('no processCpuResult')
-            return
-          }
+          if (!processCpuResult) return
           const result = processCpuResult.processCpuResult
           if (result.facecontroller && result.facecontroller.cameraFeedTexture) {
-            const {cameraFeedTexture} = processCpuResult.processCpuResult.facecontroller
+            const {cameraFeedTexture} = result.facecontroller
             const texPropsGltf = this.el.sceneEl.renderer.properties.get(faceTextureGltf_)
             texPropsGltf.__webglTexture = cameraFeedTexture
           }
@@ -37,19 +43,9 @@ const animateFaceComponent = {
     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
 
     const show = (event) => {
-      // [Fix 1] faceGltf 또는 children[0]이 아직 준비되지 않은 경우 방어
-      if (!faceGltf || !faceGltf.children || !faceGltf.children[0]) {
-        console.warn('animate-face: faceGltf not ready yet, skipping frame.')
-        return
-      }
+      if (!faceMesh) return  // 모델 아직 로드 안 됨, 조용히 스킵
 
-      const geometry = faceGltf.children[0].geometry
-      if (!geometry) {
-        console.warn('animate-face: geometry not found on faceGltf.children[0]')
-        return
-      }
-
-      const {uvsInCameraFrame} = event.detail
+      const geometry = faceMesh.geometry
 
       // Update vertex positions.
       const vertices = new Float32Array(event.detail.vertices.length * 3)
@@ -62,6 +58,7 @@ const animateFaceComponent = {
       geometry.attributes.position.needsUpdate = true
 
       // Update UVs.
+      const {uvsInCameraFrame} = event.detail
       const uvs = new Float32Array(uvsInCameraFrame.length * 2)
       for (let i = 0; i < uvsInCameraFrame.length; ++i) {
         uvs[i * 2]     = uvsInCameraFrame[i].u
@@ -70,7 +67,6 @@ const animateFaceComponent = {
       geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2))
 
       // Update vertex normals.
-      // [Fix 2] normals.array 를 통해 실제 Float32Array에 접근해야 함
       const normals = geometry.attributes.normal
       if (normals) {
         for (let i = 0; i < event.detail.normals.length; ++i) {

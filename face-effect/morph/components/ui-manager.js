@@ -1,15 +1,18 @@
 const uiManagerComponent = {
   init() {
+    // [Fix] ui-manager가 붙은 element 자체가 morphTargetModel
+    // index.html에서 a-scene 대신 모델 entity에 붙여야 함
+    // 하지만 기존 html 구조(a-scene에 붙어있음)와의 호환을 위해
+    // 여기선 morphTargetModel을 id로 찾되, object3dset 이벤트로 확실히 대기
     const morphTargetModel = document.getElementById('morphTargetModel')
 
     const handleUI = () => {
       const morphTargetMesh = morphTargetModel.getObject3D('mesh')
       if (!morphTargetMesh) {
-        console.warn('ui-manager: mesh not ready')
+        console.warn('ui-manager: mesh still not ready after model-loaded')
         return
       }
 
-      // Grab morph target names
       const targetNames = []
       morphTargetMesh.traverse((object) => {
         if (object.morphTargetInfluences && object.userData.targetNames) {
@@ -19,7 +22,7 @@ const uiManagerComponent = {
       console.log('Morph targets:', targetNames)
 
       if (targetNames.length === 0) {
-        console.warn('ui-manager: no morph targets found')
+        console.warn('ui-manager: no morph targets found - GLB에 morphTarget userData가 없을 수 있음')
         return
       }
 
@@ -31,65 +34,59 @@ const uiManagerComponent = {
       let currentTargetIndex = 0
       const sliderValues = {}
 
-      // [Fix] gltf-morph 컴포넌트를 모든 타겟에 대해 미리 등록해 둠
-      // setAttribute만으로는 multiple 컴포넌트가 처음 등록 안 될 수 있어서
-      const registerMorphComponent = (name, value) => {
-        const attributeName = `gltf-morph__${name}`
-        // 이미 등록된 컴포넌트면 update, 없으면 새로 등록
-        morphTargetModel.setAttribute(attributeName, `morphTarget: ${name}; value: ${value}`)
+      const applyMorph = (name, value) => {
+        morphTargetModel.setAttribute(`gltf-morph__${name}`, `morphTarget: ${name}; value: ${value}`)
       }
 
       // 모든 타겟을 0으로 초기 등록
       targetNames.forEach((name) => {
         sliderValues[name] = 0
-        registerMorphComponent(name, 0)
+        applyMorph(name, 0)
       })
 
-      function updateTargetNameAndSliderValue() {
-        const currentTargetName = targetNames[currentTargetIndex]
-        const currentSliderValue = sliderValues[currentTargetName] || 0
-        targetName.textContent = currentTargetName
-        slider.value = currentSliderValue
+      const updateUI = () => {
+        const name = targetNames[currentTargetIndex]
+        targetName.textContent = name
+        slider.value = sliderValues[name] || 0
       }
 
-      updateTargetNameAndSliderValue()
+      updateUI()
 
       leftArrow.addEventListener('click', () => {
         sliderValues[targetNames[currentTargetIndex]] = parseFloat(slider.value)
         currentTargetIndex = (currentTargetIndex - 1 + targetNames.length) % targetNames.length
-        updateTargetNameAndSliderValue()
+        updateUI()
       })
 
       rightArrow.addEventListener('click', () => {
         sliderValues[targetNames[currentTargetIndex]] = parseFloat(slider.value)
         currentTargetIndex = (currentTargetIndex + 1) % targetNames.length
-        updateTargetNameAndSliderValue()
+        updateUI()
       })
 
       slider.addEventListener('input', (event) => {
         const value = parseFloat(event.target.value)
         const name = targetNames[currentTargetIndex]
         sliderValues[name] = value
-        registerMorphComponent(name, value)
+        applyMorph(name, value)
       })
 
-      const resetButton = document.getElementById('reset')
-      resetButton.addEventListener('click', () => {
+      document.getElementById('reset').addEventListener('click', () => {
         slider.value = 0
         Object.keys(sliderValues).forEach((key) => {
           sliderValues[key] = 0
-          registerMorphComponent(key, 0)
+          applyMorph(key, 0)
         })
+        updateUI()
       })
     }
 
-    // [Fix] 모델 로드 타이밍 문제: 이미 로드됐을 수도 있으므로 양쪽 모두 처리
-    const mesh = morphTargetModel.getObject3D('mesh')
-    if (mesh) {
-      handleUI()
-    } else {
-      morphTargetModel.addEventListener('model-loaded', handleUI, {once: true})
-    }
+    // [Fix] object3dset 이벤트: gltf-model이 mesh를 set할 때 발생 → model-loaded보다 확실
+    morphTargetModel.addEventListener('object3dset', (e) => {
+      if (e.detail.type === 'mesh') {
+        handleUI()
+      }
+    })
   },
 }
 
