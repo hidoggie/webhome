@@ -1,0 +1,46 @@
+
+.debugger {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 11;
+  pointer-events: none;
+}
+
+
+.debugger .debugButtons{
+  position: absolute;
+  top: calc( 50% - 150px );
+  right: -220px;
+  width: 200px;
+  height: 300px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  background-color: rgba(0, 0, 0, 0.3);
+  padding: 20px;
+  border-radius: 20px;
+  pointer-events: all;
+  transition-property: right;
+  transition-duration: 1s;
+  z-index: 12;
+}
+
+.debugger .debugButtons button{
+  padding: 15px;
+}
+
+.debugger .debugButtons.active{
+  right: 0;
+}
+
+.debugger .debug{
+  width: 100%;
+  height: 200px;
+  position: absolute;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.3);
+}

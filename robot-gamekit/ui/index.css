@@ -1,0 +1,284 @@
+button {
+  border: 0;
+  outline: 0 !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+button,
+button:focus,
+button:active {
+  outline: 0;
+  pointer-events: all;
+}
+button:invalid {
+  box-shadow: none !important;
+}
+
+@font-face {
+  font-family: 'Pointless';
+  src: url('../assets/fonts/pointless.woff2') format('woff2');
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fade-in-bottom {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ui {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Pointless', sans-serif;
+  font-size: 16px;
+  color: #fff;
+  z-index: 10;
+  pointer-events: none;
+}
+.ui *,
+.ui *::before,
+.ui *::after {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+.ui__energybar {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+.ui__score {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+.ui__powerups {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+}
+.ui__btn-play {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  pointer-events: all;
+}
+
+.game-over {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 100;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+
+  /* Animations */
+}
+.game-over::before {
+  content: '';
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000;
+  opacity: 0.7;
+}
+.game-over__title {
+  text-transform: uppercase;
+  font-size: 3rem;
+  text-shadow: 0 0 4px #00cfff;
+  margin-bottom: 15px;
+  animation-delay: 0.1s;
+}
+.game-over__score {
+  text-transform: uppercase;
+  font-size: 1.3rem;
+  margin-bottom: 15px;
+  text-shadow: 0 0 4px #00cfff;
+  line-height: 1.6;
+  animation-delay: 0.2s;
+}
+.game-over__btn-retry {
+  animation-delay: 0.3s;
+  pointer-events: all;
+}
+.game-over__title,
+.game-over__score,
+.game-over__btn-retry {
+  opacity: 0;
+  animation-name: fade-in-up;
+  animation-duration: 0.75s;
+  animation-fill-mode: forwards;
+}
+
+.btn-play {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 100%;
+  background-color: transparent;
+  background-image: url('../assets/img/btn-play.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  /* Animation */
+  opacity: 0;
+  animation-name: fade-in-up;
+  animation-duration: 0.75s;
+  animation-fill-mode: forwards;
+}
+.btn-play::before,
+.btn-play::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: auto 14px;
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all 0.5s ease 0.15s;
+}
+.btn-play::before {
+  background-image: url('../assets/img/icon-play.svg');
+}
+.btn-play::after {
+  background-image: url('../assets/img/icon-pause.svg');
+}
+.btn-play--playing:before,
+.btn-play--pause:after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.btn-retry {
+  position: relative;
+  font-family: 'Pointless', sans-serif;
+  width: 140px;
+  height: 140px;
+  color: #fff;
+  border-radius: 100%;
+  background-color: transparent;
+  background-image: url('../assets/img/btn-retry.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  font-size: 0.8rem;
+  text-shadow: 0 0 3px #00cfff;
+  cursor: pointer;
+}
+
+.energybar {
+  display: flex;
+  align-items: center;
+  /* Animation */
+  opacity: 0;
+  animation-name: fade-in-bottom;
+  animation-duration: 0.75s;
+  animation-fill-mode: forwards;
+}
+.energybar__icon {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 100%;
+  z-index: 1;
+}
+.energybar__icon img {
+  width: 100%;
+  height: 100%;
+}
+
+.energybar__progress {
+  position: relative;
+  width: 180px;
+  height: 24px;
+  background-image: url('../assets/img/energybar--progress.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  margin-left: -6px;
+  z-index: 0;
+}
+.energybar__progress-wrapper {
+  display: block;
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: calc(100% - 8px);
+  width: calc(100% - 6px);
+}
+.energybar__progress-inner {
+  display: block;
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(to right, #72ff00 0%, #ebff00 100%);
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+}
+
+.powerups {
+  display: flex;
+}
+.powerups__item ~ .powerups__item {
+  margin-left: 4px;
+}
+.powerups__item {
+  position: relative;
+  width: 25px;
+}
+.powerups__item {
+  opacity: 0;
+  animation-name: fade-in-up;
+  animation-duration: 0.75s;
+  animation-fill-mode: forwards;
+}
+
+.score {
+  display: flex;
+  align-items: center;
+  width: 84px;
+  height: 40px;
+  background-image: url('../assets/img/score.png');
+  background-size: cover;
+  background-repeat: no-repeat;
+  /* Animation */
+  opacity: 0;
+  animation-name: fade-in-bottom;
+  animation-duration: 0.75s;
+  animation-fill-mode: forwards;
+}
+.score__number {
+  padding-left: 3px;
+  margin-left: 48%;
+  font-size: 0.55rem;
+}
+

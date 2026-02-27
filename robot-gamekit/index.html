@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>ar game kit</title>
+
+  <script src="./../../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../../xr_st/xrextras.js"></script>
+  <script src="./../../xr_st/landing-page.js"></script>  
+  
+  <script async src="./../../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" type="text/css" href="./index.css">
+
+</head>
+
+<body>
+
+<div id="uiHolder" style="width: 100%; height: 100%;"></div>
+<div id="debuggerHolder" style="width: 100%; height: 100%"></div>
+
+<a-scene
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  renderer="colorManagement:true"
+  xrweb="
+    allowedDevices: any;
+    defaultEnvironmentFogIntensity: 0; 
+    
+    defaultEnvironmentFloorColor: #FFF;
+    defaultEnvironmentSkyBottomColor: #B4C4CC; 
+    defaultEnvironmentSkyTopColor: #ff0000;
+    defaultEnvironmentSkyGradientStrength: 0.5;"
+  >
+
+    <a-assets>
+      <a-asset-item id="playerModel" src="assets/models/Robot.glb"></a-asset-item>
+      <a-asset-item id="coinModel" src="assets/models/Coin.glb"></a-asset-item>
+      <a-asset-item id="enemyModel" src="assets/models/Trap.glb"></a-asset-item>
+      <a-asset-item id="energyModel" src="assets/models/Energy.glb"></a-asset-item>
+      <a-asset-item id="floorModel" src="assets/models/Floor.glb"></a-asset-item>
+
+      <img id="targetTexture" src="assets/img/target.png"></img>
+      
+      <audio id="sound_tap" src="assets/sounds/tap.mp3" preload="auto"></audio>
+      <audio id="sound_coin" src="assets/sounds/coin.mp3" preload="auto"></audio>
+      <audio id="sound_enemy" src="assets/sounds/enemy.mp3" preload="auto"></audio>
+      <audio id="sound_powerup" src="assets/sounds/powerup.mp3" preload="auto"></audio>
+      <audio id="sound_gameover" src="assets/sounds/gameover.mp3" preload="auto"></audio>
+      <audio id="sound_button" src="assets/sounds/button.mp3" preload="auto"></audio>
+
+    </a-assets>
+
+  <a-camera
+    id="camera"
+    position="0 8 8"
+    raycaster="objects: .cantap"
+    cursor="
+      fuse: false;
+      rayOrigin: mouse;">
+  </a-camera>
+
+    <a-entity 
+    
+    light="
+      type: directional;
+      intensity: 1;
+      castShadow: true;
+      shadowBias: -0.0001;
+      shadowMapHeight:2048;
+      shadowMapWidth:2048;
+      shadowCameraTop: 40;
+      shadowCameraBottom: -40;
+      shadowCameraRight: 40;
+      shadowCameraLeft: -40;
+      "
+    position="1 4.3 2.5"
+    >
+  </a-entity>
+
+
+  <a-light type="ambient" intensity="0.5"></a-light>
+
+  <a-entity id='simpleGame' simple-game>
+    <a-box id="ground"
+     class="cantap" 
+     scale="1000 0.1 1000"
+    position="0 0 0"
+    material="shader: shadow; transparent: true; opacity: 0.5" 
+    shadow="receive: true"
+    sound="src: #sound_tap">
+    </a-box>
+
+    <a-entity id="board" position="0 0 -6" shadow>
+      <a-entity id="modelFloor" simple-game-floor position="0 0 0" scale="0.8 0.8 0.8"></a-entity>
+      <a-box id="simpleFloor" visible="false" position="0 0 0" width="14" height="0.4" depth="14" material="shader: standard; color: #bfbfbf" shadow="receive: false">
+      </a-box>
+
+      <a-entity position="0 0.2 0">
+        <a-entity id="player" simple-game-element simple-game-player position="0 0 6" ></a-entity>
+        <a-entity id="targetElement" simple-game-element simple-game-target position="0 0 6" >
+            <a-plane rotation="-90 0 0"
+             material="src: #targetTexture; transparent: true" width="2" height="2"
+             animation="property: rotation; to: -90 360 0; loop: true; easing: linear;"
+             ></a-plane>
+        </a-entity>
+
+        <a-entity id="enemy1" sound="src: #sound_enemy" simple-game-element simple-game-enemy position="-6 0 3"></a-entity>
+        <a-entity id="enemy2" sound="src: #sound_enemy" simple-game-element simple-game-enemy position="6 0 -3"></a-entity>
+        <a-entity id="coin1" sound="src: #sound_coin" simple-game-element simple-game-coin position="0 0 -6"></a-entity>
+        <a-entity id="coin2" sound="src: #sound_coin" simple-game-element simple-game-coin position="6 0 0"></a-entity>
+        <a-entity id="powerUp1" sound="src: #sound_powerup" simple-game-element simple-game-energy position="6 0 6"></a-entity>
+      </a>
+      
+    </a-entity>
+
+  </a-entity>
+
+  <a-entity id="gameOverSound" sound="src: #sound_gameover"></a-entity>
+  <a-entity id="buttonSound" sound="src: #sound_button"></a-entity>
+</a-scene>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<div class='ui'>
+    <!-- Energybar -->
+    <div class='ui__energybar'>
+        <div class='energybar'>
+            <div id='energyIcon' class='energybar__icon'></div>
+            <div class='energybar__progress'>
+                <div class='energybar__progress-wrapper'>
+                    <span id='energyBarProgress' class='energybar__progress-inner' style='width: 100%'></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Score -->
+    <div class="ui__score">
+        <div class="score">
+            <div id="scoreLabel" class="score__number">500</div>
+        </div>
+    </div>
+
+    <!-- Powerups -->
+    <div class='ui__powerups'>
+        <div id="powerUps" class='powerups'>
+        </div>
+    </div>
+
+    <!-- Btn Play/Pause -->
+    <div class='ui__btn-play'>
+        <div id='btnPause' class='btn-play btn-play--pause'></div>
+        <div id='btnPlay' class='btn-play btn-play--playing'></div>
+    </div>
+
+    <div id="gameOver_card" class='game-over' style='display: none;'>
+        <div class='game-over__wrapper'>
+            <div class='game-over__title'>
+                Game
+                <br>
+                Over
+            </div>
+            <div class='game-over__score'>
+                SCORE:
+                <br>
+                <span id="gameOverScore">500</span>
+            </div>
+            <div class='game-over__btn-retry'>
+                <button id='btnRestart' type='button' class='btn-retry'></button>
+            </div>
+        </div>
+    </div>
+</div>
