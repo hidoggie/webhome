@@ -243,30 +243,15 @@
     let currentType   = null  // 'photo' | 'video'
     let xr8Ready      = false
 
-    // XR8 파이프라인이 완전히 초기화된 후에 ready
-    // 'realityready' = 카메라 피드 + 파이프라인 모두 준비 완료
+    // realityready = AR 파이프라인 완전 초기화
     const scene = document.getElementById('scene')
     scene.addEventListener('realityready', () => {
       xr8Ready = true
-      console.log('capture: xr8 ready')
-      // MediaRecorder 파이프라인 등록
-      window.addEventListener('xrloaded', () => {
-        XR8.MediaRecorder.configure({
-          maxDurationMs: MAX_VIDEO_MS,
-          enableEndCard: false,
-        })
+      XR8.MediaRecorder.configure({ maxDurationMs: MAX_VIDEO_MS, enableEndCard: false })
+      try {
         XR8.addCameraPipelineModule(XR8.MediaRecorder.pipelineModule())
-        console.log('capture: MediaRecorder pipeline added')
-      }, { once: true })
-      // xrloaded가 이미 됐을 경우
-      if (window.XR8) {
-        XR8.MediaRecorder.configure({
-          maxDurationMs: MAX_VIDEO_MS,
-          enableEndCard: false,
-        })
-        try { XR8.addCameraPipelineModule(XR8.MediaRecorder.pipelineModule()) } catch(e) {}
-        console.log('capture: MediaRecorder pipeline added (sync)')
-      }
+      } catch(e) {}
+      console.log('capture: ready')
     }, { once: true })
 
     // 진행 링 업데이트
@@ -289,24 +274,23 @@
       setTimeout(() => toast.classList.remove('show'), 2000)
     }
 
-    // 사진 촬영
+    // 사진 촬영 - XR8 canvas를 직접 toBlob으로 캡쳐
     function takePhoto() {
       if (!xr8Ready) return
-      // 플래시
       flash.classList.add('flash-on')
       setTimeout(() => flash.classList.remove('flash-on'), 150)
 
-      XR8.CanvasScreenshot.takeScreenshot().then(base64 => {
-        const byteStr = atob(base64)
-        const buf = new ArrayBuffer(byteStr.length)
-        const arr = new Uint8Array(buf)
-        for (let i = 0; i < byteStr.length; i++) arr[i] = byteStr.charCodeAt(i)
-        currentBlob = new Blob([buf], { type: 'image/jpeg' })
-        currentType = 'photo'
-        showPreview()
-      }).catch(e => {
-        console.error('screenshot failed', e)
-        showToast('사진 촬영 실패')
+      // XR8은 preserveDrawingBuffer:false → 렌더 직후 프레임에서 캡쳐해야 함
+      const canvas = document.querySelector('canvas')
+      if (!canvas) { showToast('캔버스 없음'); return }
+      // requestAnimationFrame으로 렌더 직후 캡쳐
+      requestAnimationFrame(() => {
+        canvas.toBlob(blob => {
+          if (!blob) { showToast('사진 촬영 실패'); return }
+          currentBlob = blob
+          currentType = 'photo'
+          showPreview()
+        }, 'image/jpeg', 0.92)
       })
     }
 
