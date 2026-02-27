@@ -1,11 +1,34 @@
 const animateFaceComponent = {
   init() {
     const faceTextureGltf_ = new THREE.Texture()
-    const materialGltf = new THREE.MeshBasicMaterial({
-      map: faceTextureGltf_,
+
+    // [Fix] Custom ShaderMaterial: UV를 shader에서 직접 왜곡
+    // uMorphUVOffset: 각 vertex의 UV delta를 texture2D로 전달
+    const vertexShader = `
+      varying vec2 vUv;
+      attribute vec2 morphUVOffset;
+      uniform float morphStrength;
+      void main() {
+        vUv = uv + morphUVOffset * morphStrength;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `
+    const fragmentShader = `
+      uniform sampler2D map;
+      varying vec2 vUv;
+      void main() {
+        gl_FragColor = texture2D(map, vUv);
+      }
+    `
+
+    const materialGltf = new THREE.ShaderMaterial({
+      uniforms: {
+        map: {value: faceTextureGltf_},
+        morphStrength: {value: 0.0},
+      },
+      vertexShader,
+      fragmentShader,
       side: THREE.DoubleSide,
-      color: 0xffffff,
-      toneMapped: false,
       depthWrite: false,
     })
 
@@ -18,7 +41,7 @@ const animateFaceComponent = {
     let faceMesh = null
     let morphTargets = {}
     let morphInfluences = {}
-    let uvDeltaTargets = {}
+    let uvDeltaTargets = {}  // 각 morph별 UV delta Float32Array
     let geometry = null
     let faceInitialized = false
     let savedIndices = null
@@ -26,9 +49,7 @@ const animateFaceComponent = {
 
     this.el.sceneEl.addEventListener('xrfaceloading', (e) => {
       const {indices, uvs} = e.detail
-      if (indices) {
-        savedIndices = indices instanceof Uint32Array ? indices : new Uint32Array(indices)
-      }
+      if (indices) savedIndices = indices instanceof Uint32Array ? indices : new Uint32Array(indices)
       if (uvs) {
         baseUVs = Array.isArray(uvs) ? uvs : (() => {
           const arr = []
@@ -40,39 +61,30 @@ const animateFaceComponent = {
     })
 
     const buildMorphTargets = (verts, n) => {
-      const x = [], y = []
+      const x=[], y=[]
       for (let i=0;i<n;i++) { x.push(verts[i*3]); y.push(verts[i*3+1]) }
+      const cx=x.reduce((a,b)=>a+b,0)/n
+      const cy=y.reduce((a,b)=>a+b,0)/n
+      const fh=Math.max(...y)-Math.min(...y)
+      const fw=Math.max(...x)-Math.min(...x)
 
-      const cx = x.reduce((a,b)=>a+b,0)/n
-      const cy = y.reduce((a,b)=>a+b,0)/n
-      const fh = Math.max(...y) - Math.min(...y)
-      const fw = Math.max(...x) - Math.min(...x)
+      const uArr=(baseUVs||[]).map(uv=>uv.u)
+      const vArr=(baseUVs||[]).map(uv=>uv.v)
+      const uvFW=uArr.length?(Math.max(...uArr)-Math.min(...uArr)):0.5
+      const uvFH=vArr.length?(Math.max(...vArr)-Math.min(...vArr)):0.5
+      const scaleU=uvFW/fw, scaleV=uvFH/fh
 
-      // UV 범위
-      const uArr = (baseUVs||[]).map(uv=>uv.u)
-      const vArr = (baseUVs||[]).map(uv=>uv.v)
-      const uCx = uArr.length ? uArr.reduce((a,b)=>a+b,0)/uArr.length : 0.5
-      const vCy = vArr.length ? vArr.reduce((a,b)=>a+b,0)/vArr.length : 0.5
-      const uvFW = uArr.length ? (Math.max(...uArr)-Math.min(...uArr)) : 0.5
-      const uvFH = vArr.length ? (Math.max(...vArr)-Math.min(...vArr)) : 0.5
+      console.log(`buildMorphTargets: fw=${fw.toFixed(3)} fh=${fh.toFixed(3)} scaleU=${scaleU.toFixed(4)} scaleV=${scaleV.toFixed(4)}`)
 
-      // 3D→UV 변환 스케일
-      const scaleU = uvFW / fw
-      const scaleV = uvFH / fh
-
-      console.log(`buildMorphTargets: fw=${fw.toFixed(3)}, fh=${fh.toFixed(3)}`)
-      console.log(`UV: uvFW=${uvFW.toFixed(3)}, uvFH=${uvFH.toFixed(3)}, scaleU=${scaleU.toFixed(4)}, scaleV=${scaleV.toFixed(4)}`)
-
-      const eye_top   = cy+fh*0.40, eye_bot  = cy+fh*0.10, eye_mid  = (cy+fh*0.40+cy+fh*0.10)/2
-      const nose_top  = cy+fh*0.08, nose_bot = cy-fh*0.15, nose_mid = (cy+fh*0.08+cy-fh*0.15)/2
-      const mouth_top = cy-fh*0.05, mouth_bot= cy-fh*0.40, mouth_mid= (cy-fh*0.05+cy-fh*0.40)/2
-      const cheek_top = cy+fh*0.25, cheek_bot= cy-fh*0.10
+      const eye_top=cy+fh*0.40, eye_bot=cy+fh*0.10, eye_mid=(eye_top+eye_bot)/2
+      const nose_top=cy+fh*0.08, nose_bot=cy-fh*0.15, nose_mid=(nose_top+nose_bot)/2
+      const mouth_top=cy-fh*0.05, mouth_bot=cy-fh*0.40, mouth_mid=(mouth_top+mouth_bot)/2
+      const cheek_top=cy+fh*0.25, cheek_bot=cy-fh*0.10
 
       const makeDelta = (type) => {
-        const d = new Float32Array(n*3)
+        const d=new Float32Array(n*3)
         for (let i=0;i<n;i++) {
-          const xi=x[i], yi=y[i]
-          let dx=0,dy=0,dz=0
+          const xi=x[i],yi=y[i]; let dx=0,dy=0,dz=0
           if (type==='big_eyes') {
             for (const [ecx,test] of [[cx-fw*0.22,xi<cx],[cx+fw*0.22,xi>=cx]]) {
               if (!test||yi<eye_bot||yi>eye_top) continue
@@ -94,8 +106,7 @@ const animateFaceComponent = {
             }
           } else if (type==='fat_face') {
             if (yi>cheek_bot&&yi<cheek_top) {
-              const w=Math.min(1,Math.abs(xi-cx)/(fw*0.4))
-              dx=Math.sign(xi-cx)*w*fw*0.35
+              dx=Math.sign(xi-cx)*Math.min(1,Math.abs(xi-cx)/(fw*0.4))*fw*0.35
             } else if (yi<=cheek_bot) {
               const jw=Math.min(1,(cheek_bot-yi)/(fh*0.2))
               dx=Math.sign(xi-cx)*jw*fw*0.15; dy=-jw*fh*0.06
@@ -106,127 +117,132 @@ const animateFaceComponent = {
         return d
       }
 
-      const makeUVDelta = (pd) => {
-        const uvd = new Float32Array(n*2)
-        let maxUV = 0
-        for (let i=0;i<n;i++) {
-          // vertex가 늘어나면 UV는 반대방향 → 텍스처가 늘어 보임
-          uvd[i*2]   = -pd[i*3]   * scaleU
-          uvd[i*2+1] = -pd[i*3+1] * scaleV
-          maxUV = Math.max(maxUV, Math.abs(uvd[i*2]), Math.abs(uvd[i*2+1]))
-        }
-        return {uvd, maxUV}
-      }
-
-      const types = ['big_eyes','big_nose','big_mouth','fat_face']
+      const types=['big_eyes','big_nose','big_mouth','fat_face']
       for (const type of types) {
-        morphTargets[type] = makeDelta(type)
-        const {uvd, maxUV} = makeUVDelta(morphTargets[type])
-        uvDeltaTargets[type] = uvd
+        const pd=makeDelta(type)
+        morphTargets[type]=pd
+        const uvd=new Float32Array(n*2)
+        let maxUV=0
+        for (let i=0;i<n;i++) {
+          uvd[i*2]  =-pd[i*3]  *scaleU
+          uvd[i*2+1]=-pd[i*3+1]*scaleV
+          maxUV=Math.max(maxUV,Math.abs(uvd[i*2]),Math.abs(uvd[i*2+1]))
+        }
+        uvDeltaTargets[type]=uvd
         console.log(`  ${type}: maxUVDelta=${maxUV.toFixed(4)}`)
       }
 
-      morphInfluences = {big_eyes:0,big_nose:0,big_mouth:0,fat_face:0}
+      morphInfluences={big_eyes:0,big_nose:0,big_mouth:0,fat_face:0}
 
-      window._faceAnimateSetMorph = (name, value) => {
-        if (name in morphInfluences) morphInfluences[name] = value
+      window._faceAnimateSetMorph=(name,value)=>{
+        if (name in morphInfluences) {
+          morphInfluences[name]=value
+          // 합산 UV delta를 geometry attribute로 업데이트
+          updateMorphUVAttr()
+        }
       }
 
-      setTimeout(() => {
-        document.dispatchEvent(new CustomEvent('faceMorphReady', {
-          detail: {targetNames: Object.keys(morphTargets)}
-        }))
+      setTimeout(()=>{
+        document.dispatchEvent(new CustomEvent('faceMorphReady',{detail:{targetNames:Object.keys(morphTargets)}}))
         console.log('animate-face: morphs ready')
-      }, 100)
+      },100)
     }
 
-    const onxrloaded = () => {
+    // 현재 morphInfluences 기준으로 morphUVOffset attribute 갱신
+    const updateMorphUVAttr = () => {
+      if (!geometry) return
+      const attr=geometry.attributes.morphUVOffset
+      if (!attr) return
+      const n=attr.count
+      for (let i=0;i<n;i++) {
+        let du=0,dv=0
+        for (const [name,inf] of Object.entries(morphInfluences)) {
+          if (inf===0||!uvDeltaTargets[name]) continue
+          du+=uvDeltaTargets[name][i*2]  *inf
+          dv+=uvDeltaTargets[name][i*2+1]*inf
+        }
+        attr.array[i*2]  =du
+        attr.array[i*2+1]=dv
+      }
+      attr.needsUpdate=true
+    }
+
+    const onxrloaded=()=>{
       window.XR8.addCameraPipelineModule({
-        name: 'cameraFeedPipeline',
-        onUpdate: (processCpuResult) => {
+        name:'cameraFeedPipeline',
+        onUpdate:(processCpuResult)=>{
           if (!processCpuResult) return
-          const result = processCpuResult.processCpuResult
-          if (result.facecontroller && result.facecontroller.cameraFeedTexture) {
-            const texProps = this.el.sceneEl.renderer.properties.get(faceTextureGltf_)
-            texProps.__webglTexture = result.facecontroller.cameraFeedTexture
+          const result=processCpuResult.processCpuResult
+          if (result.facecontroller&&result.facecontroller.cameraFeedTexture) {
+            const texProps=this.el.sceneEl.renderer.properties.get(faceTextureGltf_)
+            texProps.__webglTexture=result.facecontroller.cameraFeedTexture
           }
         },
       })
     }
-    window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
+    window.XR8?onxrloaded():window.addEventListener('xrloaded',onxrloaded)
 
-    const show = (event) => {
-      const {vertices, normals, uvsInCameraFrame} = event.detail
+    const show=(event)=>{
+      const {vertices,normals,uvsInCameraFrame}=event.detail
 
       if (!faceInitialized) {
-        faceInitialized = true
-        const n = vertices.length
+        faceInitialized=true
+        const n=vertices.length
         console.log(`animate-face: init ${n} verts`)
 
-        geometry = new THREE.BufferGeometry()
-        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3))
-        geometry.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(n*3), 3))
-        geometry.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(n*2), 2))
-        if (savedIndices?.length > 0) {
-          geometry.setIndex(new THREE.BufferAttribute(savedIndices, 1))
-        }
+        geometry=new THREE.BufferGeometry()
+        geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3),3))
+        geometry.setAttribute('normal',   new THREE.BufferAttribute(new Float32Array(n*3),3))
+        geometry.setAttribute('uv',       new THREE.BufferAttribute(new Float32Array(n*2),2))
+        // morphUVOffset: shader에서 UV를 왜곡하는 per-vertex offset
+        geometry.setAttribute('morphUVOffset', new THREE.BufferAttribute(new Float32Array(n*2),2))
 
-        faceMesh = new THREE.Mesh(geometry, materialGltf)
-        this.el.setObject3D('faceMesh', faceMesh)
+        if (savedIndices?.length>0) geometry.setIndex(new THREE.BufferAttribute(savedIndices,1))
 
-        const base = new Float32Array(n*3)
-        for (let i=0;i<n;i++) {
-          base[i*3]=vertices[i].x; base[i*3+1]=vertices[i].y; base[i*3+2]=vertices[i].z
-        }
-        buildMorphTargets(base, n)
+        faceMesh=new THREE.Mesh(geometry,materialGltf)
+        this.el.setObject3D('faceMesh',faceMesh)
+
+        const base=new Float32Array(n*3)
+        for (let i=0;i<n;i++){base[i*3]=vertices[i].x;base[i*3+1]=vertices[i].y;base[i*3+2]=vertices[i].z}
+        buildMorphTargets(base,n)
       }
 
       if (!faceMesh) return
 
-      const posAttr  = geometry.attributes.position
-      const normAttr = geometry.attributes.normal
-      const uvAttr   = geometry.attributes.uv
-      const n = vertices.length
-      const anyActive = Object.values(morphInfluences).some(v=>v>0)
+      const posAttr =geometry.attributes.position
+      const normAttr=geometry.attributes.normal
+      const uvAttr  =geometry.attributes.uv
+      const n=vertices.length
 
-      for (let i=0;i<n;i++) {
-        let px=vertices[i].x, py=vertices[i].y, pz=vertices[i].z
-        if (anyActive) {
-          for (const [name,inf] of Object.entries(morphInfluences)) {
-            if (inf===0) continue
-            px+=morphTargets[name][i*3]*inf
-            py+=morphTargets[name][i*3+1]*inf
-            pz+=morphTargets[name][i*3+2]*inf
-          }
+      // position: XR8 + morph delta
+      for (let i=0;i<n;i++){
+        let px=vertices[i].x,py=vertices[i].y,pz=vertices[i].z
+        for (const [name,inf] of Object.entries(morphInfluences)){
+          if (inf===0) continue
+          px+=morphTargets[name][i*3]  *inf
+          py+=morphTargets[name][i*3+1]*inf
+          pz+=morphTargets[name][i*3+2]*inf
         }
-        posAttr.array[i*3]=px; posAttr.array[i*3+1]=py; posAttr.array[i*3+2]=pz
+        posAttr.array[i*3]=px;posAttr.array[i*3+1]=py;posAttr.array[i*3+2]=pz
       }
-      posAttr.needsUpdate = true
+      posAttr.needsUpdate=true
 
-      for (let i=0;i<normals.length;i++) {
-        normAttr.array[i*3]=normals[i].x
-        normAttr.array[i*3+1]=normals[i].y
-        normAttr.array[i*3+2]=normals[i].z
+      for (let i=0;i<normals.length;i++){
+        normAttr.array[i*3]=normals[i].x;normAttr.array[i*3+1]=normals[i].y;normAttr.array[i*3+2]=normals[i].z
       }
-      normAttr.needsUpdate = true
+      normAttr.needsUpdate=true
 
-      for (let i=0;i<uvsInCameraFrame.length;i++) {
-        let u=uvsInCameraFrame[i].u
-        let v=uvsInCameraFrame[i].v
-        if (anyActive) {
-          for (const [name,inf] of Object.entries(morphInfluences)) {
-            if (inf===0) continue
-            u+=uvDeltaTargets[name][i*2]*inf
-            v+=uvDeltaTargets[name][i*2+1]*inf
-          }
-        }
-        uvAttr.array[i*2]=u; uvAttr.array[i*2+1]=v
+      // UV: XR8 카메라 UV (매 프레임 업데이트)
+      for (let i=0;i<uvsInCameraFrame.length;i++){
+        uvAttr.array[i*2]=uvsInCameraFrame[i].u
+        uvAttr.array[i*2+1]=uvsInCameraFrame[i].v
       }
-      uvAttr.needsUpdate = true
+      uvAttr.needsUpdate=true
+      // morphUVOffset은 _faceAnimateSetMorph 호출 시만 업데이트 (매 프레임 불필요)
     }
 
-    this.el.sceneEl.addEventListener('xrfacefound',   show)
-    this.el.sceneEl.addEventListener('xrfaceupdated', show)
+    this.el.sceneEl.addEventListener('xrfacefound',  show)
+    this.el.sceneEl.addEventListener('xrfaceupdated',show)
   },
 }
 
