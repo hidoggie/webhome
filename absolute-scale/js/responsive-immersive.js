@@ -57,14 +57,22 @@ const responsiveImmersiveComponent = {
         !s.usesWebXr
       ) {  // Mobile-specific behavior goes here
         const container = document.getElementById('container')
+        const hotspots = document.getElementById('hotspot-group')
+
         this.el.addEventListener('coaching-overlay.show', (e) => {
+          // 차를 숨길 때 hotspot도 함께 숨김 (scale 변환 중 빨간 구름 방지)
           car.object3D.scale.set(0.001, 0.001, 0.001)
+          if (hotspots) hotspots.object3D.visible = false
           container.style.display = 'none'
         })
         this.el.addEventListener('coaching-overlay.hide', (e) => {
           container.style.display = 'block'
           car.object3D.scale.set(1, 1, 1)
           car.setAttribute('absolute-pinch-scale', '')
+          // scale이 완전히 적용된 후 hotspot 표시 (300ms 딜레이)
+          setTimeout(() => {
+            if (hotspots) hotspots.object3D.visible = true
+          }, 300)
         })
         const addComponents = () => {
           car.setAttribute('change-color', '')

@@ -95,13 +95,13 @@ const annotationComponent = {
     let labelActivated; let
       hsActivated
 
-    // hotspot inner customization - 초기 opacity 0 (로드 시 뭉쳐 보이는 문제 방지)
+    // hotspot inner - 초기 opacity 0 (로드 시 빨간 구름 방지)
     this.el.setAttribute('radius', 0.03)
     this.el.setAttribute('material', {shader: 'flat', color: '#FF4713', alphaTest: 0.5, transparent: true, opacity: 0})
     this.el.setAttribute('segments-height', 12)
     this.el.setAttribute('segments-width', 12)
 
-    // hotspot torus customization - 초기 opacity 0
+    // hotspot torus - 초기 opacity 0
     this.torus = document.createElement('a-torus')
     this.torus.setAttribute('material', {shader: 'flat', color: '#FF4713', alphaTest: 0.5, transparent: true, opacity: 0})
     this.torus.setAttribute('radius', 0.05)
@@ -170,7 +170,7 @@ const annotationComponent = {
       if (hsActivated) {
         return
       }
-      // opacity attribute를 명시적으로 0으로 리셋 후 fade-in
+      // 먼저 opacity를 0으로 명시 후 fade-in (이전 상태 잔재 방지)
       this.el.setAttribute('opacity', 0)
       this.torus.setAttribute('opacity', 0)
       this.el.setAttribute('animation__fading', {
@@ -178,38 +178,42 @@ const annotationComponent = {
         from: 0,
         to: 1,
         easing: 'easeInOutQuad',
-        dur: 1000,
+        dur: 800,
       })
       this.torus.setAttribute('animation__fade', {
         property: 'opacity',
         from: 0,
         to: 1,
         easing: 'easeInOutQuad',
-        dur: 1000,
+        dur: 800,
       })
       hsActivated = true
     }
 
     // hide hotspot
     this.deactivateHs = () => {
-      if (!hsActivated) {
-        return
+      // hsActivated 여부와 무관하게 항상 opacity 0 보장
+      if (hsActivated) {
+        this.el.setAttribute('animation__fading', {
+          property: 'opacity',
+          from: 1,
+          to: 0,
+          easing: 'easeInOutQuad',
+          dur: 800,
+        })
+        this.torus.setAttribute('animation__fade', {
+          property: 'opacity',
+          from: 1,
+          to: 0,
+          easing: 'easeInOutQuad',
+          dur: 800,
+        })
+        hsActivated = false
+      } else {
+        // 아직 activated 된 적 없어도 opacity 0 강제 적용
+        this.el.setAttribute('opacity', 0)
+        this.torus.setAttribute('opacity', 0)
       }
-      this.el.setAttribute('animation__fading', {
-        property: 'opacity',
-        from: 1,
-        to: 0,
-        easing: 'easeInOutQuad',
-        dur: 1000,
-      })
-      this.torus.setAttribute('animation__fade', {
-        property: 'opacity',
-        from: 1,
-        to: 0,
-        easing: 'easeInOutQuad',
-        dur: 1000,
-      })
-      hsActivated = false
     }
 
     // create label renderer for text
