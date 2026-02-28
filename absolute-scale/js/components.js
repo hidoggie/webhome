@@ -95,20 +95,22 @@ const annotationComponent = {
     let labelActivated; let
       hsActivated
 
-    // hotspot inner customization
+    // hotspot inner customization - 초기에 보이지 않도록 visible: false
     this.el.setAttribute('radius', 0.03)
-    this.el.setAttribute('material', {shader: 'flat', color: '#FF4713', alphaTest: 0.5, transparent: true})
+    this.el.setAttribute('material', {shader: 'flat', color: '#FF4713', alphaTest: 0.5, transparent: true, opacity: 0})
     this.el.setAttribute('segments-height', 12)
     this.el.setAttribute('segments-width', 12)
+    this.el.setAttribute('visible', false)
 
-    // hotspot torus customization
+    // hotspot torus customization - 초기에 보이지 않도록 visible: false
     this.torus = document.createElement('a-torus')
-    this.torus.setAttribute('material', {shader: 'flat', color: '#FF4713', alphaTest: 0.5, transparent: true})
+    this.torus.setAttribute('material', {shader: 'flat', color: '#FF4713', alphaTest: 0.5, transparent: true, opacity: 0})
     this.torus.setAttribute('radius', 0.05)
     this.torus.setAttribute('segments-radial', 12)
     this.torus.setAttribute('segments-tubular', 24)
     this.torus.setAttribute('radius-tubular', 0.005)
     this.torus.setAttribute('xrextras-spin', '')
+    this.torus.setAttribute('visible', false)
     this.el.appendChild(this.torus)
 
     this.activateLabel = () => {
@@ -170,8 +172,11 @@ const annotationComponent = {
       if (hsActivated) {
         return
       }
+      // visible을 true로 먼저 켠 후 fade-in
+      this.el.setAttribute('visible', true)
+      this.torus.setAttribute('visible', true)
       this.el.setAttribute('animation__fading', {
-        property: 'opacity',
+        property: 'components.material.material.opacity',
         from: 0,
         to: 1,
         easing: 'easeInOutQuad',
@@ -179,7 +184,7 @@ const annotationComponent = {
       })
 
       this.torus.setAttribute('animation__fade', {
-        property: 'opacity',
+        property: 'components.material.material.opacity',
         from: 0,
         to: 1,
         easing: 'easeInOutQuad',
@@ -195,7 +200,7 @@ const annotationComponent = {
         return
       }
       this.el.setAttribute('animation__fading', {
-        property: 'opacity',
+        property: 'components.material.material.opacity',
         from: 1,
         to: 0,
         easing: 'easeInOutQuad',
@@ -203,7 +208,7 @@ const annotationComponent = {
       })
 
       this.torus.setAttribute('animation__fade', {
-        property: 'opacity',
+        property: 'components.material.material.opacity',
         from: 1,
         to: 0,
         easing: 'easeInOutQuad',
