@@ -12,26 +12,61 @@ const changeColorComponent = {
     // default: white, dark blue, orange, blue, custom texture
     const colorList = ['#FFF', '#091F40', '#FF4713', '#43BBD1', 'custom-texture']
 
-    // Named the specified mesh within the 3D model 'Car' (The mesh for the cars exterior/paint)
+    // 외장 페인트 material 이름 (tucson GLB 기준)
+    const EXTERIOR_MATERIAL = 'tucsonMI_Exhaust1'
+
+    // 외장 페인트에 해당하는 모든 mesh를 material 이름으로 수집
+    const getExteriorMeshes = () => {
+      const meshes = []
+      const root = this.el.getObject3D('mesh')
+      if (!root) return meshes
+      root.traverse((node) => {
+        if (node.isMesh) {
+          const mat = node.material
+          // material이 배열인 경우도 처리
+          const materials = Array.isArray(mat) ? mat : [mat]
+          materials.forEach((m) => {
+            if (m && m.name === EXTERIOR_MATERIAL) {
+              meshes.push({node, material: m})
+            }
+          })
+        }
+      })
+      return meshes
+    }
+
+    // 외장 mesh에 색상/텍스처 적용
     const setColor = ({newColor, button}) => {
-      this.modelMesh = this.el.getObject3D('mesh').getObjectByName('Car')
+      const root = this.el.getObject3D('mesh')
+      if (!root) {
+        console.warn('setColor: 모델이 아직 로드되지 않았습니다.')
+        return
+      }
+
+      const exteriorMeshes = getExteriorMeshes()
+      if (exteriorMeshes.length === 0) {
+        console.warn(`setColor: "${EXTERIOR_MATERIAL}" material을 가진 mesh를 찾지 못했습니다.`)
+        return
+      }
+
+      // 외장 mesh 캐싱 (tick에서 사용)
+      this.exteriorMeshes = exteriorMeshes
+
       if (newColor === 'custom-texture') {
-        // sets custom texture
         texture.wrapS = THREE.RepeatWrapping
         texture.wrapT = THREE.RepeatWrapping
         texture.repeat.set(8, 8)
-        this.modelMesh.material.map = texture
-        this.modelMesh.material.needsUpdate = true
-        this.modelMesh.traverse((node) => {
-          node.material.color = new THREE.Color('#FFF')
+        exteriorMeshes.forEach(({material}) => {
+          material.map = texture
+          material.color.set('#FFF')
+          material.needsUpdate = true
         })
         this.textureSelected = true
       } else {
-        // no custom texture
-        this.modelMesh.material.map = null
-        this.modelMesh.material.needsUpdate = true
-        this.modelMesh.traverse((node) => {
-          node.material.color = new THREE.Color(newColor)
+        exteriorMeshes.forEach(({material}) => {
+          material.map = null
+          material.color.set(newColor)
+          material.needsUpdate = true
         })
         this.textureSelected = false
       }
@@ -75,9 +110,16 @@ const changeColorComponent = {
       return
     }
     // animates texture if selected
-    this.modelMesh.getObjectByName('Car').material.map.repeat.x = 2
-    this.modelMesh.getObjectByName('Car').material.map.repeat.y = 2
-    this.modelMesh.getObjectByName('Car').material.map.offset.x = this.offset
+    if (!this.exteriorMeshes || this.exteriorMeshes.length === 0) {
+      return
+    }
+    this.exteriorMeshes.forEach(({material}) => {
+      if (material.map) {
+        material.map.repeat.x = 2
+        material.map.repeat.y = 2
+        material.map.offset.x = this.offset
+      }
+    })
     this.offset += 0.002
   },
 }
@@ -468,4 +510,3 @@ const ignoreRaycast = {
 }
 
 export {changeColorComponent, annotationComponent, absPinchScaleComponent, proximityComponent, gltfMorphComponent, ignoreRaycast}
-
