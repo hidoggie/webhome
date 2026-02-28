@@ -1,4 +1,4 @@
-import {changeColorComponent, absPinchScaleComponent, annotationComponent, proximityComponent, gltfMorphComponent, ignoreRaycast} from './js/components'.js'
+import {changeColorComponent, absPinchScaleComponent, annotationComponent, proximityComponent, gltfMorphComponent, ignoreRaycast} from './js/components.js'
 AFRAME.registerComponent('change-color', changeColorComponent)
 AFRAME.registerComponent('annotation', annotationComponent)
 AFRAME.registerComponent('absolute-pinch-scale', absPinchScaleComponent)
@@ -16,5 +16,6 @@ const IS_IOS =
 if (IS_IOS) {
   window.createImageBitmap = undefined
 }
+
 
 
