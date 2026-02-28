@@ -1,0 +1,17 @@
+.custom-upload {
+  z-index: 2;
+  position: absolute;
+  right: 1vh;
+  bottom: 3vmin;
+  font-family: Nunito,sans-serif;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0.5em 0.7em;
+  border-radius: 10px;
+  background: linear-gradient(90deg,#2D2E43,#3A3B55);
+}
+
+input {
+  display: none !important;
+}
