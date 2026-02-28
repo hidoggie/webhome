@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>ear tracking</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+
+<script src="./../xr_st/ammo.wasm.js"></script>
+<script src="./../xr_st/aframe-physics-system-4.2.2.min.js"></script>
+  
+<script async src="./../xr_st/xr.js" data-preload-chunks="face"></script>
+<script type="module" src="./app.js" defer></script>
+
+  <link rel="stylesheet" type="text/css" href="index.css">
+  
+</head>
+
+<body>
+
+<a-scene
+  physics="driver: ammo; debug:false;"
+  xrextras-loading
+  xrextras-runtime-error
+  renderer="colorManagement:true"
+  ui-manager
+  xrconfig="allowedDevices: any; cameraDirection: front; mirroredDisplay: true"
+  xrface="enableEars:true; meshGeometry: face, eyes, iris, mouth">
+  <!-- 3D models, images, videos -->
+  <a-assets>
+    <a-asset-item id="head-occluder-no-ears" src="./assets/models/noEarsHeadOccluder.glb"></a-asset-item>
+
+    <a-asset-item id="earringLow" src="./assets/models/danglyBottom.glb"></a-asset-item>
+    <a-asset-item id="earringMid" src="./assets/models/danglyMiddle.glb"></a-asset-item>
+    <a-asset-item id="earringTop" src="./assets/models/danglyTop.glb"></a-asset-item>
+
+    <a-asset-item id="stud" src="./assets/models/8stud.glb"></a-asset-item>
+
+    <a-asset-item id="arrowIn" src="./assets/models/arrowIn.glb"></a-asset-item>
+    <a-asset-item id="arrowOut" src="./assets/models/arrowOut.glb"></a-asset-item>
+  </a-assets>
+
+  <a-camera position="0 2 0"></a-camera>
+
+  <!-- content anchored to face -->
+  <xrextras-faceanchor>
+    <!-- head occluder -->
+    <a-entity
+      gltf-model="#head-occluder-no-ears"
+      position="0 0.08 0.13"
+      scale="1 1.1 1.2"
+      xrextras-hider-material></a-entity>
+
+    <!-- head collider -->
+    <a-entity
+      scale="1.05 1.1 1.35"
+      rotation="-6 0 0"
+      position="0 0 -0.15"
+      ammo-body="type: static"
+      ammo-shape="type: capsule; fit: manual; halfExtents: .036 .02 .036 ">
+    </a-entity>
+
+    <xrextras-face-mesh xrextras-hider-material></xrextras-face-mesh>
+
+    <!-- left ear attachment points -->
+    <xrextras-face-attachment point="leftHelix">
+      <a-entity
+        id="leftStud"
+        position="-.04 0 0"
+        visible="false"
+        reflections="type:static"
+        rotation="10 160 -25"
+        gltf-model="#stud"
+        scale=".1 .1 .1"></a-entity>
+    </xrextras-face-attachment>
+
+    <xrextras-face-attachment point="leftCanal">
+      <a-sphere
+        id="leftEarOccluder"
+        position="0 0.01 .1"
+        rotation="0 -50 -17"
+        color="red"
+        scale="0.12 .23 0.03"
+        xrextras-hider-material></a-sphere>
+
+      <a-sphere
+        scale=".05 .1 .04"
+        id="leftTragusOccluder"
+        color="red"
+        xrextras-hider-material
+        position="-.04 0.02 0"></a-sphere>
+
+      <a-entity
+        id="arrowInEntity"
+        position="0 .01 .01"
+        visible="false"
+        rotation="0 180 0"
+        gltf-model="#arrowIn"
+        scale="1 1 1"></a-entity>
+    </xrextras-face-attachment>
+
+    <xrextras-face-attachment point="leftLobe">
+      <a-entity
+        id="leftEarringTop"
+        earring-chain
+        position="0 -.04 0"
+        reflections="type:static"
+        rotation="0 -45 0"
+        gltf-model="#earringTop"
+        scale=".15 .15 .15"></a-entity>
+    </xrextras-face-attachment>
+
+    <!-- right ear attachment points -->
+    <xrextras-face-attachment point="rightHelix">
+      <a-entity
+        id="rightStud"
+        position=".04 0 0"
+        visible="false"
+        reflections="type:static"
+        rotation="10 -160 25"
+        gltf-model="#stud"
+        scale=".1 .1 .1"></a-entity>
+    </xrextras-face-attachment>
+
+    <xrextras-face-attachment point="rightCanal">
+      <a-sphere
+        id="rightEarOccluder"
+        position="0 0.02 0.13"
+        rotation="0 40 17"
+        color="red"
+        scale="0.12 .23 0.03"
+        xrextras-hider-material></a-sphere>
+
+      <a-sphere
+        scale=".05 .1 .02"
+        id="rightTragusOccluder"
+        rotation="20 0 0"
+        color="red"
+        xrextras-hider-material
+        position=".05 0.02 -.03"></a-sphere>
+
+      <a-entity
+        id="arrowOutEntity"
+        position=".1 .03 .08"
+        visible="false"
+        rotation="0 180 0"
+        gltf-model="#arrowOut"
+        scale="1 1 1"></a-entity>
+    </xrextras-face-attachment>
+
+    <xrextras-face-attachment point="rightLobe">
+      <a-entity
+        id="rightEarringTop"
+        earring-chain
+        position="0 -.04 0"
+        reflections="type:static"
+        rotation="0 45 0"
+        gltf-model="#earringTop"
+        scale=".15 .15 .15"></a-entity>
+    </xrextras-face-attachment>
+  </xrextras-faceanchor>
+
+  <a-entity
+    hide-earrings
+    id="leftEarringMid"
+    reflections="type:static"
+    gltf-model="#earringMid"
+    scale=".015 .015 .015"></a-entity>
+  <a-entity
+    id="leftEarringLow"
+    reflections="type:static"
+    gltf-model="#earringLow"
+    scale=".015 .015 .015"></a-entity>
+
+  <a-entity
+    id="rightEarringMid"
+    reflections="type:static"
+    gltf-model="#earringMid"
+    scale=".015 .015 .015"></a-entity>
+  <a-entity
+    id="rightEarringLow"
+    reflections="type:static"
+    gltf-model="#earringLow"
+    scale=".015 .015 .015"></a-entity>
+
+  <a-light type="directional" target="#face" position="0 1.8 3" intensity="0.8"></a-light>
+  <a-light type="ambient" intensity="0.8"></a-light>
+</a-scene>
+
+<!-- UI -->
+<div id="nextButton">Next</div>
+
+</body>
+</html>
