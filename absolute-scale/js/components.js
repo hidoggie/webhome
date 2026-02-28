@@ -167,36 +167,49 @@ const annotationComponent = {
 
     // show hotspot
     this.activateHs = () => {
-      if (hsActivated) { return }
-      this.el.setAttribute('opacity', 0)
-      this.torus.setAttribute('opacity', 0)
+      if (hsActivated) {
+        return
+      }
       this.el.setAttribute('animation__fading', {
-        property: 'opacity', from: 0, to: 1,
-        easing: 'easeInOutQuad', dur: 800,
+        property: 'opacity',
+        from: 0,
+        to: 1,
+        easing: 'easeInOutQuad',
+        dur: 1000,
       })
+
       this.torus.setAttribute('animation__fade', {
-        property: 'opacity', from: 0, to: 1,
-        easing: 'easeInOutQuad', dur: 800,
+        property: 'opacity',
+        from: 0,
+        to: 1,
+        easing: 'easeInOutQuad',
+        dur: 1000,
       })
+
       hsActivated = true
     }
 
     // hide hotspot
     this.deactivateHs = () => {
       if (!hsActivated) {
-        // activated 안 된 상태에서도 opacity 0 강제
-        this.el.setAttribute('opacity', 0)
-        this.torus.setAttribute('opacity', 0)
         return
       }
       this.el.setAttribute('animation__fading', {
-        property: 'opacity', from: 1, to: 0,
-        easing: 'easeInOutQuad', dur: 800,
+        property: 'opacity',
+        from: 1,
+        to: 0,
+        easing: 'easeInOutQuad',
+        dur: 1000,
       })
+
       this.torus.setAttribute('animation__fade', {
-        property: 'opacity', from: 1, to: 0,
-        easing: 'easeInOutQuad', dur: 800,
+        property: 'opacity',
+        from: 1,
+        to: 0,
+        easing: 'easeInOutQuad',
+        dur: 1000,
       })
+
       hsActivated = false
     }
 
@@ -227,6 +240,16 @@ const annotationComponent = {
     this.scene.add(this.labelObj)
   },
   tick() {
+    // hotspot-group이 숨겨진 상태면 처리 건너뜀 (scale 전환 중 빨간 구름 방지)
+    const group = this.el.parentNode
+    if (group && !group.object3D.visible) {
+      this.deactivateLabel()
+      // opacity 강제 0 유지
+      if (this.el.components.material) this.el.components.material.material.opacity = 0
+      if (this.torus && this.torus.components.material) this.torus.components.material.material.opacity = 0
+      return
+    }
+
     // track label position to hotspot
     this.worldPos = this.el.object3D.getWorldPosition(this.worldVec)
     this.labelObj.position.copy(new THREE.Vector3(this.worldPos.x, this.worldPos.y + this.data.offsetY, this.worldPos.z))
@@ -454,20 +477,4 @@ const ignoreRaycast = {
   },
 }
 
-// follow-car: hotspot-group이 car의 위치/회전을 매 프레임 따라가도록 함
-// hotspot을 car 자식에서 분리했기 때문에 필요 (scale 왜곡 방지)
-const followCarComponent = {
-  schema: {
-    target: {type: 'string', default: 'car'},
-  },
-  tick() {
-    const target = document.getElementById(this.data.target)
-    if (!target) return
-    const targetObj = target.object3D
-    // 위치와 회전만 동기화 (scale은 제외 → 왜곡 방지 핵심)
-    this.el.object3D.position.copy(targetObj.position)
-    this.el.object3D.rotation.copy(targetObj.rotation)
-  },
-}
-
-export {changeColorComponent, annotationComponent, absPinchScaleComponent, proximityComponent, gltfMorphComponent, ignoreRaycast, followCarComponent}
+export {changeColorComponent, annotationComponent, absPinchScaleComponent, proximityComponent, gltfMorphComponent, ignoreRaycast}

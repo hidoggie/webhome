@@ -60,23 +60,24 @@ const responsiveImmersiveComponent = {
         const hotspots = document.getElementById('hotspot-group')
 
         this.el.addEventListener('coaching-overlay.show', (e) => {
+          // 차 숨김 + hotspot 완전히 숨김 (scale 왜곡 방지)
           car.object3D.scale.set(0.001, 0.001, 0.001)
-          // hotspot도 숨김 (scale 전환 중 빨간 구름 방지)
           if (hotspots) hotspots.object3D.visible = false
           container.style.display = 'none'
         })
         this.el.addEventListener('coaching-overlay.hide', (e) => {
           container.style.display = 'block'
+          // scale을 먼저 1로 복원
           car.object3D.scale.set(1, 1, 1)
           car.setAttribute('absolute-pinch-scale', '')
-          // scale 전환 완료 후 hotspot 표시
+          // scale 전환이 완전히 끝난 후 hotspot 표시 (2프레임 대기)
           setTimeout(() => {
             if (hotspots) hotspots.object3D.visible = true
-          }, 500)
+          }, 100)
         })
         const addComponents = () => {
           car.setAttribute('change-color', '')
-          car.setAttribute('reflections', 'type: realtime')
+          // reflections: realtime 제거 (material 덮어씌워 색상변경 무효화)
         }
         car.getObject3D('mesh') ? addComponents() : car.addEventListener('model-loaded', addComponents)
       }
