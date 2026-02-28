@@ -95,7 +95,7 @@ const annotationComponent = {
     let labelActivated; let
       hsActivated
 
-    // hotspot inner - 초기 opacity 0 (로드 시 빨간 구름 방지)
+    // hotspot inner - 초기 opacity 0
     this.el.setAttribute('radius', 0.03)
     this.el.setAttribute('material', {shader: 'flat', color: '#FF4713', alphaTest: 0.5, transparent: true, opacity: 0})
     this.el.setAttribute('segments-height', 12)
@@ -167,53 +167,37 @@ const annotationComponent = {
 
     // show hotspot
     this.activateHs = () => {
-      if (hsActivated) {
-        return
-      }
-      // 먼저 opacity를 0으로 명시 후 fade-in (이전 상태 잔재 방지)
+      if (hsActivated) { return }
       this.el.setAttribute('opacity', 0)
       this.torus.setAttribute('opacity', 0)
       this.el.setAttribute('animation__fading', {
-        property: 'opacity',
-        from: 0,
-        to: 1,
-        easing: 'easeInOutQuad',
-        dur: 800,
+        property: 'opacity', from: 0, to: 1,
+        easing: 'easeInOutQuad', dur: 800,
       })
       this.torus.setAttribute('animation__fade', {
-        property: 'opacity',
-        from: 0,
-        to: 1,
-        easing: 'easeInOutQuad',
-        dur: 800,
+        property: 'opacity', from: 0, to: 1,
+        easing: 'easeInOutQuad', dur: 800,
       })
       hsActivated = true
     }
 
     // hide hotspot
     this.deactivateHs = () => {
-      // hsActivated 여부와 무관하게 항상 opacity 0 보장
-      if (hsActivated) {
-        this.el.setAttribute('animation__fading', {
-          property: 'opacity',
-          from: 1,
-          to: 0,
-          easing: 'easeInOutQuad',
-          dur: 800,
-        })
-        this.torus.setAttribute('animation__fade', {
-          property: 'opacity',
-          from: 1,
-          to: 0,
-          easing: 'easeInOutQuad',
-          dur: 800,
-        })
-        hsActivated = false
-      } else {
-        // 아직 activated 된 적 없어도 opacity 0 강제 적용
+      if (!hsActivated) {
+        // activated 안 된 상태에서도 opacity 0 강제
         this.el.setAttribute('opacity', 0)
         this.torus.setAttribute('opacity', 0)
+        return
       }
+      this.el.setAttribute('animation__fading', {
+        property: 'opacity', from: 1, to: 0,
+        easing: 'easeInOutQuad', dur: 800,
+      })
+      this.torus.setAttribute('animation__fade', {
+        property: 'opacity', from: 1, to: 0,
+        easing: 'easeInOutQuad', dur: 800,
+      })
+      hsActivated = false
     }
 
     // create label renderer for text
@@ -470,4 +454,20 @@ const ignoreRaycast = {
   },
 }
 
-export {changeColorComponent, annotationComponent, absPinchScaleComponent, proximityComponent, gltfMorphComponent, ignoreRaycast}
+// follow-car: hotspot-group이 car의 위치/회전을 매 프레임 따라가도록 함
+// hotspot을 car 자식에서 분리했기 때문에 필요 (scale 왜곡 방지)
+const followCarComponent = {
+  schema: {
+    target: {type: 'string', default: 'car'},
+  },
+  tick() {
+    const target = document.getElementById(this.data.target)
+    if (!target) return
+    const targetObj = target.object3D
+    // 위치와 회전만 동기화 (scale은 제외 → 왜곡 방지 핵심)
+    this.el.object3D.position.copy(targetObj.position)
+    this.el.object3D.rotation.copy(targetObj.rotation)
+  },
+}
+
+export {changeColorComponent, annotationComponent, absPinchScaleComponent, proximityComponent, gltfMorphComponent, ignoreRaycast, followCarComponent}
