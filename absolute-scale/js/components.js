@@ -7,82 +7,98 @@ const changeColorComponent = {
     const texture = new THREE.TextureLoader().load(customImg)
     this.offset = 0
     this.textureSelected = false
+    this.exteriorMeshes = []
 
     // These hex colors are used by the UI buttons and car
     // default: white, dark blue, orange, blue, custom texture
     const colorList = ['#FFF', '#091F40', '#FF4713', '#43BBD1', 'custom-texture']
 
-    // 외장 페인트 material 이름 (tucson GLB 기준)
+    // 투싼 GLB의 외장 페인트 material 이름
     const EXTERIOR_MATERIAL = 'tucsonMI_Exhaust1'
 
-    // 외장 페인트에 해당하는 모든 mesh를 material 이름으로 수집
-    const getExteriorMeshes = () => {
-      const meshes = []
+    // 외장 페인트에 해당하는 모든 material을 수집
+    const collectExteriorMeshes = () => {
+      const materials = []
       const root = this.el.getObject3D('mesh')
-      if (!root) return meshes
+      if (!root) return materials
       root.traverse((node) => {
-        if (node.isMesh) {
-          const mat = node.material
-          // material이 배열인 경우도 처리
-          const materials = Array.isArray(mat) ? mat : [mat]
-          materials.forEach((m) => {
-            if (m && m.name === EXTERIOR_MATERIAL) {
-              meshes.push({node, material: m})
-            }
-          })
-        }
+        if (!node.isMesh) return
+        const mats = Array.isArray(node.material) ? node.material : [node.material]
+        mats.forEach((m) => {
+          if (m && m.name === EXTERIOR_MATERIAL) {
+            materials.push(m)
+          }
+        })
       })
-      return meshes
+      return materials
     }
 
-    // 외장 mesh에 색상/텍스처 적용
-    const setColor = ({newColor, button}) => {
-      const root = this.el.getObject3D('mesh')
-      if (!root) {
-        console.warn('setColor: 모델이 아직 로드되지 않았습니다.')
-        return
-      }
+    // 마지막으로 요청된 색상을 저장 (model-loaded 이후 재적용)
+    let pendingColor = null
+    let pendingButton = null
 
-      const exteriorMeshes = getExteriorMeshes()
-      if (exteriorMeshes.length === 0) {
-        console.warn(`setColor: "${EXTERIOR_MATERIAL}" material을 가진 mesh를 찾지 못했습니다.`)
-        return
-      }
-
-      // 외장 mesh 캐싱 (tick에서 사용)
-      this.exteriorMeshes = exteriorMeshes
-
+    const applyColor = (newColor) => {
       if (newColor === 'custom-texture') {
         texture.wrapS = THREE.RepeatWrapping
         texture.wrapT = THREE.RepeatWrapping
         texture.repeat.set(8, 8)
-        exteriorMeshes.forEach(({material}) => {
-          material.map = texture
-          material.color.set('#FFF')
-          material.needsUpdate = true
+        this.exteriorMeshes.forEach((m) => {
+          m.map = texture
+          m.color.set('#FFF')
+          m.needsUpdate = true
         })
         this.textureSelected = true
       } else {
-        exteriorMeshes.forEach(({material}) => {
-          material.map = null
-          material.color.set(newColor)
-          material.needsUpdate = true
+        this.exteriorMeshes.forEach((m) => {
+          m.map = null
+          m.color.set(newColor)
+          m.needsUpdate = true
         })
         this.textureSelected = false
       }
-
-      button.focus()
     }
 
-    // create a UI button for each color in the list that changes the car color
+    const setColor = ({newColor, button}) => {
+      pendingColor = newColor
+      pendingButton = button
+
+      // mesh가 아직 수집되지 않은 경우 시도
+      if (this.exteriorMeshes.length === 0) {
+        this.exteriorMeshes = collectExteriorMeshes()
+      }
+
+      if (this.exteriorMeshes.length === 0) {
+        // 모델 로드 전이면 model-loaded 이벤트에서 자동 재적용됨
+        console.warn('setColor: 외장 mesh 준비 중, model-loaded 후 재적용 예정')
+        return
+      }
+
+      applyColor(newColor)
+      if (button) button.focus()
+    }
+
+    // model-loaded 이후 mesh 수집 + pending 색상 재적용
+    // 모바일 AR에서는 coaching-overlay 이후 change-color 컴포넌트가 붙기 때문에
+    // 이 시점에 이미 모델이 로드돼 있을 수 있어 바로 수집 시도
+    this.el.addEventListener('model-loaded', () => {
+      this.exteriorMeshes = collectExteriorMeshes()
+      if (this.exteriorMeshes.length === 0) {
+        console.warn('model-loaded: 외장 mesh를 찾지 못했습니다.')
+        return
+      }
+      if (pendingColor !== null) {
+        applyColor(pendingColor)
+        if (pendingButton) pendingButton.focus()
+      }
+    })
+
+    // create a UI button for each color in the list
     for (let i = 0; i < colorList.length; i++) {
       const colorButton = document.createElement('button')
       colorButton.classList.add('carousel')
       if (colorList[i] === 'custom-texture') {
-        // sets button background to custom texture
         colorButton.style.backgroundImage = `url(${customImg})`
       } else {
-        // sets button background to hex color
         colorButton.style.backgroundColor = colorList[i]
       }
       container.appendChild(colorButton)
@@ -93,10 +109,9 @@ const changeColorComponent = {
       }))
     }
 
+    // realityready 시 첫 번째 색상으로 초기화
     this.el.sceneEl.addEventListener('realityready', () => {
-      // Select first button in list
       const firstButton = container.getElementsByTagName('button')[0]
-      // set car to first button's color
       setColor({newColor: colorList[0], button: firstButton})
     })
 
@@ -109,15 +124,12 @@ const changeColorComponent = {
     if (this.textureSelected === false) {
       return
     }
-    // animates texture if selected
-    if (!this.exteriorMeshes || this.exteriorMeshes.length === 0) {
-      return
-    }
-    this.exteriorMeshes.forEach(({material}) => {
-      if (material.map) {
-        material.map.repeat.x = 2
-        material.map.repeat.y = 2
-        material.map.offset.x = this.offset
+    // 텍스처 선택 시 스크롤 애니메이션
+    this.exteriorMeshes.forEach((m) => {
+      if (m.map) {
+        m.map.repeat.x = 2
+        m.map.repeat.y = 2
+        m.map.offset.x = this.offset
       }
     })
     this.offset += 0.002
@@ -157,7 +169,6 @@ const annotationComponent = {
       if (labelActivated) {
         return
       }
-      // hide hotspot torus
       this.torus.setAttribute('animation__scale', {
         property: 'scale',
         from: '1 1 1',
@@ -165,10 +176,7 @@ const annotationComponent = {
         easing: 'easeInOutQuad',
         dur: 250,
       })
-      // brighten hotspot inner
       this.el.setAttribute('color', '#FD835E')
-
-      // show text label
       this.label.style.opacity = 0
       this.label.style.display = 'block'
       this.label.classList.add('fade-in')
@@ -176,7 +184,6 @@ const annotationComponent = {
         this.label.style.opacity = 1
         this.label.classList.remove('fade-in')
       }, 500)
-
       labelActivated = true
     }
 
@@ -184,7 +191,6 @@ const annotationComponent = {
       if (!labelActivated) {
         return
       }
-      // show hotspot torus
       this.torus.setAttribute('animation__scale', {
         property: 'scale',
         from: '0.001 0.001 0.001',
@@ -192,10 +198,7 @@ const annotationComponent = {
         easing: 'easeOutElastic',
         dur: 500,
       })
-      // revert to original hotspot inner color
       this.el.setAttribute('color', '#FF4713')
-
-      // hide text label
       this.label.style.opacity = 1
       this.label.classList.add('fade-out')
       setTimeout(() => {
@@ -203,11 +206,9 @@ const annotationComponent = {
         this.label.classList.remove('fade-out')
         this.label.style.display = 'none'
       }, 400)
-
       labelActivated = false
     }
 
-    // show hotspot
     this.activateHs = () => {
       if (hsActivated) {
         return
@@ -219,7 +220,6 @@ const annotationComponent = {
         easing: 'easeInOutQuad',
         dur: 1000,
       })
-
       this.torus.setAttribute('animation__fade', {
         property: 'opacity',
         from: 0,
@@ -227,11 +227,9 @@ const annotationComponent = {
         easing: 'easeInOutQuad',
         dur: 1000,
       })
-
       hsActivated = true
     }
 
-    // hide hotspot
     this.deactivateHs = () => {
       if (!hsActivated) {
         return
@@ -243,7 +241,6 @@ const annotationComponent = {
         easing: 'easeInOutQuad',
         dur: 1000,
       })
-
       this.torus.setAttribute('animation__fade', {
         property: 'opacity',
         from: 1,
@@ -251,11 +248,9 @@ const annotationComponent = {
         easing: 'easeInOutQuad',
         dur: 1000,
       })
-
       hsActivated = false
     }
 
-    // create label renderer for text
     this.labelRenderer = new THREE.CSS2DRenderer()
     this.labelRenderer.setSize(window.innerWidth, window.innerHeight)
     this.labelRenderer.domElement.style.position = 'absolute'
@@ -263,7 +258,6 @@ const annotationComponent = {
     this.labelRenderer.domElement.style.pointerEvents = 'none'
     document.body.appendChild(this.labelRenderer.domElement)
 
-    // create label
     this.label = document.createElement('h1')
     this.label.style.color = 'white'
     this.label.style.opacity = 0
@@ -274,7 +268,6 @@ const annotationComponent = {
     this.label.innerText = this.data.text
     document.body.appendChild(this.label)
 
-    // set label position to hotspot
     this.labelObj = new THREE.CSS2DObject(this.label)
     this.worldVec = new THREE.Vector3()
     this.worldPos = this.el.object3D.getWorldPosition(this.worldVec)
@@ -282,12 +275,10 @@ const annotationComponent = {
     this.scene.add(this.labelObj)
   },
   tick() {
-    // track label position to hotspot
     this.worldPos = this.el.object3D.getWorldPosition(this.worldVec)
     this.labelObj.position.copy(new THREE.Vector3(this.worldPos.x, this.worldPos.y + this.data.offsetY, this.worldPos.z))
     this.labelRenderer.render(this.scene, this.camera)
 
-    // proximity monitoring
     const distance = this.worldPos.distanceTo(this.camera.el.object3D.position)
     if (distance < this.data.labeldistance) {
       this.activateLabel()
@@ -306,17 +297,13 @@ const annotationComponent = {
 const targets = ['Front-Driver', 'Back-Driver', 'Front-Pass', 'Back-Pass']
 const proximityComponent = {
   schema: {
-    target: {type: 'string', default: 'camera'},  // id of the object to check proximity on
-    distance: {type: 'number', default: 3.5},  // distance to object
+    target: {type: 'string', default: 'camera'},
+    distance: {type: 'number', default: 3.5},
   },
   init() {
     let windowsActivated
     this.activateWindows = () => {
-      if (windowsActivated) {
-        return
-      }
-
-      // roll down windows
+      if (windowsActivated) return
       targets.forEach((target) => {
         this.el.setAttribute(`gltf-morph__${target}`, `morphtarget: ${target}; value: 1`)
         this.el.setAttribute(`animation__${target}`, `
@@ -325,16 +312,11 @@ const proximityComponent = {
           to: 1;
           easing: easeInOutQuad`)
       })
-
       windowsActivated = true
     }
 
     this.deactivateWindows = () => {
-      if (!windowsActivated) {
-        return
-      }
-
-      // roll up windows
+      if (!windowsActivated) return
       targets.forEach((target) => {
         this.el.setAttribute(`gltf-morph__${target}`, `morphtarget: ${target}; value: 0`)
         this.el.setAttribute(`animation__${target}`, `
@@ -343,7 +325,6 @@ const proximityComponent = {
           to: 0;
           easing: easeInOutQuad`)
       })
-
       windowsActivated = false
     }
   },
@@ -351,8 +332,6 @@ const proximityComponent = {
     const thisPosition = this.el.object3D.position
     const targetPosition = document.getElementById(this.data.target).object3D.position
     const distance = thisPosition.distanceTo(targetPosition)
-
-    // proximity monitoring
     if (distance < this.data.distance) {
       this.activateWindows()
     } else {
@@ -365,7 +344,7 @@ const absPinchScaleComponent = {
   schema: {
     min: {default: 0.1},
     max: {default: 5},
-    scale: {default: 0},  // If scale is set to zero here, the object's initial scale is used.
+    scale: {default: 0},
   },
   init() {
     const s = this.data.scale
@@ -373,9 +352,8 @@ const absPinchScaleComponent = {
     this.scaleFactor = 1
     this.handleEvent = this.handleEvent.bind(this)
     this.el.sceneEl.addEventListener('twofingermove', this.handleEvent)
-    this.el.classList.add('cantap')  // Needs "objects: .cantap" attribute on raycaster.
+    this.el.classList.add('cantap')
 
-    // Calculate glb-model bounding box
     this.calcMeshBounds = () => {
       this.meshBounds = new THREE.Box3().setFromObject(this.el.object3D)
       this.lengthMeshBounds = {
@@ -386,7 +364,6 @@ const absPinchScaleComponent = {
     }
     this.calcMeshBounds()
 
-    // UI LOGIC
     this.camera = this.el.sceneEl.camera
     this.scene = new THREE.Scene()
 
@@ -407,7 +384,6 @@ const absPinchScaleComponent = {
     this.labelObj = new THREE.CSS2DObject(this.label)
     this.scene.add(this.labelObj)
 
-    // TIMER LOGIC
     this.runTimer = () => {
       this.timer = window.setTimeout(
         () => {
@@ -428,34 +404,27 @@ const absPinchScaleComponent = {
     this.el.sceneEl.removeEventListener('twofingermove', this.handleEvent)
   },
   handleEvent(event) {
-    // Calculate glb-model bounding box
     this.calcMeshBounds()
-
     this.scaleFactor *= 1 + event.detail.spreadChange / event.detail.startSpread
     this.scaleFactor = Math.min(Math.max(this.scaleFactor, this.data.min), this.data.max)
 
     const setText = () => {
-      // change % text
       const processedSF = (this.scaleFactor * 100).toFixed()
       this.label.innerText = `${processedSF}%`
     }
 
     if (this.scaleFactor <= 0.9 || this.scaleFactor >= 1.1) {
-      // scale object
       this.el.object3D.scale.x = this.scaleFactor * this.initialScale.x
       this.el.object3D.scale.y = this.scaleFactor * this.initialScale.y
       this.el.object3D.scale.z = this.scaleFactor * this.initialScale.z
-
-      // change % text
       setText()
-    } else if (this.scaleFactor >= 0.9 && this.scaleFactor <= 1.1) {  // snapping between 90 - 100 - 110
+    } else if (this.scaleFactor >= 0.9 && this.scaleFactor <= 1.1) {
       this.el.object3D.scale.x = this.initialScale.x
       this.el.object3D.scale.y = this.initialScale.y
       this.el.object3D.scale.z = this.initialScale.z
       this.label.innerText = '100%'
     }
 
-    // fade out behavior
     this.label.style.opacity = 1
     clearTimeout(this.timer)
     this.runTimer()
