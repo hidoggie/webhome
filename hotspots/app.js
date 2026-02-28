@@ -11,5 +11,3 @@ window.hideAll = () => {
 AFRAME.registerComponent('recenter-button', recenterButtonComponent)
 AFRAME.registerComponent('tap-hotspot', tapHotspotComponent)
 AFRAME.registerComponent('tap-close', tapCloseComponent)
-
-Other Work by 8th Wall Playground
