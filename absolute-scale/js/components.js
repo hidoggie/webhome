@@ -62,13 +62,11 @@ const changeColorComponent = {
       pendingColor = newColor
       pendingButton = button
 
-      // mesh가 아직 수집되지 않은 경우 시도
-      if (this.exteriorMeshes.length === 0) {
-        this.exteriorMeshes = collectExteriorMeshes()
-      }
+      // reflections 컴포넌트가 material을 교체할 수 있으므로
+      // 버튼을 누를 때마다 항상 mesh를 새로 수집
+      this.exteriorMeshes = collectExteriorMeshes()
 
       if (this.exteriorMeshes.length === 0) {
-        // 모델 로드 전이면 model-loaded 이벤트에서 자동 재적용됨
         console.warn('setColor: 외장 mesh 준비 중, model-loaded 후 재적용 예정')
         return
       }
