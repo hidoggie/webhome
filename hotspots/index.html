@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>hotspot</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  <script src="//unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+  
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" type="text/css" href="./index.css">
+  
+</head>
+
+<body>
+
+<div id="recenterButtonContainer" class="hidden">
+  <img src="./assets/images/recenter.png">
+</div>
+
+<div id="container" class="collapsed">
+  <div class="outer">
+    <div id="closeButton" onclick="hideAll()">Close</div>
+  </div>
+  <div class="outer" id="contents"></div>
+  <!--<div class="outer">Contents go here</div>-->
+</div>
+
+<a-scene
+  recenter-button
+  xrextras-gesture-detector
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  renderer="colorManagement: true; webgl2: true"
+  xrweb="allowedDevices: any">
+
+  <!-- We can define assets here to be loaded when A-Frame initializes -->
+  <a-assets>
+    <!-- Credit to Poly by Google for the model: https://poly.google.com/view/7rUkCX-AIR2 -->
+    <a-asset-item id="gasStationModel" src="assets/models/gas-station.glb"></a-asset-item>
+
+    <a-mixin id="hotspot-text" text="font: exo2bold; width: 5" geometry="primitive: plane; width: 1.6; height: 0.4" material="color: black;" position="0 0.5 0"></a-mixin>
+    <a-mixin id="hotspot-target" geometry="primitive: octahedron; radius: 0.2;" material="flatShading: true; color: rgb(255, 0, 161)"></a-mixin>
+  </a-assets>
+
+  <!-- The raycaster will emit mouse events on scene objects specified with the cantap class -->
+  <a-camera
+    id="camera"
+    position="0 4 6"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;">
+  </a-camera>
+
+  <a-entity
+    light="
+      type: directional;
+      intensity: 0.8;
+      castShadow: true;
+      shadowMapHeight:2048;
+      shadowMapWidth:2048;
+      shadowCameraTop: 10;
+      target: #model;"
+    xrextras-attach="target: model; offset: 1 15 3;"
+    shadow>
+  </a-entity>
+
+  <a-light type="ambient" intensity="0.7"></a-light>
+
+  <a-entity 
+    id="model" 
+    gltf-model="#gasStationModel" 
+    class="cantap" 
+    xrextras-hold-drag
+    xrextras-two-finger-rotate 
+    xrextras-pinch-scale
+    scale="2 2 2" 
+    shadow="receive: false">
+
+    <!--Hotspot #1-->
+    <a-entity id="hotspot1" mixin="hotspot-target" position="-0.515 0.505 0.969" rotation="0 0 0" scale="0.5 0.5 0.5" look-at="#camera" class="cantap" tap-hotspot>
+      <a-text id="hotspot1-child" value="Hotspot 1" align="center" mixin="hotspot-text" visible="false" tap-close></a-text>
+    </a-entity>
+
+    <!--Hotspot #3-->
+    <a-entity id="hotspot2" mixin="hotspot-target" position="0.857 0.815 0.078" rotation="0 0 0" scale="0.5 0.5 0.5" look-at="#camera" class="cantap" tap-hotspot>
+      <a-text id="hotspot2-child" value="Hotspot 2" align="center" mixin="hotspot-text" visible="false" tap-close></a-text>
+    </a-entity>
+    
+    <!--Hotspot #3-->
+    <a-entity id="hotspot3" mixin="hotspot-target" position="0.167 0.953 -0.728" rotation="0 0 0" scale="0.5 0.5 0.5" look-at="#camera" class="cantap" tap-hotspot>
+      <a-text id="hotspot3-child" value="Hotspot 3" align="center" mixin="hotspot-text" visible="false" tap-close></a-text>
+    </a-entity>
+
+  </a-entity>
+
+  
+  <a-plane
+    id="ground" 
+    rotation="-90 0 0" 
+    width="1000" 
+    height="1000" 
+    material="shader: shadow" 
+    shadow>
+  </a-plane>
+</a-scene>
+</body>
+</html>
