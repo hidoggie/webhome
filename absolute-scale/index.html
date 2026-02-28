@@ -80,29 +80,30 @@
     xrextras-two-finger-rotate
     proximity
     shadow="receive: false">
-    <!-- Hotspots -->
-    <a-entity id="hotspot-group">
-      <a-sphere 
-        id="hs-wheels" 
-        position="-1.9 0.35 1" 
-        annotation="text: 19” Aluminum Wheels"
-      ></a-sphere>
-      <a-sphere 
-        id="hs-range" 
-        position="-2 1.175 0" 
-        annotation="text: 250+ mile range; labeldistance: 1.5;"
-      ></a-sphere>
-      <a-sphere 
-        id="hs-hub" 
-        position="-1 1.05 0" 
-        annotation="text: 17&#x22; Smart Hub"
-      ></a-sphere>
-      <a-sphere 
-        id="hs-seats" 
-        position="0.2 1.05 0"
-        annotation="text: 100% Vegan Leather"
-      ></a-sphere>
-    </a-entity>
+  </a-entity>
+
+  <!-- Hotspot group: car 자식에서 분리 → scale 왜곡 방지 -->
+  <a-entity id="hotspot-group" follow-car="target: car" visible="false">
+    <a-sphere
+      id="hs-wheels"
+      position="-1.9 0.35 1"
+      annotation="text: 19 inch Aluminum Wheels"
+    ></a-sphere>
+    <a-sphere
+      id="hs-range"
+      position="-2 1.175 0"
+      annotation="text: 250+ mile range; labeldistance: 1.5;"
+    ></a-sphere>
+    <a-sphere
+      id="hs-hub"
+      position="-1 1.05 0"
+      annotation="text: 17 inch Smart Hub"
+    ></a-sphere>
+    <a-sphere
+      id="hs-seats"
+      position="0.2 1.05 0"
+      annotation="text: 100% Vegan Leather"
+    ></a-sphere>
   </a-entity>
 
   <a-plane
