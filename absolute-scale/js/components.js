@@ -3,7 +3,7 @@ const changeColorComponent = {
     const container = document.getElementById('container')
 
     // custom texture variables
-    const customImg = require('../assets/textures/candy.jpg')  // try assets/textures/space.jpg!
+    const customImg = '../assets/textures/candy.jpg'  // try assets/textures/space.jpg!
     const texture = new THREE.TextureLoader().load(customImg)
     this.offset = 0
     this.textureSelected = false
