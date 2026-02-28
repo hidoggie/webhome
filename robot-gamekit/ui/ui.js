@@ -1,10 +1,10 @@
 const uiHTML = await fetch('./ui/ui.html').then(r => r.text());
 import { UIElement, Button, Bar, Label, IconBar, Icon } from '../ui-kit/module.js'
 
-const powerUpImageOn = './../assets/img/powerup.png'
-const powerUpImageOff = './../assets/img/powerup--consumed.png'
+const powerUpImageOn = './assets/img/powerup.png'
+const powerUpImageOff = './assets/img/powerup--consumed.png'
 
-const energyIconImage = './../assets/img/energybar--icon.png'
+const energyIconImage = './assets/img/energybar--icon.png'
 
 class UI {
   init(gameState) {
