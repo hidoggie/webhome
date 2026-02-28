@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>multi-image-tracking</title>
+
+  <script src="./../xr_st/8frame-1.5.0.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+
+  <script>
+     const onxrloaded = async () => {
+       const res1 = await fetch('./rooster-target-ar.json')
+       const json1 = await res1.json()
+       const res2 = await fetch('./bluejay-target-ar.json')
+       const json2 = await res2.json()
+       const res3 = await fetch('./macaw-target-ar.json')
+       const json3 = await res3.json()
+       const res4 = await fetch('./ostrich-target-ar.json')
+       const json4 = await res4.json()
+       const res5 = await fetch('./owl-target-ar.json')
+       const json5 = await res5.json()
+       const res6 = await fetch('./peacock-target-ar.json')
+       const json6 = await res6.json()
+       const res7 = await fetch('./pelican-target-ar.json')
+       const json7 = await res7.json()
+       const res8 = await fetch('./penguin-target-ar.json')
+       const json8 = await res8.json()
+       const res9 = await fetch('./puffin-target-ar.json')
+       const json9 = await res9.json()
+       const res10 = await fetch('./pigeon-target-ar.json')
+       const json10 = await res10.json()
+
+
+       XR8.XrController.configure({
+         imageTargetData: [json1, json2, json3, json4, json5, json6, json7, json8, json9, json10],
+       })
+     }
+     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
+
+  </script>
+
+</head>
+
+<body>
+
+<div 
+  style="
+    position: absolute;
+    text-align: center;
+    bottom: 12vh;
+    width: 100%;
+    z-index: 10;
+    color: white;
+    font-family: 'Nunito', monospace;
+    font-size: 5vw;
+    text-shadow: 0px 0px 5px black;
+    pointer-events: none;">
+  <h3 id="prompt">Looking for birds that can fly...</h3>
+</div>
+
+<a-scene
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  config-targets=
+    "targets: macaw, owl, peacock, pelican, pigeon, puffin, cardinal, toucan, blue-jay, rooster"
+  xrweb="disableWorldTracking: true">
+  <a-camera
+    position="0 4 10"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;">
+  </a-camera>
+  
+  <a-entity smart-target="name: macaw"><a-text value="macaw"  align="center"></a-text></a-entity>
+  <a-entity smart-target="name: owl"><a-text value="owl" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: peacock"><a-text value="peacock" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: pelican"><a-text value="pelican" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: pigeon"><a-text value="pigeon" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: puffin"><a-text value="puffin" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: cardinal">
+    <a-text value="cardinal" align="center"></a-text>
+  </a-entity>
+  <a-entity smart-target="name: toucan"><a-text value="toucan" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: blue-jay">
+    <a-text value="blue jay" align="center" ></a-text>
+  </a-entity>
+  
+  <!--   last target loads additional targets   -->
+  <a-entity smart-target="name: rooster"><a-text value="rooster" align="center"></a-text></a-entity>
+  
+  <!--   additional targets   -->
+  <a-entity smart-target="name: penguin"><a-text value="penguin" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: ostrich"><a-text value="ostrich" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: roadrunner">
+    <a-text value="roadrunner" align="center"></a-text>
+  </a-entity>
+  
+  <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
+  <a-light type="ambient" intensity="1"></a-light>
+</a-scene>
+</body>
+</html>
+
+
+
