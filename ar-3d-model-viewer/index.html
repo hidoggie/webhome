@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>car-absolute-scale</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  <script src="./../xr_st/aframe-orbit-controls-component.min.js"></script>
+  <script src="./../xr_st/gradientsky.min.js"></script>
+
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" href="./index.css">
+
+<!-- Font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@600&display=swap" rel="stylesheet">
+  
+</head>
+
+<body>
+
+<div id="blackFade" class="absolute-fill" style="z-index: 9"></div>
+
+<!-- UI Buttons used to change colors -->
+<div id="container"></div>
+
+<!-- AR/3D Toggle -->
+<label id="toggle" class="switch" style="z-index: 10">
+  <input id="changeView" type="checkbox"> 
+  <span class="slider round"></span>
+  <h1 class="ar-switch-text">AR</h1>
+  <h1 class="object-switch-text">3D</h1>
+</label>
+
+<a-scene
+  change-view
+  landing-page
+  xrextras-runtime-error
+  xrextras-gesture-detector
+  xrextras-loading
+  renderer="colorManagement: true"
+  xrweb>
+
+  <a-assets>
+    <a-asset-item id="carModel" src="./assets/car.glb"></a-asset-item>
+  </a-assets>
+
+  <a-camera
+    id="camera"
+    position="0 4 4"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;"
+    orbit-controls="enabled: false; target: #target">
+  </a-camera>
+
+  <a-entity
+    xr-light
+    light="type: directional;
+      castShadow: true;
+      shadowMapHeight:2048;
+      shadowMapWidth:2048;
+      shadowCameraTop: 10;
+      target: #target;"
+    xrextras-attach="target: target; offset: 0 15 0;"
+    shadow>
+  </a-entity>
+  
+  <a-light
+    xr-light
+    type="ambient">
+  </a-light>
+
+   <a-entity
+    id="target"
+    gltf-model="#carModel"
+    rotation="0 30 0"
+    xrextras-two-finger-rotate
+    xrextras-pinch-scale
+    xrextras-hold-drag
+    reflections="type: realtime"
+    change-color
+    shadow="receive: false">
+  </a-entity>
+  
+	<a-plane
+    id="ground"
+    rotation="-90 0 0"
+    width="100"
+    height="100"
+    material="shader: shadow; opacity: 0.45;"
+    shadow
+  ></a-plane>
+
+  <a-sky id="sky" visible="false" material="shader: gradient; topColor: 40 40 40; bottomColor: 80 80 80"></a-sky>
+  
+</a-scene>
+</body>
+</html>
