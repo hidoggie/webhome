@@ -7,40 +7,32 @@
 
   <script src="./../xr_st/8frame-1.4.1.min.js"></script>
   <script src="./../xr_st/xrextras.js"></script>
-  <!--script src="./../xr_st/landing-page.js"></script-->  
+  <script src="./../xr_st/landing-page.js"></script>  
 
   <script src="./howler.min.js"></script>
-  
-  <!-- ✅ FIX: slam 제거 (world-tracking 미사용 시 불필요, 세션 충돌 원인) -->
-  <script async src="./../xr_st/xr.js"></script>
-  <script type="module" src="./app.js" defer></script>
-  
+
+  <script async src="./../xr_st/xr.js"  data-preload-chunks="slam"></script>
 </head>
 
 <body>
 
 <a-scene
-  tap-play-sound
   landing-page
   xrextras-loading
   xrextras-runtime-error
   renderer="colorManagement:true"
-  xrweb="allowedDevices: any">
+  xrweb>
 
-  <!-- We can define assets here to be loaded when A-Frame initializes -->
   <a-assets>
     <a-asset-item id="btn-waveform" src="assets/models/btn-waveform.glb"></a-asset-item>
     <a-asset-item id="btn-plate" src="assets/models/btn-plate.glb"></a-asset-item>
   </a-assets>
 
-  <!-- The raycaster will emit mouse events on scene objects specified with the cantap class -->
   <a-camera
     id="camera"
     position="0 8 0"
     raycaster="objects: .cantap"
-    cursor="
-      fuse: false;
-      rayOrigin: mouse;">
+    cursor="fuse: false; rayOrigin: mouse;">
   </a-camera>
 
   <a-entity
@@ -48,8 +40,8 @@
       type: directional;
       intensity: 0.8;
       castShadow: true;
-      shadowMapHeight:2048;
-      shadowMapWidth:2048;
+      shadowMapHeight: 2048;
+      shadowMapWidth: 2048;
       shadowCameraTop: 20;
       shadowCameraBottom: -20;
       shadowCameraRight: 20;
@@ -62,8 +54,7 @@
 
   <a-light type="ambient" intensity="0.5"></a-light>
 
-  <!-- tap the button to make a sound -->
-  <a-entity gltf-model="#btn-plate" cubemap-realtime position="0 0 -5" scale="3 3 3" shadow="receive: false">
+  <a-entity gltf-model="#btn-plate" position="0 0 -5" scale="1.5 1.5 1.5" shadow="receive: false">
     <a-entity id="btn-obj" gltf-model="#btn-waveform" class="cantap"></a-entity>
   </a-entity>
 
@@ -74,6 +65,71 @@
     material="shader: shadow; transparent: true; opacity: 0.4"
     shadow>
   </a-box>
+
 </a-scene>
+
+<script>
+  AFRAME.registerComponent('tap-play-sound', {
+    init() {
+      const button = document.getElementById('btn-obj')
+      let isPressed = false
+
+      // ✅ 핵심: setAttribute 재호출은 이미 존재하는 애니메이션을 재시작하지 않음
+      //    remove → 다음 틱에 set 해야 A-Frame이 새 애니메이션으로 인식
+      const setAnim = (name, props) => {
+        button.removeAttribute(name)
+        // requestAnimationFrame으로 한 틱 뒤에 붙여야 remove가 확실히 반영됨
+        requestAnimationFrame(() => {
+          button.setAttribute(name, props)
+        })
+      }
+
+      const onTap = () => {
+        if (isPressed) return
+        isPressed = true
+
+        // 사운드 재생
+        const sound = new window.Howl({
+          src: ['./assets/sound.mp3'],
+          html5: true,
+        })
+        sound.play()
+
+        // 즉시 눌린 위치 + 찌그러짐으로 강제 세팅 (애니메이션 없이 순간 이동)
+        button.object3D.position.set(0, -0.35, 0)
+        button.object3D.scale.set(1.15, 0.65, 1.15)
+
+        // 100ms 후 복귀 애니메이션 시작
+        setTimeout(() => {
+          setAnim('animation__release', {
+            property: 'position',
+            from: '0 -0.35 0',
+            to: '0 0 0',
+            easing: 'easeOutElastic',
+            dur: 600,
+          })
+          setAnim('animation__unsquish', {
+            property: 'scale',
+            from: '1.15 0.65 1.15',
+            to: '1 1 1',
+            easing: 'easeOutElastic',
+            dur: 600,
+          })
+
+          setTimeout(() => {
+            isPressed = false
+          }, 650)
+        }, 100)
+      }
+
+      button.addEventListener('click', onTap)
+    },
+  })
+
+  document.querySelector('a-scene').addEventListener('loaded', () => {
+    document.querySelector('a-scene').setAttribute('tap-play-sound', '')
+  })
+</script>
+
 </body>
 </html>
