@@ -61,14 +61,7 @@ const cubeMapRealtimeComponent = {
 
       window.XR8.addCameraPipelineModule({
         name: this._xr8ModuleName,
-        onBeforeRun: () => {
-          // ✅ XR 세션이 완전히 시작된 뒤 configure 호출
-          try {
-            window.XR8.XrController.configure({ enableLighting: true })
-          } catch (e) {
-            console.warn('[cubemap-realtime] configure failed:', e)
-          }
-        },
+        // ✅ enableLighting 제거 — 오픈소스 xr.js에서 XrController.configure() 미지원
         onUpdate: () => {
           cubeCamera.update(scene.renderer, cubeMapScene)
         },
