@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>3D button click event</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+
+  <script src="./howler.min.js"></script>
+
+  <script async src="./../xr_st/xr.js"></script>
+</head>
+
+<body>
+
+<a-scene
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  renderer="colorManagement:true"
+  xrweb>
+
+  <a-assets>
+    <a-asset-item id="btn-waveform" src="assets/models/btn-waveform.glb"></a-asset-item>
+    <a-asset-item id="btn-plate" src="assets/models/btn-plate.glb"></a-asset-item>
+  </a-assets>
+
+  <a-camera
+    id="camera"
+    position="0 8 0"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;">
+  </a-camera>
+
+  <a-entity
+    light="
+      type: directional;
+      intensity: 0.8;
+      castShadow: true;
+      shadowMapHeight: 2048;
+      shadowMapWidth: 2048;
+      shadowCameraTop: 20;
+      shadowCameraBottom: -20;
+      shadowCameraRight: 20;
+      shadowCameraLeft: -20;
+      target: #btn-obj"
+    xrextras-attach="target: btn-obj; offset: 8 15 8"
+    position="1 4.3 2.5"
+    shadow>
+  </a-entity>
+
+  <a-light type="ambient" intensity="0.5"></a-light>
+
+  <!-- cubemap-realtime 제거 — 오픈소스 xr.js 충돌 원인 -->
+  <a-entity gltf-model="#btn-plate" position="0 0 -5" scale="3 3 3" shadow="receive: false">
+    <a-entity id="btn-obj" gltf-model="#btn-waveform" class="cantap"></a-entity>
+  </a-entity>
+
+  <a-box
+    id="ground"
+    scale="1000 2 1000"
+    position="0 -1 0"
+    material="shader: shadow; transparent: true; opacity: 0.4"
+    shadow>
+  </a-box>
+
+</a-scene>
+
+<script>
+  AFRAME.registerComponent('tap-play-sound', {
+    init() {
+      const button = document.getElementById('btn-obj')
+
+      const onTap = () => {
+        // 사운드 재생 (html5: true — 모바일 자동재생 정책 우회)
+        const sound = new window.Howl({
+          src: ['./assets/sound.mp3'],
+          html5: true,
+        })
+        sound.play()
+
+        // 버튼 눌림 → 복귀 애니메이션
+        const pos = button.object3D.position
+        button.setAttribute('animation__press', {
+          property: 'position',
+          from: `${pos.x} ${pos.y} ${pos.z}`,
+          to: `${pos.x} ${pos.y - 0.1} ${pos.z}`,
+          easing: 'easeOutQuad',
+          dur: 100,
+        })
+        button.setAttribute('animation__release', {
+          property: 'position',
+          from: `${pos.x} ${pos.y - 0.1} ${pos.z}`,
+          to: `${pos.x} ${pos.y} ${pos.z}`,
+          easing: 'easeOutElastic',
+          dur: 400,
+          delay: 100,
+        })
+      }
+
+      button.addEventListener('click', onTap)
+    },
+  })
+
+  // scene 로드 완료 후 컴포넌트 attach
+  document.querySelector('a-scene').addEventListener('loaded', () => {
+    document.querySelector('a-scene').setAttribute('tap-play-sound', '')
+  })
+</script>
+
+</body>
+</html>
