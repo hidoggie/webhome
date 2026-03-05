@@ -8,8 +8,10 @@
   <script src="./../xr_st/8frame-1.4.1.min.js"></script>
   <script src="./../xr_st/xrextras.js"></script>
   <script src="./../xr_st/landing-page.js"></script>  
+
   <script src="./howler.min.js"></script>
-  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+
+  <script async src="./../xr_st/xr.js"></script>
 </head>
 
 <body>
@@ -52,7 +54,6 @@
 
   <a-light type="ambient" intensity="0.5"></a-light>
 
-  <!-- cubemap-realtime 제거 — 오픈소스 xr.js 충돌 원인 -->
   <a-entity gltf-model="#btn-plate" position="0 0 -5" scale="3 3 3" shadow="receive: false">
     <a-entity id="btn-obj" gltf-model="#btn-waveform" class="cantap"></a-entity>
   </a-entity>
@@ -71,39 +72,49 @@
   AFRAME.registerComponent('tap-play-sound', {
     init() {
       const button = document.getElementById('btn-obj')
+      let isPressed = false
 
       const onTap = () => {
-        // 사운드 재생 (html5: true — 모바일 자동재생 정책 우회)
+        // 애니메이션 진행 중 재클릭 차단
+        if (isPressed) return
+        isPressed = true
+
+        // 사운드 재생
         const sound = new window.Howl({
           src: ['./assets/sound.mp3'],
           html5: true,
         })
         sound.play()
 
-        // 버튼 눌림 → 복귀 애니메이션
-        const pos = button.object3D.position
+        // 눌림: Y축 -0.1 아래로 (원점 기준 고정값 사용)
         button.setAttribute('animation__press', {
           property: 'position',
-          from: `${pos.x} ${pos.y} ${pos.z}`,
-          to: `${pos.x} ${pos.y - 0.1} ${pos.z}`,
+          from: '0 0 0',
+          to: '0 -0.1 0',
           easing: 'easeOutQuad',
-          dur: 100,
+          dur: 120,
         })
+
+        // 복귀: 탄성 있게 원위치
         button.setAttribute('animation__release', {
           property: 'position',
-          from: `${pos.x} ${pos.y - 0.1} ${pos.z}`,
-          to: `${pos.x} ${pos.y} ${pos.z}`,
+          from: '0 -0.1 0',
+          to: '0 0 0',
           easing: 'easeOutElastic',
-          dur: 400,
-          delay: 100,
+          dur: 500,
+          delay: 120,
         })
+
+        // 애니메이션 완료 후 잠금 해제
+        setTimeout(() => {
+          isPressed = false
+        }, 650)
       }
 
       button.addEventListener('click', onTap)
     },
   })
 
-  // scene 로드 완료 후 컴포넌트 attach
   document.querySelector('a-scene').addEventListener('loaded', () => {
     document.querySelector('a-scene').setAttribute('tap-play-sound', '')
   })
