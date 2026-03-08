@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 페이지 — Bird AR Stamp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:        #0d0f14;
+      --surface:   #151820;
+      --surface2:  #1c2030;
+      --border:    rgba(255,255,255,0.07);
+      --ink:       #e8ecf4;
+      --muted:     rgba(232,236,244,0.45);
+      --accent:    #c0392b;
+      --accent2:   #e67e22;
+      --green:     #27ae60;
+      --blue:      #2980b9;
+      --gold:      #f39c12;
+      --radius:    8px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+      font-size: 14px;
+    }
+
+    /* ── Login Gate ── */
+    #login-gate {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 999;
+      flex-direction: column;
+      gap: 16px;
+    }
+    #login-gate.hidden { display: none; }
+
+    .login-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 40px;
+      width: min(90vw, 340px);
+      text-align: center;
+    }
+    .login-title {
+      font-family: 'Gowun Batang', serif;
+      font-size: 20px;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .login-sub { color: var(--muted); font-size: 12px; margin-bottom: 24px; }
+
+    .login-box input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 11px 14px;
+      color: var(--ink);
+      font-size: 15px;
+      letter-spacing: 0.15em;
+      text-align: center;
+      margin-bottom: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-box input:focus { border-color: var(--accent); }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 11px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+
+    #login-error {
+      color: var(--accent);
+      font-size: 12px;
+      margin-top: 10px;
+      min-height: 16px;
+    }
+
+    /* ── Layout ── */
+    #app { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    #sidebar {
+      width: 220px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      padding: 24px 0;
+      position: fixed; top: 0; left: 0; bottom: 0;
+      z-index: 10;
+    }
+    .sidebar-logo {
+      padding: 0 20px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo-ko {
+      font-family: 'Gowun Batang', serif;
+      font-size: 15px;
+      color: var(--ink);
+      letter-spacing: 0.1em;
+    }
+    .logo-en {
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    nav { padding: 16px 0; flex: 1; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 13px;
+      border-left: 3px solid transparent;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .nav-item:hover { color: var(--ink); background: rgba(255,255,255,0.03); }
+    .nav-item.active {
+      color: var(--ink);
+      border-left-color: var(--accent);
+      background: rgba(192,57,43,0.08);
+    }
+    .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+    .sidebar-footer {
+      padding: 16px 20px;
+      border-top: 1px solid var(--border);
+    }
+    #logout-btn {
+      background: none; border: 1px solid var(--border);
+      border-radius: 6px; color: var(--muted);
+      font-size: 12px; padding: 8px 12px;
+      cursor: pointer; width: 100%;
+      transition: all 0.2s;
+    }
+    #logout-btn:hover { color: var(--ink); border-color: rgba(255,255,255,0.2); }
+
+    /* Main content */
+    #main {
+      margin-left: 220px;
+      flex: 1;
+      padding: 32px;
+    }
+
+    /* Section visibility */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* Page title */
+    .page-title {
+      font-family: 'Gowun Batang', serif;
+      font-size: 22px;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .page-sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+
+    /* ── Stat Cards ── */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+    }
+    .stat-card.red::before   { background: var(--accent); }
+    .stat-card.orange::before{ background: var(--accent2); }
+    .stat-card.green::before { background: var(--green); }
+    .stat-card.blue::before  { background: var(--blue); }
+    .stat-card.gold::before  { background: var(--gold); }
+
+    .stat-icon { font-size: 22px; margin-bottom: 10px; }
+    .stat-value {
+      font-size: 32px;
+      font-family: 'Gowun Batang', serif;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .stat-label { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+
+    /* ── Gift Stock Section ── */
+    .stock-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .panel-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 20px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .panel-title .dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .stock-display {
+      display: flex; align-items: center; gap: 24px;
+      flex-wrap: wrap;
+    }
+    .stock-number {
+      font-family: 'Gowun Batang', serif;
+      font-size: 52px;
+      color: var(--ink);
+      line-height: 1;
+    }
+    .stock-number.low { color: var(--accent); }
+    .stock-info { flex: 1; }
+    .stock-bar-wrap {
+      background: rgba(255,255,255,0.06);
+      border-radius: 4px;
+      height: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      min-width: 200px;
+    }
+    #stock-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--green);
+      transition: width 0.6s ease, background 0.4s ease;
+    }
+    #stock-bar-fill.low { background: var(--accent); }
+    .stock-label { font-size: 12px; color: var(--muted); }
+
+    .stock-controls {
+      display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap;
+    }
+    .stock-input-wrap {
+      display: flex; gap: 8px; align-items: center;
+    }
+    .stock-input-wrap input {
+      width: 90px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--ink);
+      padding: 9px 12px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .stock-input-wrap input:focus { border-color: var(--blue); }
+
+    .btn {
+      border: none; border-radius: 6px;
+      padding: 9px 16px;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      letter-spacing: 0.04em;
+    }
+    .btn:hover { opacity: 0.8; }
+    .btn-green  { background: var(--green);  color: white; }
+    .btn-blue   { background: var(--blue);   color: white; }
+    .btn-red    { background: var(--accent); color: white; }
+    .btn-subtle { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+
+    /* ── Code Verification ── */
+    .verify-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .verify-row {
+      display: flex; gap: 10px; align-items: center;
+    }
+    .verify-row input {
+      flex: 1;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--ink);
+      padding: 11px 14px;
+      font-size: 15px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      outline: none;
+      transition: border-color 0.2s;
+      max-width: 200px;
+    }
+    .verify-row input:focus { border-color: var(--blue); }
+
+    #verify-result {
+      margin-top: 14px;
+      padding: 14px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      display: none;
+    }
+    #verify-result.ok    { background: rgba(39,174,96,0.12); border: 1px solid rgba(39,174,96,0.3); color: #2ecc71; }
+    #verify-result.err   { background: rgba(192,57,43,0.12); border: 1px solid rgba(192,57,43,0.3); color: #e74c3c; }
+    #verify-result.used  { background: rgba(243,156,18,0.12); border: 1px solid rgba(243,156,18,0.3); color: var(--gold); }
+
+    /* ── Log Table ── */
+    .log-controls {
+      display: flex; gap: 10px; margin-bottom: 16px; align-items: center; flex-wrap: wrap;
+    }
+    .filter-select {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--ink);
+      padding: 8px 12px;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
+    }
+    .search-input {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--ink);
+      padding: 8px 12px;
+      font-size: 13px;
+      outline: none;
+      width: 180px;
+      transition: border-color 0.2s;
+    }
+    .search-input:focus { border-color: var(--blue); }
+
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead { background: var(--surface2); }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    td {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+    }
+    .badge-pending { background: rgba(243,156,18,0.15); color: var(--gold); }
+    .badge-claimed { background: rgba(39,174,96,0.15);  color: var(--green); }
+
+    .code-text {
+      font-family: 'Gowun Batang', serif;
+      letter-spacing: 0.12em;
+      color: var(--gold);
+    }
+
+    .claim-btn {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .claim-btn:hover { border-color: var(--green); color: var(--green); }
+    .claim-btn.done { color: var(--muted); cursor: default; opacity: 0.4; }
+
+    .no-data {
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ── Chart (hourly) ── */
+    .chart-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    #hour-chart {
+      display: flex; align-items: flex-end; gap: 6px;
+      height: 100px;
+      margin-top: 16px;
+    }
+    .bar-col {
+      flex: 1;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+    }
+    .bar-fill {
+      width: 100%;
+      border-radius: 3px 3px 0 0;
+      background: rgba(192,57,43,0.6);
+      transition: height 0.4s ease;
+      min-height: 2px;
+      position: relative;
+    }
+    .bar-fill:hover { background: var(--accent); }
+    .bar-fill::after {
+      content: attr(data-count);
+      position: absolute;
+      top: -18px; left: 50%; transform: translateX(-50%);
+      font-size: 10px; color: var(--ink);
+      display: none;
+    }
+    .bar-fill:hover::after { display: block; }
+    .bar-lbl { font-size: 9px; color: var(--muted); }
+
+    /* ── Reset / Settings ── */
+    .danger-zone {
+      background: rgba(192,57,43,0.05);
+      border: 1px solid rgba(192,57,43,0.2);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-top: 24px;
+    }
+    .danger-title { color: var(--accent); font-size: 13px; font-weight: 600; margin-bottom: 12px; }
+    .danger-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      #sidebar { width: 60px; padding: 16px 0; }
+      .nav-icon { width: 100%; text-align: center; }
+      .nav-item span:last-child { display: none; }
+      .logo-ko, .logo-en { display: none; }
+      .sidebar-logo { padding: 0 0 16px; display: flex; justify-content: center; }
+      #main { margin-left: 60px; padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN GATE ── -->
+<div id="login-gate">
+  <div class="login-box">
+    <div class="login-title">관리자 로그인</div>
+    <div class="login-sub">Bird AR Stamp 관리 시스템</div>
+    <input type="password" id="pw-input" placeholder="비밀번호 입력" maxlength="20">
+    <button class="btn-primary" onclick="tryLogin()">로그인</button>
+    <div id="login-error"></div>
+  </div>
+</div>
+
+<!-- ── MAIN APP ── -->
+<div id="app">
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div>
+        <div class="logo-ko">🐦 스탬프 관리</div>
+        <div class="logo-en">Admin Panel</div>
+      </div>
+    </div>
+    <nav>
+      <div class="nav-item active" onclick="showSection('dashboard')">
+        <span class="nav-icon">📊</span><span>대시보드</span>
+      </div>
+      <div class="nav-item" onclick="showSection('stock')">
+        <span class="nav-icon">🎁</span><span>사은품 재고</span>
+      </div>
+      <div class="nav-item" onclick="showSection('verify')">
+        <span class="nav-icon">✅</span><span>코드 확인</span>
+      </div>
+      <div class="nav-item" onclick="showSection('logs')">
+        <span class="nav-icon">📋</span><span>지급 로그</span>
+      </div>
+      <div class="nav-item" onclick="showSection('settings')">
+        <span class="nav-icon">⚙️</span><span>설정</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logout-btn" onclick="logout()">로그아웃</button>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main id="main">
+
+    <!-- ── DASHBOARD ── -->
+    <section class="section active" id="sec-dashboard">
+      <div class="page-title">대시보드</div>
+      <div class="page-sub">Bird AR Stamp 운영 현황</div>
+
+      <div class="stat-grid">
+        <div class="stat-card red">
+          <div class="stat-icon">🎁</div>
+          <div class="stat-value" id="stat-total">0</div>
+          <div class="stat-label">총 사은품 지급 수</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon">⏳</div>
+          <div class="stat-value" id="stat-pending">0</div>
+          <div class="stat-label">수령 대기 중</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="stat-claimed">0</div>
+          <div class="stat-label">수령 완료</div>
+        </div>
+        <div class="stat-card blue">
+          <div class="stat-icon">📦</div>
+          <div class="stat-value" id="stat-stock">—</div>
+          <div class="stat-label">남은 재고</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon">📅</div>
+          <div class="stat-value" id="stat-today">0</div>
+          <div class="stat-label">오늘 지급</div>
+        </div>
+      </div>
+
+      <div class="chart-panel">
+        <div class="panel-title"><span class="dot"></span>시간대별 사은품 지급 현황 (오늘)</div>
+        <div id="hour-chart"></div>
+      </div>
+    </section>
+
+    <!-- ── STOCK ── -->
+    <section class="section" id="sec-stock">
+      <div class="page-title">사은품 재고 관리</div>
+      <div class="page-sub">재고를 입력하고 현황을 관리합니다</div>
+
+      <div class="stock-panel">
+        <div class="panel-title"><span class="dot"></span>현재 재고</div>
+        <div class="stock-display">
+          <div class="stock-number" id="stock-big">—</div>
+          <div class="stock-info">
+            <div class="stock-bar-wrap">
+              <div id="stock-bar-fill" style="width:0%"></div>
+            </div>
+            <div class="stock-label" id="stock-label-text">재고를 설정해주세요</div>
+          </div>
+        </div>
+        <div class="stock-controls">
+          <div class="stock-input-wrap">
+            <input type="number" id="stock-set-val" placeholder="수량" min="0">
+            <button class="btn btn-blue" onclick="setStock()">초기 재고 설정</button>
+          </div>
+          <div class="stock-input-wrap">
+            <input type="number" id="stock-add-val" placeholder="추가" min="1">
+            <button class="btn btn-green" onclick="addStock()">재고 추가 +</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stock-panel">
+        <div class="panel-title"><span class="dot"></span>사은품 정보</div>
+        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-start;">
+          <div style="flex:1; min-width:200px;">
+            <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:6px;">사은품 이름</label>
+            <input type="text" id="gift-name-input" placeholder="예: 새 모양 에코백"
+              style="width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--ink); padding:10px 12px; font-size:14px; outline:none;">
+          </div>
+          <div style="padding-top:24px;">
+            <button class="btn btn-blue" onclick="saveGiftName()">저장</button>
+          </div>
+        </div>
+        <div style="margin-top:12px; font-size:13px; color:var(--muted);">
+          현재 사은품: <span id="gift-name-display" style="color:var(--ink);">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── VERIFY ── -->
+    <section class="section" id="sec-verify">
+      <div class="page-title">코드 확인</div>
+      <div class="page-sub">참가자의 수령 코드를 확인하고 사은품을 지급합니다</div>
+
+      <div class="verify-panel">
+        <div class="panel-title"><span class="dot"></span>코드 검색</div>
+        <div class="verify-row">
+          <input type="text" id="code-input" placeholder="BIRD-0000" maxlength="12">
+          <button class="btn btn-blue" onclick="verifyCode()">확인</button>
+          <button class="btn btn-green" onclick="confirmClaim()">지급 완료 처리</button>
+        </div>
+        <div id="verify-result"></div>
+      </div>
+
+      <div class="stock-panel">
+        <div class="panel-title"><span class="dot"></span>빠른 지급 목록 (대기 중)</div>
+        <div id="pending-list"></div>
+      </div>
+    </section>
+
+    <!-- ── LOGS ── -->
+    <section class="section" id="sec-logs">
+      <div class="page-title">지급 로그</div>
+      <div class="page-sub">시간대별 사은품 지급 기록을 확인합니다</div>
+
+      <div class="log-controls">
+        <select class="filter-select" id="log-filter" onchange="renderLogs()">
+          <option value="all">전체</option>
+          <option value="pending">대기 중</option>
+          <option value="claimed">수령 완료</option>
+        </select>
+        <input type="text" class="search-input" id="log-search" placeholder="코드 검색..." oninput="renderLogs()">
+        <button class="btn btn-subtle" onclick="exportCSV()">CSV 내보내기</button>
+        <button class="btn btn-subtle" onclick="renderLogs()">새로고침</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>코드</th>
+              <th>시간</th>
+              <th>날짜</th>
+              <th>상태</th>
+              <th>처리</th>
+            </tr>
+          </thead>
+          <tbody id="log-tbody"></tbody>
+        </table>
+        <div id="no-data" class="no-data" style="display:none;">기록이 없습니다</div>
+      </div>
+    </section>
+
+    <!-- ── SETTINGS ── -->
+    <section class="section" id="sec-settings">
+      <div class="page-title">설정</div>
+      <div class="page-sub">시스템 설정을 관리합니다</div>
+
+      <div class="stock-panel">
+        <div class="panel-title"><span class="dot"></span>비밀번호 변경</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <input type="password" id="new-pw" placeholder="새 비밀번호"
+            style="background:var(--surface2); border:1px solid var(--border); border-radius:6px; color:var(--ink); padding:10px 14px; font-size:14px; outline:none; width:180px;">
+          <button class="btn btn-blue" onclick="changePw()">변경</button>
+        </div>
+        <div id="pw-msg" style="font-size:12px; margin-top:10px; min-height:16px;"></div>
+      </div>
+
+      <div class="stock-panel">
+        <div class="panel-title"><span class="dot"></span>데이터 내보내기</div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button class="btn btn-subtle" onclick="exportCSV()">📄 CSV 내보내기</button>
+          <button class="btn btn-subtle" onclick="exportJSON()">📦 JSON 내보내기</button>
+        </div>
+      </div>
+
+      <div class="danger-zone">
+        <div class="danger-title">⚠ 위험 구역</div>
+        <div class="danger-row">
+          <button class="btn btn-red" onclick="resetLogs()">로그 전체 삭제</button>
+          <button class="btn btn-red" onclick="resetAll()">전체 초기화</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════════
+const DEFAULT_PW = 'admin1234';
+const PW_KEY = 'adminPassword';
+
+function getPw() { return localStorage.getItem(PW_KEY) || DEFAULT_PW; }
+
+function tryLogin() {
+  const val = document.getElementById('pw-input').value;
+  if (val === getPw()) {
+    document.getElementById('login-gate').classList.add('hidden');
+    init();
+  } else {
+    document.getElementById('login-error').textContent = '비밀번호가 올바르지 않습니다';
+    setTimeout(() => document.getElementById('login-error').textContent = '', 2000);
+  }
+}
+document.getElementById('pw-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') tryLogin();
+});
+
+function logout() {
+  document.getElementById('login-gate').classList.remove('hidden');
+  document.getElementById('pw-input').value = '';
+}
+
+function changePw() {
+  const val = document.getElementById('new-pw').value.trim();
+  const msg = document.getElementById('pw-msg');
+  if (val.length < 4) { msg.style.color = '#e74c3c'; msg.textContent = '4자 이상 입력하세요'; return; }
+  localStorage.setItem(PW_KEY, val);
+  msg.style.color = '#27ae60';
+  msg.textContent = '변경되었습니다';
+  setTimeout(() => msg.textContent = '', 2000);
+}
+
+// ═══════════════════════════════════════════════
+//  DATA ACCESS
+// ═══════════════════════════════════════════════
+function getLogs()  { try { return JSON.parse(localStorage.getItem('giftLogs') || '[]'); } catch { return []; } }
+function saveLogs(l){ localStorage.setItem('giftLogs', JSON.stringify(l)); }
+
+function getStock() {
+  const s = localStorage.getItem('giftStock');
+  return s === null ? null : parseInt(s);
+}
+function saveStock(n){ localStorage.setItem('giftStock', String(n)); }
+
+function getInitStock() {
+  const s = localStorage.getItem('giftInitStock');
+  return s === null ? null : parseInt(s);
+}
+
+// ═══════════════════════════════════════════════
+//  NAV
+// ═══════════════════════════════════════════════
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+
+  const map = { dashboard:'대시보드', stock:'사은품 재고', verify:'코드 확인', logs:'지급 로그', settings:'설정' };
+  document.querySelectorAll('.nav-item').forEach(n => {
+    if (n.textContent.trim().includes(map[id] || '')) n.classList.add('active');
+  });
+
+  if (id === 'dashboard') renderDashboard();
+  if (id === 'stock')     renderStock();
+  if (id === 'logs')      renderLogs();
+  if (id === 'verify')    renderPending();
+}
+
+// ═══════════════════════════════════════════════
+//  DASHBOARD
+// ═══════════════════════════════════════════════
+function renderDashboard() {
+  const logs = getLogs();
+  const total   = logs.length;
+  const pending = logs.filter(l => !l.claimed).length;
+  const claimed = logs.filter(l => l.claimed).length;
+  const stock   = getStock();
+  const today   = todayStr();
+  const todayCnt = logs.filter(l => l.time.startsWith(today)).length;
+
+  document.getElementById('stat-total').textContent   = total;
+  document.getElementById('stat-pending').textContent = pending;
+  document.getElementById('stat-claimed').textContent = claimed;
+  document.getElementById('stat-stock').textContent   = stock !== null ? stock : '—';
+  document.getElementById('stat-today').textContent   = todayCnt;
+
+  renderHourChart(logs);
+}
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function renderHourChart(logs) {
+  const today = todayStr();
+  const hours = Array(24).fill(0);
+  logs.forEach(l => {
+    if (l.time.startsWith(today)) {
+      const h = new Date(l.time).getHours();
+      hours[h]++;
+    }
+  });
+  const max = Math.max(...hours, 1);
+  const chart = document.getElementById('hour-chart');
+  chart.innerHTML = hours.map((cnt, h) => `
+    <div class="bar-col">
+      <div class="bar-fill" style="height:${Math.round((cnt/max)*90)}px" data-count="${cnt}"></div>
+      <div class="bar-lbl">${h}</div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  STOCK
+// ═══════════════════════════════════════════════
+function renderStock() {
+  const stock    = getStock();
+  const initStock = getInitStock();
+  const giftName = localStorage.getItem('giftName') || '—';
+
+  const bigEl  = document.getElementById('stock-big');
+  const fillEl = document.getElementById('stock-bar-fill');
+  const lblEl  = document.getElementById('stock-label-text');
+
+  document.getElementById('gift-name-display').textContent = giftName;
+  document.getElementById('gift-name-input').value = giftName !== '—' ? giftName : '';
+
+  if (stock === null) {
+    bigEl.textContent = '—';
+    fillEl.style.width = '0%';
+    lblEl.textContent = '재고를 설정해주세요';
+    return;
+  }
+
+  bigEl.textContent = stock;
+  bigEl.className = 'stock-number' + (stock < 10 ? ' low' : '');
+
+  const pct = initStock ? Math.max(0, Math.round((stock/initStock)*100)) : 100;
+  fillEl.style.width = pct + '%';
+  fillEl.className = 'bar-fill' + (stock < 10 ? ' low' : '');
+  lblEl.textContent = initStock
+    ? `초기 재고 ${initStock}개 중 ${stock}개 남음 (${pct}%)`
+    : `${stock}개 남음`;
+}
+
+function setStock() {
+  const val = parseInt(document.getElementById('stock-set-val').value);
+  if (isNaN(val) || val < 0) return alert('올바른 수량을 입력하세요');
+  localStorage.setItem('giftInitStock', String(val));
+  saveStock(val);
+  renderStock();
+  alert(`재고가 ${val}개로 설정되었습니다`);
+}
+
+function addStock() {
+  const val = parseInt(document.getElementById('stock-add-val').value);
+  if (isNaN(val) || val < 1) return alert('추가 수량을 입력하세요');
+  const cur = getStock() || 0;
+  const init = parseInt(localStorage.getItem('giftInitStock') || '0') + val;
+  localStorage.setItem('giftInitStock', String(init));
+  saveStock(cur + val);
+  renderStock();
+}
+
+function saveGiftName() {
+  const v = document.getElementById('gift-name-input').value.trim();
+  if (!v) return;
+  localStorage.setItem('giftName', v);
+  renderStock();
+}
+
+// ═══════════════════════════════════════════════
+//  VERIFY
+// ═══════════════════════════════════════════════
+let currentVerifyCode = null;
+
+function verifyCode() {
+  const code = document.getElementById('code-input').value.trim().toUpperCase();
+  const result = document.getElementById('verify-result');
+  if (!code) return;
+  currentVerifyCode = null;
+
+  const logs = getLogs();
+  const entry = logs.find(l => l.code === code);
+
+  result.style.display = 'block';
+  if (!entry) {
+    result.className = 'err';
+    result.textContent = `❌ 유효하지 않은 코드입니다: ${code}`;
+  } else if (entry.claimed) {
+    result.className = 'used';
+    const claimedAt = entry.claimedAt ? new Date(entry.claimedAt).toLocaleString('ko-KR') : '알 수 없음';
+    result.innerHTML = `⚠ 이미 수령된 코드입니다<br><small style="opacity:0.7">수령 시각: ${claimedAt}</small>`;
+  } else {
+    result.className = 'ok';
+    const issuedAt = new Date(entry.time).toLocaleString('ko-KR');
+    result.innerHTML = `✅ 유효한 코드입니다 — 사은품 지급 가능<br><small style="opacity:0.7">발급 시각: ${issuedAt}</small>`;
+    currentVerifyCode = code;
+  }
+}
+
+function confirmClaim() {
+  if (!currentVerifyCode) {
+    alert('먼저 유효한 코드를 확인하세요');
+    return;
+  }
+  if (!confirm(`코드 ${currentVerifyCode} 사은품 지급 처리하시겠습니까?`)) return;
+
+  const logs = getLogs();
+  const idx = logs.findIndex(l => l.code === currentVerifyCode);
+  if (idx < 0) return;
+  logs[idx].claimed = true;
+  logs[idx].claimedAt = new Date().toISOString();
+  saveLogs(logs);
+
+  // Decrease stock
+  const stock = getStock();
+  if (stock !== null && stock > 0) saveStock(stock - 1);
+
+  const result = document.getElementById('verify-result');
+  result.className = 'used';
+  result.textContent = `🎁 지급 완료 처리되었습니다: ${currentVerifyCode}`;
+  currentVerifyCode = null;
+
+  renderPending();
+}
+
+function renderPending() {
+  const logs = getLogs().filter(l => !l.claimed).reverse();
+  const el = document.getElementById('pending-list');
+  if (!logs.length) {
+    el.innerHTML = '<div style="color:var(--muted); font-size:13px; padding:8px 0;">대기 중인 코드가 없습니다</div>';
+    return;
+  }
+  el.innerHTML = logs.slice(0, 10).map(l => `
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border);">
+      <span class="code-text">${l.code}</span>
+      <span style="color:var(--muted); font-size:12px;">${new Date(l.time).toLocaleString('ko-KR')}</span>
+      <button class="claim-btn" onclick="quickClaim('${l.code}', this)">지급 처리</button>
+    </div>
+  `).join('');
+}
+
+function quickClaim(code, btn) {
+  if (!confirm(`${code} 지급 처리하시겠습니까?`)) return;
+  const logs = getLogs();
+  const idx = logs.findIndex(l => l.code === code);
+  if (idx < 0) return;
+  logs[idx].claimed = true;
+  logs[idx].claimedAt = new Date().toISOString();
+  saveLogs(logs);
+  const stock = getStock();
+  if (stock !== null && stock > 0) saveStock(stock - 1);
+  btn.textContent = '완료';
+  btn.classList.add('done');
+  btn.disabled = true;
+}
+
+// ═══════════════════════════════════════════════
+//  LOGS
+// ═══════════════════════════════════════════════
+function renderLogs() {
+  const filter  = document.getElementById('log-filter').value;
+  const search  = document.getElementById('log-search').value.trim().toUpperCase();
+  let logs = getLogs().reverse();
+
+  if (filter === 'pending') logs = logs.filter(l => !l.claimed);
+  if (filter === 'claimed') logs = logs.filter(l => l.claimed);
+  if (search) logs = logs.filter(l => l.code.includes(search));
+
+  const tbody = document.getElementById('log-tbody');
+  const noData = document.getElementById('no-data');
+
+  if (!logs.length) {
+    tbody.innerHTML = '';
+    noData.style.display = 'block';
+    return;
+  }
+  noData.style.display = 'none';
+
+  const allLogs = getLogs().reverse();
+  tbody.innerHTML = logs.map((l, i) => {
+    const realIdx = allLogs.findIndex(x => x.code === l.code);
+    const dt = new Date(l.time);
+    const time = dt.toLocaleTimeString('ko-KR', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const date = dt.toLocaleDateString('ko-KR');
+    const badge = l.claimed
+      ? `<span class="badge badge-claimed">수령 완료</span>`
+      : `<span class="badge badge-pending">대기 중</span>`;
+    const action = l.claimed
+      ? `<span style="font-size:11px; color:var(--muted);">${new Date(l.claimedAt||l.time).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})}</span>`
+      : `<button class="claim-btn" onclick="quickClaim('${l.code}', this)">지급 처리</button>`;
+    return `
+      <tr>
+        <td style="color:var(--muted)">${realIdx + 1}</td>
+        <td><span class="code-text">${l.code}</span></td>
+        <td>${time}</td>
+        <td>${date}</td>
+        <td>${badge}</td>
+        <td>${action}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  EXPORT
+// ═══════════════════════════════════════════════
+function exportCSV() {
+  const logs = getLogs();
+  const header = '번호,코드,발급시각,수령여부,수령시각';
+  const rows = logs.map((l, i) =>
+    `${i+1},${l.code},${new Date(l.time).toLocaleString('ko-KR')},${l.claimed ? '완료' : '대기'},${l.claimedAt ? new Date(l.claimedAt).toLocaleString('ko-KR') : ''}`
+  );
+  const csv = '\uFEFF' + [header, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `stamp_log_${todayStr()}.csv`; a.click();
+}
+
+function exportJSON() {
+  const data = {
+    exportedAt: new Date().toISOString(),
+    stock: getStock(),
+    logs: getLogs(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `stamp_data_${todayStr()}.json`; a.click();
+}
+
+// ═══════════════════════════════════════════════
+//  RESET
+// ═══════════════════════════════════════════════
+function resetLogs() {
+  if (!confirm('⚠ 모든 로그를 삭제하시겠습니까? 복구할 수 없습니다.')) return;
+  localStorage.removeItem('giftLogs');
+  renderDashboard();
+  renderLogs();
+  alert('로그가 삭제되었습니다');
+}
+
+function resetAll() {
+  if (!confirm('⚠ 전체 데이터를 초기화하시겠습니까? 로그, 재고, 스탬프 상태가 모두 삭제됩니다.')) return;
+  ['giftLogs','giftStock','giftInitStock','giftName','birdStampState','birdRewardCode'].forEach(k => localStorage.removeItem(k));
+  alert('초기화 완료');
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════
+function init() {
+  renderDashboard();
+}
+
+// Auto-refresh every 15s when on dashboard
+setInterval(() => {
+  if (document.getElementById('sec-dashboard').classList.contains('active')) {
+    renderDashboard();
+  }
+}, 15000);
+</script>
+</body>
+</html>

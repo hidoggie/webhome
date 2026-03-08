@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>Bird AR Stamp</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script type="module" src="./app.js"></script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --ink: #1a1209;
+      --paper: #f5ede0;
+      --paper-aged: #e8d9c0;
+      --stamp-red: #c0392b;
+      --stamp-gold: #b8860b;
+      --stamp-blue: #1a3a5c;
+      --stamp-green: #2d6a4f;
+      --accent: #c0392b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── HUD Prompt ── */
+    #prompt {
+      position: fixed;
+      bottom: 12vh;
+      width: 100%;
+      text-align: center;
+      z-index: 10;
+      color: white;
+      font-family: 'Gowun Batang', serif;
+      font-size: 4.5vw;
+      text-shadow: 0 0 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5);
+      pointer-events: none;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Stamp Indicator Bar (top) ── */
+    #stamp-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, transparent 100%);
+      pointer-events: none;
+    }
+    .bar-stamp {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      filter: grayscale(1) opacity(0.5);
+    }
+    .bar-stamp.done {
+      filter: grayscale(0) opacity(1);
+      border-color: rgba(255,220,100,0.9);
+      background: rgba(255,220,100,0.2);
+      transform: scale(1.15);
+    }
+    #bar-count {
+      color: white;
+      font-size: 13px;
+      font-family: 'Gowun Batang', serif;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+      padding-left: 6px;
+    }
+
+    /* ── Stamp Card Popup ── */
+    #overlay {
+      position: fixed; inset: 0;
+      background: rgba(10, 8, 4, 0.75);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #overlay.show {
+      opacity: 1; pointer-events: all;
+    }
+
+    #stamp-card {
+      width: min(88vw, 360px);
+      background: var(--paper);
+      border-radius: 4px;
+      position: relative;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(180,150,100,0.3);
+      overflow: hidden;
+      transform: scale(0.88) translateY(20px);
+      transition: transform 0.45s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    #overlay.show #stamp-card {
+      transform: scale(1) translateY(0);
+    }
+
+    /* Paper texture */
+    #stamp-card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .card-content { position: relative; z-index: 1; }
+
+    /* Card Header */
+    .card-header {
+      background: var(--ink);
+      padding: 14px 20px 12px;
+      text-align: center;
+      position: relative;
+    }
+    .card-header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 50%; transform: translateX(-50%);
+      width: 80%; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,215,100,0.6), transparent);
+    }
+    .card-title-ko {
+      font-family: 'Gowun Batang', serif;
+      font-size: 18px;
+      color: #f5ede0;
+      letter-spacing: 0.15em;
+    }
+    .card-title-en {
+      font-size: 10px;
+      color: rgba(245,237,224,0.5);
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+    .card-subtitle {
+      font-size: 11px;
+      color: rgba(245,237,224,0.65);
+      margin-top: 6px;
+      font-weight: 300;
+      letter-spacing: 0.05em;
+    }
+
+    /* Stamp Grid */
+    .stamp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 18px 18px 14px;
+    }
+
+    .stamp-slot {
+      aspect-ratio: 1;
+      border: 1.5px dashed rgba(140, 110, 70, 0.4);
+      border-radius: 3px;
+      background: var(--paper-aged);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    .stamp-slot::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 60%);
+    }
+
+    .stamp-label {
+      font-size: 9px;
+      color: rgba(100,80,50,0.5);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-top: 6px;
+      font-family: 'Gowun Batang', serif;
+    }
+
+    .stamp-empty-icon {
+      font-size: 26px;
+      opacity: 0.2;
+    }
+
+    /* Stamp Seal */
+    .stamp-seal {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      opacity: 0;
+      transform: scale(1.4) rotate(-12deg);
+      transition: none;
+    }
+    .stamp-slot.stamped .stamp-seal {
+      opacity: 1;
+      transform: scale(1) rotate(-8deg);
+      animation: stampIn 0.5s cubic-bezier(0.22,1,0.36,1) forwards;
+    }
+
+    @keyframes stampIn {
+      0%   { opacity: 0; transform: scale(2.5) rotate(-5deg); filter: blur(2px); }
+      40%  { opacity: 1; transform: scale(0.9) rotate(-10deg); filter: blur(0); }
+      60%  { transform: scale(1.05) rotate(-7deg); }
+      100% { opacity: 1; transform: scale(1) rotate(-8deg); }
+    }
+
+    .seal-circle {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      border: 3px solid currentColor;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      position: relative;
+    }
+    .seal-circle::before {
+      content: '';
+      position: absolute; inset: 4px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      opacity: 0.4;
+    }
+    .seal-icon { font-size: 28px; line-height: 1; }
+    .seal-name {
+      font-family: 'Gowun Batang', serif;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      margin-top: 3px;
+      opacity: 0.8;
+    }
+
+    /* Stamp colors */
+    .stamp-slot[data-bird="macaw"]    .stamp-seal { color: var(--stamp-red);   }
+    .stamp-slot[data-bird="puffin"]   .stamp-seal { color: var(--stamp-blue);  }
+    .stamp-slot[data-bird="cardinal"] .stamp-seal { color: var(--stamp-green); }
+    .stamp-slot[data-bird="blue-jay"] .stamp-seal { color: var(--stamp-gold);  }
+
+    .stamp-slot.stamped {
+      border-color: transparent;
+      background: var(--paper);
+    }
+
+    /* Ink bleed on stamped slot */
+    .stamp-slot.stamped::after {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 3px;
+      opacity: 0.06;
+    }
+    .stamp-slot[data-bird="macaw"].stamped::after    { background: var(--stamp-red);   }
+    .stamp-slot[data-bird="puffin"].stamped::after   { background: var(--stamp-blue);  }
+    .stamp-slot[data-bird="cardinal"].stamped::after { background: var(--stamp-green); }
+    .stamp-slot[data-bird="blue-jay"].stamped::after { background: var(--stamp-gold);  }
+
+    /* Card Footer */
+    .card-footer {
+      padding: 10px 18px 14px;
+      text-align: center;
+      border-top: 1px solid rgba(140,110,70,0.2);
+    }
+    .card-footer-text {
+      font-size: 10px;
+      color: rgba(100,80,50,0.55);
+      letter-spacing: 0.06em;
+      font-family: 'Gowun Batang', serif;
+    }
+    .stamp-count-text {
+      font-size: 13px;
+      color: var(--ink);
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    #stamp-count-num {
+      color: var(--accent);
+      font-family: 'Gowun Batang', serif;
+    }
+
+    /* Close Button */
+    #close-btn {
+      position: absolute;
+      top: 10px; right: 12px;
+      background: none; border: none;
+      color: rgba(245,237,224,0.6);
+      font-size: 20px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      transition: color 0.2s;
+      z-index: 2;
+    }
+    #close-btn:hover { color: white; }
+
+    /* ── Complete Screen ── */
+    #complete-screen {
+      position: fixed; inset: 0;
+      z-index: 200;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at center, #2c1a08 0%, #0d0804 100%);
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    #complete-screen.show {
+      opacity: 1; pointer-events: all;
+    }
+
+    .complete-inner {
+      text-align: center;
+      padding: 40px 30px;
+      max-width: 340px;
+    }
+
+    .complete-stamp-ring {
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      border: 3px solid rgba(192,57,43,0.7);
+      margin: 0 auto 24px;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      animation: ringPulse 2.5s ease-in-out infinite;
+    }
+    .complete-stamp-ring::before {
+      content: '';
+      position: absolute; inset: 6px;
+      border-radius: 50%;
+      border: 1px solid rgba(192,57,43,0.3);
+    }
+    .complete-stamp-ring::after {
+      content: '';
+      position: absolute; inset: -12px;
+      border-radius: 50%;
+      border: 1px solid rgba(192,57,43,0.15);
+    }
+    @keyframes ringPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(192,57,43,0.3); }
+      50%      { box-shadow: 0 0 0 16px rgba(192,57,43,0); }
+    }
+    .complete-emoji { font-size: 52px; }
+
+    .complete-title {
+      font-family: 'Gowun Batang', serif;
+      font-size: 26px;
+      color: #f5ede0;
+      letter-spacing: 0.12em;
+      margin-bottom: 8px;
+    }
+    .complete-sub {
+      font-size: 13px;
+      color: rgba(245,237,224,0.55);
+      line-height: 1.7;
+      margin-bottom: 30px;
+    }
+    .complete-code-box {
+      background: rgba(245,237,224,0.07);
+      border: 1px solid rgba(245,237,224,0.15);
+      border-radius: 4px;
+      padding: 14px 20px;
+      margin-bottom: 24px;
+    }
+    .complete-code-label {
+      font-size: 10px;
+      color: rgba(245,237,224,0.4);
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    #reward-code {
+      font-family: 'Gowun Batang', serif;
+      font-size: 22px;
+      color: #ffd700;
+      letter-spacing: 0.2em;
+    }
+    .complete-instruction {
+      font-size: 12px;
+      color: rgba(245,237,224,0.5);
+      line-height: 1.6;
+    }
+
+    /* ── Toast Notification ── */
+    #toast {
+      position: fixed;
+      top: 70px; left: 50%; transform: translateX(-50%) translateY(-20px);
+      background: rgba(20,15,8,0.92);
+      border: 1px solid rgba(192,57,43,0.4);
+      border-radius: 40px;
+      padding: 9px 20px;
+      color: #f5ede0;
+      font-size: 13px;
+      font-family: 'Gowun Batang', serif;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      z-index: 300;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+    }
+    #toast.show {
+      opacity: 1; transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Top bar showing stamp progress -->
+<div id="stamp-bar">
+  <div class="bar-stamp" data-bird="macaw">🦜</div>
+  <div class="bar-stamp" data-bird="puffin">🐦</div>
+  <div class="bar-stamp" data-bird="cardinal">🐦‍🔥</div>
+  <div class="bar-stamp" data-bird="blue-jay">🪶</div>
+  <span id="bar-count">0 / 4</span>
+</div>
+
+<!-- Bottom prompt -->
+<div id="prompt">새를 찾아보세요... 📷</div>
+
+<!-- Stamp Card Popup -->
+<div id="overlay">
+  <div id="stamp-card">
+    <div class="card-content">
+      <div class="card-header">
+        <button id="close-btn">✕</button>
+        <div class="card-title-ko">조류 탐험 스탬프</div>
+        <div class="card-title-en">Bird Explorer Stamp Card</div>
+        <div class="card-subtitle">4종의 새를 모두 찾아 도장을 완성하세요</div>
+      </div>
+
+      <div class="stamp-grid">
+        <!-- Macaw -->
+        <div class="stamp-slot" data-bird="macaw">
+          <div class="stamp-empty-icon">🦜</div>
+          <div class="stamp-label">Macaw</div>
+          <div class="stamp-seal">
+            <div class="seal-circle">
+              <div class="seal-icon">🦜</div>
+              <div class="seal-name">MACAW</div>
+            </div>
+          </div>
+        </div>
+        <!-- Puffin -->
+        <div class="stamp-slot" data-bird="puffin">
+          <div class="stamp-empty-icon">🐦</div>
+          <div class="stamp-label">Puffin</div>
+          <div class="stamp-seal">
+            <div class="seal-circle">
+              <div class="seal-icon">🐦</div>
+              <div class="seal-name">PUFFIN</div>
+            </div>
+          </div>
+        </div>
+        <!-- Cardinal -->
+        <div class="stamp-slot" data-bird="cardinal">
+          <div class="stamp-empty-icon">🐦‍🔥</div>
+          <div class="stamp-label">Cardinal</div>
+          <div class="stamp-seal">
+            <div class="seal-circle">
+              <div class="seal-icon">🐦‍🔥</div>
+              <div class="seal-name">CARDINAL</div>
+            </div>
+          </div>
+        </div>
+        <!-- Blue Jay -->
+        <div class="stamp-slot" data-bird="blue-jay">
+          <div class="stamp-empty-icon">🪶</div>
+          <div class="stamp-label">Blue Jay</div>
+          <div class="stamp-seal">
+            <div class="seal-circle">
+              <div class="seal-icon">🪶</div>
+              <div class="seal-name">BLUE JAY</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <div class="stamp-count-text">
+          <span id="stamp-count-num">0</span> / 4 완료
+        </div>
+        <div class="card-footer-text">각 새를 카메라로 인식하면 도장이 찍힙니다</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Complete Screen -->
+<div id="complete-screen">
+  <div class="complete-inner">
+    <div class="complete-stamp-ring">
+      <div class="complete-emoji">🎉</div>
+    </div>
+    <div class="complete-title">탐험 완료!</div>
+    <div class="complete-sub">
+      4종의 새를 모두 발견했습니다<br>
+      아래 코드를 스태프에게 보여주세요
+    </div>
+    <div class="complete-code-box">
+      <div class="complete-code-label">사은품 수령 코드</div>
+      <div id="reward-code">BIRD-0000</div>
+    </div>
+    <div class="complete-instruction">
+      ⓘ 스태프가 코드를 확인 후 사은품을 드립니다<br>
+      코드는 1회만 사용 가능합니다
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- AR Scene -->
+<a-scene
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  config-targets="targets: macaw, puffin, cardinal, blue-jay"
+  xrweb="disableWorldTracking: true">
+  <a-camera
+    position="0 4 10"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;">
+  </a-camera>
+
+  <a-entity smart-target="name: macaw"><a-text value="macaw" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: cardinal"><a-text value="cardinal" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: blue-jay"><a-text value="blue jay" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: puffin"><a-text value="puffin" align="center"></a-text></a-entity>
+
+  <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
+  <a-light type="ambient" intensity="1"></a-light>
+</a-scene>
+
+<script>
+  // ─────────────────────────────────────────
+  //  STAMP STATE  (synced with localStorage)
+  // ─────────────────────────────────────────
+  const BIRDS = ['macaw', 'puffin', 'cardinal', 'blue-jay'];
+  const STORAGE_KEY = 'birdStampState';
+
+  function loadState() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+    catch { return {}; }
+  }
+  function saveState(state) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }
+
+  let stampState = loadState(); // { macaw: true, puffin: true, ... }
+
+  // ─────────────────────────────────────────
+  //  DOM REFS
+  // ─────────────────────────────────────────
+  const overlay        = document.getElementById('overlay');
+  const completeScreen = document.getElementById('complete-screen');
+  const toastEl        = document.getElementById('toast');
+  const promptEl       = document.getElementById('prompt');
+  const countNumEl     = document.getElementById('stamp-count-num');
+  const rewardCodeEl   = document.getElementById('reward-code');
+  const closeBtn       = document.getElementById('close-btn');
+
+  // ─────────────────────────────────────────
+  //  UTILITIES
+  // ─────────────────────────────────────────
+  function stampedCount() {
+    return BIRDS.filter(b => stampState[b]).length;
+  }
+
+  function showToast(msg, dur = 2200) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    setTimeout(() => toastEl.classList.remove('show'), dur);
+  }
+
+  function generateCode() {
+    const saved = localStorage.getItem('birdRewardCode');
+    if (saved) return saved;
+    const code = 'BIRD-' + String(Math.floor(1000 + Math.random() * 9000));
+    localStorage.setItem('birdRewardCode', code);
+    return code;
+  }
+
+  // Update UI to reflect current state
+  function refreshUI() {
+    const count = stampedCount();
+
+    // Stamp card slots
+    BIRDS.forEach(bird => {
+      const slot = document.querySelector(`.stamp-slot[data-bird="${bird}"]`);
+      if (stampState[bird]) {
+        slot.classList.add('stamped');
+      }
+    });
+
+    // Top bar
+    BIRDS.forEach(bird => {
+      const bar = document.querySelector(`.bar-stamp[data-bird="${bird}"]`);
+      if (stampState[bird]) bar.classList.add('done');
+    });
+    document.getElementById('bar-count').textContent = `${count} / 4`;
+
+    // Count text
+    countNumEl.textContent = count;
+
+    // Prompt
+    if (count === 0)      promptEl.textContent = '새를 찾아보세요... 📷';
+    else if (count < 4)   promptEl.textContent = `${4 - count}마리 더 찾아보세요!`;
+    else                  promptEl.textContent = '모든 새를 찾았어요! 🎊';
+  }
+
+  // ─────────────────────────────────────────
+  //  OPEN / CLOSE CARD
+  // ─────────────────────────────────────────
+  function openCard() {
+    overlay.classList.add('show');
+  }
+  function closeCard() {
+    overlay.classList.remove('show');
+    if (stampedCount() === 4) {
+      setTimeout(showComplete, 400);
+    }
+  }
+
+  closeBtn.addEventListener('click', closeCard);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeCard();
+  });
+
+  // ─────────────────────────────────────────
+  //  COMPLETE SCREEN
+  // ─────────────────────────────────────────
+  function showComplete() {
+    const code = generateCode();
+    rewardCodeEl.textContent = code;
+    completeScreen.classList.add('show');
+    logGiftDispense(code);
+  }
+
+  // ─────────────────────────────────────────
+  //  STAMP A BIRD
+  // ─────────────────────────────────────────
+  function stampBird(bird) {
+    if (stampState[bird]) {
+      showToast(`이미 찍은 도장입니다: ${bird}`);
+      openCard();
+      return;
+    }
+
+    stampState[bird] = true;
+    saveState(stampState);
+
+    refreshUI();
+
+    // Force re-trigger animation by removing and re-adding class
+    const slot = document.querySelector(`.stamp-slot[data-bird="${bird}"]`);
+    slot.classList.remove('stamped');
+    void slot.offsetWidth; // reflow
+    slot.classList.add('stamped');
+
+    // Haptic
+    if (navigator.vibrate) navigator.vibrate([30, 20, 50]);
+
+    showToast(`🐦 ${bird.toUpperCase()} 도장 획득!`);
+    openCard();
+  }
+
+  // ─────────────────────────────────────────
+  //  GIFT LOG  (persisted in localStorage)
+  // ─────────────────────────────────────────
+  function logGiftDispense(code) {
+    const logs = JSON.parse(localStorage.getItem('giftLogs') || '[]');
+    const entry = {
+      code,
+      time: new Date().toISOString(),
+      claimed: false,
+    };
+    logs.push(entry);
+    localStorage.setItem('giftLogs', JSON.stringify(logs));
+  }
+
+  // ─────────────────────────────────────────
+  //  AR IMAGE TARGET EVENTS
+  //  (8th Wall fires these on the window)
+  // ─────────────────────────────────────────
+  const BIRD_MAP = {
+    macaw:    'macaw',
+    puffin:   'puffin',
+    cardinal: 'cardinal',
+    bluejay:  'blue-jay',
+    'blue-jay': 'blue-jay',
+  };
+
+  window.addEventListener('xrimagefound', (e) => {
+    const name = e.detail?.name?.toLowerCase().replace(/\s+/g, '-');
+    const bird = BIRD_MAP[name] || name;
+    if (BIRDS.includes(bird)) {
+      stampBird(bird);
+    }
+  });
+
+  // Also hook into A-Frame component events if using smart-target
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[smart-target]').forEach(el => {
+      el.addEventListener('targetFound', () => {
+        const name = el.getAttribute('smart-target').replace('name: ', '').trim();
+        const bird = BIRD_MAP[name] || name;
+        if (BIRDS.includes(bird)) stampBird(bird);
+      });
+    });
+
+    refreshUI();
+  });
+
+  // ─────────────────────────────────────────
+  //  XR8 CONFIG  (from original index.html)
+  // ─────────────────────────────────────────
+  const onxrloaded = async () => {
+    const [r1, r2, r3, r4] = await Promise.all([
+      fetch('./bluejay-target-ar.json').then(r => r.json()),
+      fetch('./macaw-target-ar.json').then(r => r.json()),
+      fetch('./puffin-target-ar.json').then(r => r.json()),
+      fetch('./cardinal-target-ar.json').then(r => r.json()),
+    ]);
+    XR8.XrController.configure({
+      imageTargetData: [r1, r2, r3, r4],
+    });
+  };
+  window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded);
+</script>
+
+</body>
+</html>
