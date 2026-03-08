@@ -1,15 +1,15 @@
 {
-  "imagePath": "image-targets/expo-edit.jpg",
+  "imagePath": "image-targets/expo-poster.png",
   "name": "expo-ar",
   "type": "PLANAR",
   "properties": {
     "top": 0,
     "left": 0,
-    "width": 800,
-    "height": 821,
+    "width": 519,
+    "height": 725,
     "isRotated": true,
-    "originalWidth": 800,
-    "originalHeight": 821
+    "originalWidth": 519,
+    "originalHeight": 725
   },
   "userMetadataIsJson": true,
   "loadAutomatically": true,
