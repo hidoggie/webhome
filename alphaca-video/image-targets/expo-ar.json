@@ -1,0 +1,18 @@
+{
+  "imagePath": "image-targets/expo-target.jpg",
+  "name": "expo-ar",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 1316,
+    "height": 1350,
+    "isRotated": true,
+    "originalWidth": 1316,
+    "originalHeight": 1350
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156802,
+  "updated": 1646873156802
+}
