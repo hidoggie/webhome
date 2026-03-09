@@ -233,14 +233,29 @@
   // ─────────────────────────────────────────
   //  OPEN / CLOSE CARD
   // ─────────────────────────────────────────
+  let isPopupOpen = false; // 팝업이 열려있는지 확인하는 잠금 변수
+
   function openCard() {
+   // 이미 팝업이 열려있다면 중복 실행 방지
+    if (isPopupOpen) return;
+
+    isPopupOpen = true;
+
     overlay.classList.add('show');
+
     setTimeout(function(){
-        overlay.classList.remove('show');
-    },1000);
+        closeCard();
+    },1500);
   }
+
   function closeCard() {
     overlay.classList.remove('show');
+
+   // 팝업이 완전히 사라진 후(애니메이션 고려) 잠금을 해제
+    setTimeout(() => {
+      isPopupOpen = false;
+    }, 300);
+
     if (stampedCount() === 4) {
       setTimeout(showComplete, 400);
     }
@@ -335,7 +350,7 @@
   // 같은 이미지를 다시 인식했을 때도 팝업 열기
   scene.addEventListener('xrimageupdated', ({detail}) => {
     const name = detail.name;
-    if (BIRDS.includes(name) && stampState[name]) {
+    if (BIRDS.includes(name) && stampState[name] && !isPopupOpen) {
       openCard();
     }
   });
