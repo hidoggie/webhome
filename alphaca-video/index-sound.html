@@ -13,9 +13,33 @@
   <script src="./../xr_st/xrextras.js"></script>
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
   <script src="./target-sound.js"></script>
+
+  <style>
+    /* 소리 켜기 버튼 - 이미지 인식 전에는 숨김 */
+    #sound-btn {
+      display: none;
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.65);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.8);
+      border-radius: 50px;
+      padding: 14px 32px;
+      font-size: 18px;
+      font-family: sans-serif;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+  </style>
 </head>
 
 <body>
+
+  <!-- 이미지 인식 후에만 표시되는 소리 켜기 버튼 -->
+  <button id="sound-btn">🔊 소리 켜기</button>
 
   <a-scene
     xrextras-gesture-detector
@@ -28,12 +52,11 @@
       <video
         id="alpha-video"
         muted
+        autoplay
         playsinline
         crossorigin="anonymous"
         loop="true"
-        preload="auto"
         src="./ai-girl-hanbok.mp4">
-        <!-- autoplay 없음: 이미지 타겟 인식 시에만 재생 -->
       </video>
     </a-assets>
 
@@ -70,58 +93,31 @@
     });
     document.querySelector('a-scene').setAttribute('safe-vr-fix', '');
 
-    // ── 오디오 잠금 해제 ──────────────────────────────────────
-    let audioUnlocked = false;
+    const video   = document.getElementById('alpha-video');
+    const soundBtn = document.getElementById('sound-btn');
 
-    // 첫 터치 시 조용히 오디오 컨텍스트 잠금 해제
-    // (화면 변화 없음 - AR 씬을 터치하는 순간 자동 처리)
-    function unlockAudio(video) {
-      if (audioUnlocked) return Promise.resolve();
-      return video.play().then(() => {
-        video.pause();
-        video.currentTime = 0;
-        video.muted = false;
-        audioUnlocked = true;
-        console.log('[AR] 오디오 잠금 해제 완료');
+    // 소리 켜기 버튼 클릭 → 진짜 사용자 제스처이므로 오디오 잠금 해제됨
+    soundBtn.addEventListener('click', () => {
+      video.muted = false;
+      video.volume = 1.0;
+      video.play().then(() => {
+        soundBtn.style.display = 'none';  // 소리 켜지면 버튼 숨김
       }).catch(err => {
-        console.warn('[AR] 오디오 잠금 해제 실패:', err);
+        console.warn('[AR] 오디오 재생 실패:', err);
       });
-    }
+    });
 
-    // ── target-dongb.js 에서 호출하는 전역 재생 함수 ─────────
-    window.playVideoWithAudio = function(video) {
-      video.currentTime = 0;
+    // 이미지 인식 시 버튼 표시 / 인식 해제 시 버튼 숨김
+    // target-dongb.js 가 a-scene 에서 xrimagefound / xrimagelost 를 발생시킴
+    const scene = document.querySelector('a-scene');
 
-      if (audioUnlocked) {
-        // 잠금 해제 완료 → 바로 오디오 포함 재생
-        video.muted = false;
-        video.volume = 1.0;
-        video.play().catch(err => {
-          console.warn('[AR] 재생 실패, muted fallback:', err);
-          video.muted = true;
-          video.play();
-        });
-      } else {
-        // 잠금 해제 전 → muted로 먼저 재생 시작 후 음소거 해제
-        video.muted = true;
-        video.play().then(() => {
-          // 재생 중 상태에서 음소거 해제 (이미 play()가 성공했으므로 안전)
-          video.muted = false;
-          video.volume = 1.0;
-          audioUnlocked = true;
-          console.log('[AR] 타겟 인식으로 오디오 잠금 해제 + 재생');
-        }).catch(err => {
-          console.warn('[AR] 재생 실패:', err);
-        });
-      }
-    };
+    scene.addEventListener('xrimagefound', () => {
+      soundBtn.style.display = 'block';  // 버튼 등장
+    });
 
-    // 첫 터치 시 백그라운드에서 오디오 잠금 해제 준비
-    ['touchstart', 'mousedown', 'pointerdown'].forEach(evt => {
-      document.addEventListener(evt, () => {
-        const video = document.getElementById('alpha-video');
-        if (!audioUnlocked) unlockAudio(video);
-      }, { once: true });
+    scene.addEventListener('xrimagelost', () => {
+      soundBtn.style.display = 'none';   // 타겟 사라지면 버튼도 숨김
+      video.muted = true;                // 다음 인식을 위해 다시 muted 상태로
     });
   </script>
 </body>

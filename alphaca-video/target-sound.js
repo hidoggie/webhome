@@ -23,8 +23,7 @@ AFRAME.registerComponent('target-video', {
       if (name !== detail.name) {
         return
       }
-      // v.play() 대신 전역 함수 사용 → 오디오 포함 재생
-      window.playVideoWithAudio(v)
+      v.play()
       object3D.position.copy(detail.position)
       object3D.quaternion.copy(detail.rotation)
       object3D.scale.set(detail.scale, detail.scale, detail.scale)
