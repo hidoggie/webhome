@@ -1,5 +1,5 @@
 const onxrloaded = async () => {
-  const res = await fetch('./image-targets/dongb-ar.json')
+  const res = await fetch('./image-targets/aigirl-target.json')
   const json = await res.json()
   XR8.XrController.configure({
     imageTargetData: [json],
