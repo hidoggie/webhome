@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>이미지 인식으로 비디오와 3D를</title>
+
+  <script src="./../xr_st/8frame-1.5.0.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>
+
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script src="./target-sound.js"></script>
+
+  <style>
+    /* 소리 켜기 버튼 - 이미지 인식 전에는 숨김 */
+    #sound-btn {
+      display: none;
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 9999;
+      background: rgba(0, 0, 0, 0.65);
+      color: white;
+      border: 2px solid rgba(255,255,255,0.8);
+      border-radius: 50px;
+      padding: 14px 32px;
+      font-size: 18px;
+      font-family: sans-serif;
+      cursor: pointer;
+      letter-spacing: 1px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+  <!-- 이미지 인식 후에만 표시되는 소리 켜기 버튼 -->
+  <button id="sound-btn">🔊 소리 켜기</button>
+
+  <a-scene
+    landing-page
+    xrextras-loading
+    xrextras-runtime-error
+    renderer="colorManagement: true; physicallyBasedRendering: true;"
+    xrweb="disableWorldTracking: true">
+
+    <a-assets>
+      <video
+        id="alpha-video"
+        muted
+        autoplay
+        playsinline
+        crossorigin="anonymous"
+        loop="true"
+        src="./ai-girl-hanbok.mp4">
+      </video>
+       <a-asset-item id="balloon" src="./assets/lego_man.glb"></a-asset-item>   
+    </a-assets>
+
+    <a-camera
+      position="0 4 10"
+      raycaster="objects: .cantap"
+      cursor="fuse: false; rayOrigin: mouse;">
+    </a-camera>
+
+    <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
+    <a-light type="ambient" intensity="1"></a-light>
+
+  <xrextras-named-image-target name="ai-girl-ar;">
+    <xrextras-target-video-fade video="#alpha-video"></xrextras-target-video-fade>
+    <a-entity gltf-model="#balloon" position="0 -7 -13" scale=".02 .02 .02" xrextras-spin class="cantap"></a-entity>
+  </xrextras-named-image-target>
+
+  </a-scene>
+
+  <script>
+    // ── safe-vr-fix ───────────────────────────────────────────
+    AFRAME.registerComponent('safe-vr-fix', {
+      init: function () {
+        const sceneEl = this.el.sceneEl;
+        if (sceneEl.enterVRButton) {
+          const origUpdate = sceneEl.enterVRButton.updateEnterInterfaces;
+          sceneEl.enterVRButton.updateEnterInterfaces = function () {
+            if (origUpdate) origUpdate.apply(this, arguments);
+          };
+        }
+      }
+    });
+    document.querySelector('a-scene').setAttribute('safe-vr-fix', '');
+
+    const video   = document.getElementById('alpha-video');
+    const soundBtn = document.getElementById('sound-btn');
+
+    // 소리 켜기 버튼 클릭 → 진짜 사용자 제스처이므로 오디오 잠금 해제됨
+    soundBtn.addEventListener('click', () => {
+      video.muted = false;
+      video.volume = 1.0;
+      video.play().then(() => {
+        soundBtn.style.display = 'none';  // 소리 켜지면 버튼 숨김
+      }).catch(err => {
+        console.warn('[AR] 오디오 재생 실패:', err);
+      });
+    });
+
+    // 이미지 인식 시 버튼 표시 / 인식 해제 시 버튼 숨김
+    // target-dongb.js 가 a-scene 에서 xrimagefound / xrimagelost 를 발생시킴
+    const scene = document.querySelector('a-scene');
+
+    scene.addEventListener('xrimagefound', () => {
+      soundBtn.style.display = 'block';  // 버튼 등장
+    });
+
+    scene.addEventListener('xrimagelost', () => {
+      soundBtn.style.display = 'none';   // 타겟 사라지면 버튼도 숨김
+      video.muted = true;                // 다음 인식을 위해 다시 muted 상태로
+    });
+  </script>
+</body>
+</html>
