@@ -1,0 +1,18 @@
+{
+  "imagePath": "image-targets/ai-girl-hanbok.png",
+  "name": "ai-girl-ar",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 1341,
+    "height": 1803,
+    "isRotated": true,
+    "originalWidth": 1341,
+    "originalHeight": 1803
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156802,
+  "updated": 1646873156802
+}
