@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>dongbaegi video</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./aframe-chromakey-material.min.js"></script>
+  <script src="./../xr_st/landing-page.js"></script-->  
+
+  <script src="//cdn.8thwall.com/web/xrextras/xrextras.js"></script>
+  <script src='//cdn.8thwall.com/web/landing-page/landing-page.js'></script>
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script src="./target-dongb.js"></script>
+
+  <style>
+    /* 탭 유도 오버레이 */
+    #tap-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      color: white;
+      font-family: sans-serif;
+      text-align: center;
+      cursor: pointer;
+    }
+    #tap-overlay .icon {
+      font-size: 64px;
+      margin-bottom: 16px;
+      animation: pulse 1.5s infinite;
+    }
+    #tap-overlay .msg {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+    #tap-overlay .sub {
+      font-size: 15px;
+      opacity: 0.8;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.15); opacity: 0.7; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 사용자 탭 유도 오버레이 (오디오 자동재생 정책 우회) -->
+  <div id="tap-overlay">
+    <div class="icon">🔊</div>
+    <div class="msg">화면을 탭하여 시작하세요</div>
+    <div class="sub">Tap anywhere to start with sound</div>
+  </div>
+
+  <a-scene
+    xrextras-gesture-detector
+    landing-page
+    xrextras-loading
+    xrextras-runtime-error
+    xrweb="disableWorldTracking: true; allowedDevices: any">
+
+    <a-assets>
+      <video
+        id="alpha-video"
+        autoplay
+        playsinline
+        crossorigin="anonymous"
+        loop="true"
+        src="./ai-girl-hanbok.mp4">
+        <!-- muted 제거: 오디오 포함 재생 -->
+      </video>
+    </a-assets>
+
+    <a-camera
+      position="0 4 10"
+      raycaster="objects: .cantap"
+      cursor="fuse: false; rayOrigin: mouse;">
+    </a-camera>
+
+    <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
+    <a-light type="ambient" intensity="1"></a-light>
+
+    <a-entity
+      target-video="name: dongbaegi-ar; video: #alpha-video;"
+      material="shader: chromakey; src: #alpha-video; color: 0 0.5 1"
+      geometry="primitive: plane; height: 1.65; width: 1.65;"
+      rotation="0 90 0">
+    </a-entity>
+
+  </a-scene>
+
+  <script>
+    // ── 1. safe-vr-fix 컴포넌트 ──────────────────────────────
+    AFRAME.registerComponent('safe-vr-fix', {
+      init: function () {
+        const sceneEl = this.el.sceneEl;
+        if (sceneEl.enterVRButton) {
+          const origUpdate = sceneEl.enterVRButton.updateEnterInterfaces;
+          sceneEl.enterVRButton.updateEnterInterfaces = function () {
+            if (origUpdate) origUpdate.apply(this, arguments);
+          };
+        }
+      }
+    });
+    document.querySelector('a-scene').setAttribute('safe-vr-fix', '');
+
+    // ── 2. 탭 오버레이: 사용자 제스처로 오디오 잠금 해제 ─────
+    const overlay = document.getElementById('tap-overlay');
+    const video   = document.getElementById('alpha-video');
+
+    overlay.addEventListener('click', function unlockAudio() {
+      // 사용자 탭 → 비디오 음소거 해제 후 재생
+      video.muted = false;
+      video.volume = 1.0;
+
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            console.log('오디오 포함 재생 시작');
+          })
+          .catch(err => {
+            console.warn('재생 실패, muted fallback:', err);
+            video.muted = true;
+            video.play();
+          });
+      }
+
+      // 오버레이 제거
+      overlay.style.display = 'none';
+      overlay.removeEventListener('click', unlockAudio);
+    });
+
+    // ── 3. 이미지 타겟 감지 시 오디오 재생 보장 ──────────────
+    // target-dongb.js 가 커스텀 이벤트를 발행하는 경우를 위한 핸들러
+    window.addEventListener('targetFound', () => {
+      if (!video.paused) return;
+      video.muted = false;
+      video.play().catch(() => {
+        video.muted = true;
+        video.play();
+      });
+    });
+
+    window.addEventListener('targetLost', () => {
+      video.pause();
+    });
+  </script>
+</body>
+</html>
