@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html  lang="ko">
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7,12 +7,12 @@
   <title>이미지 Target - 3D 띄우기</title>
 
   <script src="./../xr_st/8frame-1.4.1.min.js"></script>
-  <script src="./../xr_st/landing-page.js"></script>
-
   <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
-  <script type="module" src="./app.js" defer></script>
-  <!--script src="./target-sound.js"></script-->
+
+  <script type="module" src="./app.js"></script>
 
   <script>
      const onxrloaded = async () => {
@@ -29,23 +29,18 @@
 
 <body>
 
-  <a-scene
-    landing-page
-    xrextras-loading
-    xrextras-runtime-error
-    config-targets="targets: ai-girl-ar"
-    xrweb="disableWorldTracking: true; allowedDevices: any">
-
-    <a-assets>
-        <a-asset-item id="balloon" src="./assets/lego_man.glb"></a-asset-item>
-    </a-assets>
-
-    <a-camera
-      id="camera"
-      position="0 4 10"
-      raycaster="objects: .cantap"
-      cursor="fuse: false; rayOrigin: mouse;">
-    </a-camera>
+<a-scene
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  config-targets=
+    "targets: ai-girl-ar"
+  xrweb="disableWorldTracking: true">
+  <a-camera
+    position="0 4 10"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;">
+  </a-camera>
 
     <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
     <a-light type="ambient" intensity="1"></a-light>
@@ -55,9 +50,6 @@
            id="model"
            gltf-model="#balloon"
            class="cantap"
-           xrextras-hold-drag
-           xrextras-two-finger-rotate
-           xrextras-pinch-scale
            scale="3 3 3"
            shadow="receive: false">
        </a-entity>
