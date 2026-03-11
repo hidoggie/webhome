@@ -54,6 +54,7 @@
         muted
         autoplay
         playsinline
+        webkit-playsinline
         crossorigin="anonymous"
         loop="true"
         src="./ai-girl-hanbok.mp4">
@@ -97,14 +98,30 @@
 
     // 소리 켜기 버튼 클릭 → 진짜 사용자 제스처이므로 오디오 잠금 해제됨
     soundBtn.addEventListener('click', () => {
-      video.muted = false;
+  //    video.muted = false;
+      video.removeAttribute('muted');
       video.volume = 1.0;
-      video.play().then(() => {
-        soundBtn.style.display = 'none';  // 소리 켜지면 버튼 숨김
-      }).catch(err => {
-        console.warn('[AR] 오디오 재생 실패:', err);
-      });
+
+  //    video.play().then(() => {
+  //      soundBtn.style.display = 'none';  // 소리 켜지면 버튼 숨김
+  //    }).catch(err => {
+  //      console.warn('[AR] 오디오 재생 실패:', err);
+  //    });
+  //  });
+
+      // 사용자 제스처(click) 안에서 동기적으로 play() 호출 → iOS 허용
+      const playPromise = video.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            soundBtn.style.display = 'none';
+          })
+          .catch(err => {
+            console.warn('[AR] 오디오 재생 실패:', err);
+          });
+      }
     });
+
 
     // 이미지 인식 시 버튼 표시 / 인식 해제 시 버튼 숨김
     // target-dongb.js 가 a-scene 에서 xrimagefound / xrimagelost 를 발생시킴
@@ -116,7 +133,8 @@
 
     scene.addEventListener('xrimagelost', () => {
       soundBtn.style.display = 'none';   // 타겟 사라지면 버튼도 숨김
-      video.muted = true;                // 다음 인식을 위해 다시 muted 상태로
+  //    video.muted = true;                // 다음 인식을 위해 다시 muted 상태로
+      video.setAttribute('muted', '');
     });
   </script>
 </body>
