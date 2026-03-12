@@ -24,7 +24,7 @@
       text-align: center;
       z-index: 10;
       color: white;
-      font-family: 'Gowun Batang', serif;
+      font-family: 'Dongle', serif;
       font-size: 4.5vw;
       text-shadow: 0 0 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5);
       pointer-events: none;
@@ -63,7 +63,7 @@
     #bar-count {
       color: white;
       font-size: 13px;
-      font-family: 'Gowun Batang', serif;
+      font-family: 'Dongle', serif;
       text-shadow: 0 1px 4px rgba(0,0,0,0.8);
       padding-left: 6px;
     }
@@ -124,19 +124,19 @@
     }
     .card-title-ko {
       font-family: 'Dongle', serif;
-      font-size: 18px;
+      font-size: 1rem;
       color: #f5ede0;
       letter-spacing: 0.15em;
     }
     .card-title-en {
-      font-size: 1rem;
+      font-size: 0.7rem;
       color: rgba(245,237,224,0.5);
       letter-spacing: 0.25em;
       text-transform: uppercase;
       margin-top: 2px;
     }
     .card-subtitle {
-      font-size: 1rem;
+      font-size: 0.7rem;
       color: rgba(245,237,224,0.65);
       margin-top: 6px;
       font-weight: 300;
@@ -169,7 +169,7 @@
     }
 
     .stamp-label {
-      font-size: 1.5rem;
+      font-size: 1rem;
       color: rgba(100,80,50,0.5);
       letter-spacing: 0.1em;
       text-transform: uppercase;
@@ -261,7 +261,7 @@
       font-size: 10px;
       color: rgba(100,80,50,0.55);
       letter-spacing: 0.06em;
-      font-family: 'Gowun Batang', serif;
+      font-family: 'Dongle', serif;
     }
     .stamp-count-text {
       font-size: 13px;
@@ -271,7 +271,7 @@
     }
     #stamp-count-num {
       color: var(--accent);
-      font-family: 'Gowun Batang', serif;
+      font-family: 'Dongle', serif;
     }
 
     /* Close Button */
@@ -337,7 +337,7 @@
     .complete-emoji { font-size: 52px; }
 
     .complete-title {
-      font-family: 'Gowun Batang', serif;
+      font-family: 'Dongle', serif;
       font-size: 26px;
       color: #f5ede0;
       letter-spacing: 0.12em;
@@ -364,7 +364,7 @@
       margin-bottom: 6px;
     }
     #reward-code {
-      font-family: 'Gowun Batang', serif;
+      font-family: 'Dongle', serif;
       font-size: 22px;
       color: #ffd700;
       letter-spacing: 0.2em;
@@ -385,7 +385,7 @@
       padding: 9px 20px;
       color: #f5ede0;
       font-size: 13px;
-      font-family: 'Gowun Batang', serif;
+      font-family: 'Dongle', serif;
       letter-spacing: 0.06em;
       white-space: nowrap;
       z-index: 300;
