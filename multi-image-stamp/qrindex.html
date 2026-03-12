@@ -14,7 +14,7 @@
   <script src="./qrcode.min.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=dongle:wght@400&family=Noto+Sans+KR:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="./index.css">
 
 </head>
@@ -245,7 +245,7 @@
 
     setTimeout(function(){
         closeCard();
-    },1500);
+    },3000);
   }
 
   function closeCard() {
@@ -294,8 +294,8 @@
   // ─────────────────────────────────────────
   function stampBird(bird) {
     if (stampState[bird]) {
-      showToast(`이미 찍은 도장입니다: ${bird}`);
-      openCard();
+//      showToast(`이미 찍은 도장입니다: ${bird}`);
+//      openCard();
       return;
     }
 
@@ -349,10 +349,10 @@
 
   // 같은 이미지를 다시 인식했을 때도 팝업 열기
   scene.addEventListener('xrimageupdated', ({detail}) => {
-    const name = detail.name;
-    if (BIRDS.includes(name) && stampState[name] && !isPopupOpen) {
-      openCard();
-    }
+  //  const name = detail.name;
+  //  if (BIRDS.includes(name) && stampState[name] && !isPopupOpen) {
+  //    openCard();
+  //  }
   });
 
   refreshUI();
