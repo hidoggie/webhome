@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>sky aframe</title>
+
+  <script src="./../xr_st/8frame-1.5.0.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  <script src="./../xr_st/coaching-overlay.js"></script>
+  <script src="./../xr_st/aframe-extras-6.1.1.min.js"></script>
+
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+
+  <script type="module" src="./app.js" defer></script>
+  <link rel="stylesheet" href="./index.css">
+
+</head>
+<body>
+<div id="orientationOverlay">
+  <div id="message">
+    <img src="./assets/UI/rotate.svg" width="100px" />
+    Please rotate the phone to portrait mode for a better experience.
+  </div>
+</div>
+
+<div id="bottomBar" style="display: none">
+  <button id="leftButton">
+    <img src="./assets/UI/triangle.svg" />
+  </button>
+  <button id="rightButton">
+    <img src="./assets/UI/triangle.svg" />
+  </button>
+</div>
+
+<a-scene
+  xrextras-loading
+  xrextras-runtime-error
+  landing-page
+  sky-coaching-overlay
+  sky-recenter
+  renderer="colorManagement: true"
+  xrlayers
+  device-orientation>
+
+  <a-assets>
+     <a-asset-item id="doty" src="./assets/models/lego_man.glb"></a-asset-item>
+     <video
+      id="video"
+      src=./cats.mp4"
+      autoplay
+      loop
+      muted
+      playsinline
+      crossorigin="anonymous"></video>
+    <img id="skyTexture" src="./assets/textures/space.png" />
+  </a-assets>
+
+  <a-camera wasd-controls-enabled="false" position="0 3 0" raycaster="objects: .cantap"></a-camera>
+
+  <a-entity light="type: ambient; intensity: 1;"></a-entity>
+
+  <!-- Sky texture -->
+  <a-entity id="skyScene" xrlayerscene="name:sky; invertLayerMask:false; edgeSmoothness:0.6">
+    <a-videosphere material="src: #skyTexture; transparent: true; opacity: 1; fog: false;">
+    </a-videosphere>
+
+    <!-- Overlay video plane -->
+    <a-plane
+      material="shader: flat; src: #video; transparent: true; opacity: 1;"
+      position="0 10 -10"
+      width="6"
+      height="3.375"></a-plane>
+
+    <a-entity light="type: ambient; intensity: 1;"></a-entity>
+  </a-entity>
+</a-scene>
+</body>
+</html>
