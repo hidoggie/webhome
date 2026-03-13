@@ -60,10 +60,14 @@
 
   <a-entity light="type: ambient; intensity: 1;"></a-entity>
 
-  <a-entity
+  <!--a-entity
     id="skyScene"
     xrlayerscene="name:sky; invertLayerMask:false; edgeSmoothness:0.6"
-    sky-debug>
+    sky-debug-->
+  <a-entity
+    id="skyScene"
+    xrlayerscene="name:sky">
+
     <a-sky material="src: #skyTexture; transparent: true; opacity: 1; fog:false;"></a-sky>
 
     <a-entity id="pivot" position="0 0 0" rotation="0 0 0">
