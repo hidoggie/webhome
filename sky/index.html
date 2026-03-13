@@ -34,9 +34,10 @@
         xrlayers>
         
       <a-assets>
-        <a-asset-item id="legoModel" src="./lego_man.glb"></a-asset-item>
-        <img id="skyTexture" src='./space.png'>
+        <a-asset-item id="legoModel" src="lego_main.glb"></a-asset-item>
       </a-assets>
+
+        </a-assets>
 
         <a-camera position="0 3 0"></a-camera>
         
@@ -46,19 +47,14 @@
             <a-entity
                id="model"
                gltf-model="#legoModel"
-               position="1 8 -10"
-               scale="2 2 2"
-               shadow="receive: false">
+               class="cantap"
+               xrextras-hold-drag
+               xrextras-two-finger-rotate
+               xrextras-pinch-scale
+               scale="3 3 3"
+               shadow="receive: false"
+               visible="false">
             </a-entity>
-
-            <!--a-box 
-                position="0 10 -10"
-                scale="5 5 5"
-                material="
-                color: #AD50FF; shader: flat; 
-                src: https://cdn.8thwall.com/web/assets/cube-texture.png"
-                shadow>
-            </a-box-->
             <a-entity light="type: ambient; intensity: 1;"></a-entity>
         </sky-scene>
     </a-scene>
