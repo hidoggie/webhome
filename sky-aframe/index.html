@@ -46,18 +46,10 @@
   device-orientation>
   <a-assets>
     <a-asset-item id="doty" src="./assets/models/lego_man.glb"></a-asset-item>
-    <a-asset-item id="airship" src="./assets/models/lego_star_destroyer.glb"></a-asset-item>
     <img id="skyTexture" src="./assets/textures/space.png" />
   </a-assets>
 
   <a-camera wasd-controls-enabled="false" near="0.1" position="0 0 0"></a-camera>
-
-  <!--a-entity
-    gltf-model="#airship"
-    position="-20 20 -55"
-    rotation="0 -15 0"
-    animation-mixer="clip: idle; loop: repeat;"
-    scale="0.1 0.1 0.1"></a-entity-->
 
   <a-entity light="type: ambient; intensity: 1;"></a-entity>
 
@@ -65,7 +57,7 @@
     id="skyScene"
     xrlayerscene="name:sky; invertLayerMask:false; edgeSmoothness:0.6">
 
-    <a-sky material="src: #skyTexture; transparent: true; opacity: 1; fog:false;">
+    <a-sky material="src: #skyTexture; transparent: true; opacity: 1; fog:false;"></a-sky>
 
     <a-entity id="pivot" position="0 0 0" rotation="0 0 0">
       <a-entity
@@ -75,10 +67,10 @@
         scale=".02 .02 .02"
         rotation="0 0 0"
         animation-mixer="clip: idle; loop: repeat;"
+        visible="false"
         sky-arrows>
       </a-entity>
     </a-entity>
-   </a-sky>
 
     <a-entity
       light="
