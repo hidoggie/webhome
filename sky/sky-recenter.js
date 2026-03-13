@@ -9,13 +9,12 @@ AFRAME.registerComponent('sky-recenter', {
   },
 })
 
-   const scene = this.el.sceneEl
    const model = document.getElementById('model')
 
-    scene.addEventListener('sky-coaching-overlay.hide', () => {
+    this.el.addEventListener('sky-coaching-overlay.hide', () => {
       model.setAttribute('visible', true)
     })
 
-    scene.addEventListener('sky-coaching-overlay.show', () => {
+    this.el.addEventListener('sky-coaching-overlay.show', () => {
        model.setAttribute('visible', false)
     })
