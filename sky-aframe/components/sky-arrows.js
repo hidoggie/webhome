@@ -12,12 +12,14 @@ const arrowsComponent = {
     const leftButton = document.getElementById('leftButton')
     const DotyM = document.getElementById('dotyModel')
 
-     bottomBar.style.display = 'none'
-     DotyM.setAttribute('visible', false)
-
     scene.addEventListener('sky-coaching-overlay.hide', () => {
       bottomBar.style.display = 'flex'
       DotyM.setAttribute('visible', true)
+    })
+
+    scene.addEventListener('sky-coaching-overlay.show', () => {
+       bottomBar.style.display = 'none'
+       DotyM.setAttribute('visible', false)
     })
 
     // The current value of the pivot's 'rotation' attribute
