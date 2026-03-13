@@ -1,4 +1,4 @@
-import {arrowsComponent} from './components/sky-show-hide.js'
+import {ShowHideComponent} from './components/sky-show-hide.js'
 AFRAME.registerComponent('sky-show-hide', ShowHideComponent)
 
 import {debugComponent} from './components/sky-debug.js'
