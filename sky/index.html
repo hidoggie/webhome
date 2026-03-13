@@ -9,6 +9,7 @@
     <script src="./../xr_st/xrextras.js"></script>
     <script src='./../xr_st/landing-page.js'></script>
     <script src='./../xr_st/coaching-overlay.js'></script>
+    <script src="./../xr_st/aframe-extras-6.1.1.min.js"></script>
 
     <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
 
@@ -17,22 +18,23 @@
 
   <body>
     <a-scene 
+        landing-page
         xrextras-loading
         xrextras-runtime-error
-        landing-page
         sky-coaching-overlay
         sky-recenter
         renderer="colorManagement: true"
-        xrlayers
+        xrlayers="cameraDirection: back;"
         xrconfig
         device-orientation>
         
       <a-assets>
         <a-asset-item id="legoModel" src="./lego_man.glb"></a-asset-item>
+        <img id="skyTexture" src="./space.png" />
       </a-assets>
 
-        <!--a-camera position="0 3 0"></a-camera-->
-       <a-camera id="camera" wasd-controls-enabled="false" near="0.1" position="0 0 0"></a-camera>
+        <a-camera position="0 3 0"></a-camera>
+       <!--a-camera id="camera" wasd-controls-enabled="false" near="0.1" position="0 0 0"></a-camera-->
         
         <a-entity     
            id="skyScene"
@@ -43,9 +45,11 @@
                id="model"
                gltf-model="#legoModel"
                class="cantap"
-               scale="3 3 3"
-               shadow="receive: false"
-               visible="false">
+               position="0 -7 -13"
+               scale=".02 .02 .02"
+               rotation="0 0 0"
+               visible="false"
+               hide-show>
             </a-entity>
             <a-entity light="type: ambient; intensity: 1;"></a-entity>
         </a-entity>
