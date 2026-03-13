@@ -12,16 +12,16 @@ AFRAME.registerComponent('sky-recenter', {
 
 AFRAME.registerComponent('hide-show', {
   init() {
-    const sceneEl = document.getElementById('MyScene')
+    const scene = this.el.sceneEl
     const model = document.getElementById('model')
 
     // ✅ 하늘 인식 성공 → 리센터 + 모델 표시
-    sceneEl.addEventListener('sky-coaching-overlay.hide', () => {
+    scene.addEventListener('sky-coaching-overlay.hide', () => {
       model.setAttribute('visible', true)
     })
 
     // ✅ 하늘 이탈 → 모델 숨김
-    sceneEl.addEventListener('sky-coaching-overlay.show', () => {
+    scene.addEventListener('sky-coaching-overlay.show', () => {
       model.setAttribute('visible', false)
     })
   },
