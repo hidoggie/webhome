@@ -38,16 +38,17 @@
         
         <a-entity     
            id="skyScene"
-           xrlayerscene="name: sky; edgeSmoothness: 0.6">
+           xrlayerscene="name: sky; invertLayerMask:false; edgeSmoothness: 0.6">
+
             <a-sky material="src: #skyTexture; transparent: true; opacity: 1;"></a-sky>
 
             <a-entity
                id="model"
                gltf-model="#legoModel"
-               class="cantap"
-               position="0 -7 -13"
-               scale="3 3 3"
+               position="0 0 0"
+               scale=".02 .02 .02"
                rotation="0 0 0"
+               animation-mixer="clip: idle; loop: repeat;"
                visible="false"
                hide-show>
             </a-entity>
