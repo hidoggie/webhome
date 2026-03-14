@@ -70,8 +70,9 @@
       id="dotyModel"
       material="shader: chromakey; src: #alpha-video; color: 0.1 0.9 0.2"
       geometry="primitive: plane; height: 1.65; width: 1.65;"
-      rotation="0 90 0"
-     >
+      position="0 0.915 0"
+      scale="3 3 3"
+    >
     </a-entity>
 
     <!-- Overlay video plane -->
@@ -80,6 +81,14 @@
       position="0 10 -10"
       width="6"
       height="3.375"></a-plane-->
+  <a-plane
+    height="2000"
+    width="2000"
+    rotation="-90 0 0"
+    material="shader: shadow; opacity: 0.67"
+   >
+  </a-plane>
+
 
     <a-entity light="type: ambient; intensity: 1;"></a-entity>
   </a-entity>
