@@ -11,7 +11,7 @@
   <script src="./../xr_st/coaching-overlay.js"></script>
   <script src="./../xr_st/aframe-extras-6.1.1.min.js"></script>
   <!--script src="./../xr_st/aframe-chromakey-material-1.1.4.min.js"></script-->
-  <script src="./aframe-chromakey-material.min.js"></script>
+  <!--script src="./aframe-chromakey-material.min.js"></script-->
 
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
 
@@ -80,7 +80,7 @@
     </a-entity-->
     <a-entity
       id="dotyModel"
-      material="shader: chromakey; src: #alpha-video; color: 0.1 0.9 0.2"
+      chromakey="src: #alpha-video; color: 0.1 0.9 0.2; opacity: 1; transparent: true"
       geometry="primitive: plane; height: 7; width: 7;"
       position="0 0.915 0"
      >
