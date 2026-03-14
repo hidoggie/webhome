@@ -10,12 +10,10 @@
   <script src="./../xr_st/landing-page.js"></script>  
   <script src="./../xr_st/coaching-overlay.js"></script>
   <script src="./../xr_st/aframe-extras-6.1.1.min.js"></script>
-  <!--script src="./../xr_st/aframe-chromakey-material-1.1.4.min.js"></script-->
-  <!--script src="./aframe-chromakey-material.min.js"></script-->
 
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
 
-  <script type="module" src="./app1.js" defer></script>
+  <script type="module" src="./app2.js" defer></script>
   <link rel="stylesheet" href="./index.css">
 
 </head>
@@ -26,15 +24,6 @@
     Please rotate the phone to portrait mode for a better experience.
   </div>
 </div>
-
-<!--div id="bottomBar" style="display: none">
-  <button id="leftButton">
-    <img src="./assets/UI/triangle.svg" />
-  </button>
-  <button id="rightButton">
-    <img src="./assets/UI/triangle.svg" />
-  </button>
-</div-->
 
 <a-scene
   xrextras-gesture-detector
@@ -47,62 +36,80 @@
   xrlayers="cameraDirection: back;"
   xrconfig
   xrweb="disableWorldTracking: true; allowedDevices: any">
+
   <a-assets>
-    <!--a-asset-item id="doty" src="./assets/models/lego_man.glb"></a-asset-item-->
     <img id="skyTexture" src="./assets/textures/space.png" />
-    <video id="alpha-video" src="./alpaca.mp4" autoplay muted loop="true" webkit-playsinline playsinline crossorigin="anonymous"></video>
-    <video id="beta-video" src="./cats.mp4" autoplay muted loop="true" webkit-playsinline playsinline crossorigin="anonymous"></video>
+
+    <!--
+      ✅ FIX: autoplay + muted + playsinline 모두 명시
+           webkit-playsinline은 구형 iOS 대응
+    -->
+    <video
+      id="alpha-video"
+      src="./alpaca.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+      webkit-playsinline
+      crossorigin="anonymous"
+      preload="auto">
+    </video>
+
+    <video
+      id="beta-video"
+      src="./cats.mp4"
+      autoplay
+      muted
+      loop
+      playsinline
+      webkit-playsinline
+      crossorigin="anonymous"
+      preload="auto">
+    </video>
   </a-assets>
 
-  <!--a-camera wasd-controls-enabled="false" near="0.1" position="0 0 0"></a-camera-->
-    <a-camera
-      position="0 4 10"
-      raycaster="objects: .cantap"
-      cursor="fuse: false; rayOrigin: mouse;">
-    </a-camera>
-    <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
-    <a-light type="ambient" intensity="1"></a-light>
+  <a-camera
+    position="0 4 10"
+    raycaster="objects: .cantap"
+    cursor="fuse: false; rayOrigin: mouse;">
+  </a-camera>
+
+  <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
+  <a-light type="ambient" intensity="1"></a-light>
 
   <a-entity
     id="skyScene"
     xrlayerscene="name:sky; invertLayerMask:false; edgeSmoothness:0.6">
 
-    <a-sky material="src: #skyTexture;  transparent: true;  opacity: 1;  fog: false;"></a-sky>
+    <a-sky material="src: #skyTexture; transparent: true; opacity: 1; fog: false;"></a-sky>
 
-    <!--a-video id="dotyModel" src="#alpha-video" transparent="true" opacity="1" display="false" width="16" height="9" position="0 0 -20"-->
-    <!--a-entity
-      id="dotyModel"
-      material="shader: chromakey; src: #alpha-video; color: 0.1 0.9 0.2"
-      geometry="primitive: plane; height: 1.65; width: 1.65;"
-      position="0 0.915 0"
-      scale="3 3 3"
-    >
-    </a-entity-->
+    <!--
+      ✅ FIX 핵심: chromakey를 component가 아닌 material shader로 사용
+                  src에 #alpha-video 셀렉터 전달
+    -->
     <a-entity
       id="dotyModel"
       material="shader: chromakey; src: #alpha-video; color: 0.1 0.9 0.2; opacity: 1; transparent: true"
       geometry="primitive: plane; height: 7; width: 7;"
       position="0 0.915 0"
+      play-video="video: #alpha-video; autoplay: true"
     >
     </a-entity>
 
-    <!-- Overlay video plane -->
-    <!--a-plane
-      material="shader: chromakey; src: #beta-video; color: 0.1 0.9 0.2"
-      position="0 10 -10"
-      width="6"
-      height="3.375"></a-plane-->
-  <!--a-plane
-    height="2000"
-    width="2000"
-    rotation="-90 0 0"
-    material="shader: shadow; opacity: 0.67"
-   >
-  </a-plane-->
-
   </a-entity>
 </a-scene>
+
+<script>
+  // ✅ FIX: 화면 터치 시 비디오 재생 강제 실행 (모바일 브라우저 autoplay 정책 우회)
+  window.addEventListener('touchstart', function onFirstTouch() {
+    document.querySelectorAll('video').forEach(v => {
+      v.muted = true
+      v.play().catch(() => {})
+    })
+    window.removeEventListener('touchstart', onFirstTouch)
+  }, {once: true})
+</script>
+
 </body>
 </html>
-
-
