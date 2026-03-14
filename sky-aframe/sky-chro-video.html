@@ -88,14 +88,28 @@
       ✅ FIX 핵심: chromakey를 component가 아닌 material shader로 사용
                   src에 #alpha-video 셀렉터 전달
     -->
-    <a-entity
+    <!--a-entity
       id="dotyModel"
       material="shader: chromakey; src: #beta-video; color: 0.1 0.9 0.2; opacity: 1; transparent: true"
       geometry="primitive: plane; height: 7; width: 7;"
       position="0 0.915 3"
-      play-video="video: #beta-video; autoplay: true"
+      play-video="video: #alpha-video; autoplay: true"
     >
+    </a-entity-->
+    <a-entity
+      id="dotyModel"
+      material="shader: chromakey;
+                src: #alpha-video;
+                color: 0.1 0.9 0.2;
+                threshold: 0.35;
+                smoothness: 0.08;
+                spill: 1.0;
+                opacity: 1"
+      geometry="primitive: plane; height: 7; width: 7;"
+      position="0 0.915 0"
+      play-video="video: #alpha-video; autoplay: true">
     </a-entity>
+
 
   </a-entity>
 </a-scene>
