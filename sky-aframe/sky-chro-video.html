@@ -63,13 +63,16 @@
     id="skyScene"
     xrlayerscene="name:sky; invertLayerMask:false; edgeSmoothness:0.6">
 
+    <a-sky material="src: #skyTexture;  transparent: true;  opacity: 1;  fog: false;"></a-sky>
+
     <!--a-video id="dotyModel" src="#alpha-video" transparent="true" opacity="1" display="false" width="16" height="9" position="0 0 -20"-->
-    <a-entity
+    <a-video
       id="dotyModel"
       material="shader: chromakey; src: #alpha-video; color: 0.1 0.9 0.2"
-      geometry="primitive: plane; height: 1.65; width: 1.65;"
-      rotation="0 90 0">
-    </a-entity>
+      position="0 10 -10"
+      width="6"
+      height="3.375">
+    </a-video>
 
     <!-- Overlay video plane -->
     <!--a-plane
