@@ -47,7 +47,7 @@
   <a-assets>
     <!--a-asset-item id="doty" src="./assets/models/lego_man.glb"></a-asset-item-->
     <img id="skyTexture" src="./assets/textures/space.png" />
-    <video id="alpha-video" src="./cats.mp4" muted loop></video>
+    <video id="alpha-video" src="./cats.mp4" autoplay muted loop="true" webkit-playsinline playsinline></video>
   </a-assets>
 
   <a-camera wasd-controls-enabled="false" near="0.1" position="0 0 0"></a-camera>
@@ -58,8 +58,8 @@
     id="skyScene"
     xrlayerscene="name:sky; invertLayerMask:false; edgeSmoothness:0.6">
 
-    <a-videosphere id="dotyModel" material="src: #alpha-video; transparent: true; opacity: 1; fog: false;">
-    </a-videosphere>
+    <a-video id="dotyModel" src="#alpha-video" transparent="true" opacity="1" display="false" width="16" height="9" position="0 0 -20">
+    </a-video>
 
     <!-- Overlay video plane -->
     <a-plane
