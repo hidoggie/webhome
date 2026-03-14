@@ -1,6 +1,6 @@
 const chromaKeyShader = {
   schema: {
-    src: {type: 'map'},
+    src: {type: 'selector'},
     color: {default: {x: 0.1, y: 0.9, z: 0.2}, type: 'vec3', is: 'uniform'},
     opacity: {default: 1.0},
     transparent: {default: true, is: 'uniform'},
