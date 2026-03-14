@@ -50,23 +50,31 @@
     <video id="alpha-video" src="./cats.mp4" autoplay muted loop="true" webkit-playsinline playsinline></video>
   </a-assets>
 
-  <a-camera wasd-controls-enabled="false" near="0.1" position="0 0 0"></a-camera>
-
-  <a-entity light="type: ambient; intensity: 1;"></a-entity>
+  <!--a-camera wasd-controls-enabled="false" near="0.1" position="0 0 0"></a-camera-->
+    <a-camera
+      position="0 4 10"
+      raycaster="objects: .cantap"
+      cursor="fuse: false; rayOrigin: mouse;">
+    </a-camera>
+    <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
 
   <a-entity
     id="skyScene"
     xrlayerscene="name:sky; invertLayerMask:false; edgeSmoothness:0.6">
 
-    <a-video id="dotyModel" src="#alpha-video" transparent="true" opacity="1" display="false" width="16" height="9" position="0 0 -20">
-    </a-video>
+    <!--a-video id="dotyModel" src="#alpha-video" transparent="true" opacity="1" display="false" width="16" height="9" position="0 0 -20"-->
+    <a-entity
+      material="shader: chromakey; src: #alpha-video; color: 0.1 0.9 0.2"
+      geometry="primitive: plane; height: 1.65; width: 1.65;"
+      rotation="0 90 0">
+    </a-entity>
 
     <!-- Overlay video plane -->
-    <a-plane
-      material="shader: flat; src: #skyTexture; transparent: true; opacity: 1;"
+    <!--a-plane
+      material="shader: flat; src: #alpha-video; transparent: true; opacity: 1;"
       position="0 10 -10"
       width="6"
-      height="3.375"></a-plane>
+      height="3.375"></a-plane-->
 
     <a-entity light="type: ambient; intensity: 1;"></a-entity>
   </a-entity>
