@@ -48,7 +48,7 @@
   <a-assets>
     <!--a-asset-item id="doty" src="./assets/models/lego_man.glb"></a-asset-item-->
     <img id="skyTexture" src="./assets/textures/space.png" />
-    <video id="alpha-video" src="./cats.mp4" autoplay muted loop="true" webkit-playsinline playsinline></video>
+    <video id="alpha-video" src="./cats.mp4" autoplay="true" muted="true" loop="true" webkit-playsinline="true" playsinline="true" crossorigin="anonymous"></video>
   </a-assets>
 
   <!--a-camera wasd-controls-enabled="false" near="0.1" position="0 0 0"></a-camera-->
@@ -66,13 +66,14 @@
     <a-sky material="src: #skyTexture;  transparent: true;  opacity: 1;  fog: false;"></a-sky>
 
     <!--a-video id="dotyModel" src="#alpha-video" transparent="true" opacity="1" display="false" width="16" height="9" position="0 0 -20"-->
-    <a-video
+    <a-entity
       id="dotyModel"
       material="shader: chromakey; src: #alpha-video; color: 0.1 0.9 0.2"
+      geometry="primitive: box"
       position="0 10 -10"
       width="6"
       height="3.375">
-    </a-video>
+    </a-entity>
 
     <!-- Overlay video plane -->
     <!--a-plane
