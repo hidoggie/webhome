@@ -240,6 +240,20 @@ const annotationComponent = {
     this.worldPos = this.el.object3D.getWorldPosition(this.worldVec)
     this.labelObj.position.copy(new THREE.Vector3(this.worldPos.x, this.worldPos.y + this.data.offsetY, this.worldPos.z))
     this.scene.add(this.labelObj)
+
+  this.el.addEventListener('click', () => {
+    if (this.labelActivated) {
+      this.deactivateLabel()
+    } else {
+      // 다른 hotspot label 먼저 닫기
+      document.querySelectorAll('[annotation]').forEach(el => {
+        if (el !== this.el && el.components.annotation) {
+          el.components.annotation.deactivateLabel()
+        }
+      })
+      this.activateLabel()
+    }
+  })
   },
   tick() {
     // hotspot-group이 숨겨진 상태면 처리 건너뜀 (scale 전환 중 빨간 구름 방지)
