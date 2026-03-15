@@ -62,7 +62,7 @@ const responsiveImmersiveComponent = {
         this.el.addEventListener('coaching-overlay.show', (e) => {
           // 차 숨김 + hotspot 완전히 숨김 (scale 왜곡 방지)
           car.object3D.scale.set(0.001, 0.001, 0.001)
-          if (hotspots) hotspots.object3D.visible = false
+          if (hotspots) hotspots.setAttribute('visible', false)  // ✅
           container.style.display = 'none'
         })
         this.el.addEventListener('coaching-overlay.hide', (e) => {
@@ -70,10 +70,10 @@ const responsiveImmersiveComponent = {
           // scale을 먼저 1로 복원
           car.object3D.scale.set(1, 1, 1)
           car.setAttribute('absolute-pinch-scale', '')
-          // scale 전환이 완전히 끝난 후 hotspot 표시 (2프레임 대기)
+
           setTimeout(() => {
-            if (hotspots) hotspots.object3D.visible = true
-          }, 100)
+            if (hotspots) hotspots.setAttribute('visible', true)  // ✅
+          }, 100)        
         })
         const addComponents = () => {
           car.setAttribute('change-color', '')

@@ -92,8 +92,9 @@ const annotationComponent = {
   init() {
     this.camera = this.el.sceneEl.camera
     this.scene = new THREE.Scene()
-    let labelActivated; let
-      hsActivated
+
+    this.labelActivated = false
+    this.hsActivated = false
 
     // hotspot inner - 초기 opacity 0
     this.el.setAttribute('radius', 0.03)
@@ -112,7 +113,7 @@ const annotationComponent = {
     this.el.appendChild(this.torus)
 
     this.activateLabel = () => {
-      if (labelActivated) {
+      if (this.labelActivated) {
         return
       }
       // hide hotspot torus
@@ -135,11 +136,11 @@ const annotationComponent = {
         this.label.classList.remove('fade-in')
       }, 500)
 
-      labelActivated = true
+      this.labelActivated = true
     }
 
     this.deactivateLabel = () => {
-      if (!labelActivated) {
+      if (!this.labelActivated) {
         return
       }
       // show hotspot torus
@@ -162,12 +163,12 @@ const annotationComponent = {
         this.label.style.display = 'none'
       }, 400)
 
-      labelActivated = false
+      this.labelActivated = false
     }
 
     // show hotspot
     this.activateHs = () => {
-      if (hsActivated) {
+      if (this.hsActivated) {
         return
       }
       this.el.setAttribute('animation__fading', {
@@ -186,12 +187,12 @@ const annotationComponent = {
         dur: 1000,
       })
 
-      hsActivated = true
+      this.hsActivated = true
     }
 
     // hide hotspot
     this.deactivateHs = () => {
-      if (!hsActivated) {
+      if (!this.hsActivated) {
         return
       }
       this.el.setAttribute('animation__fading', {
@@ -210,7 +211,7 @@ const annotationComponent = {
         dur: 1000,
       })
 
-      hsActivated = false
+      this.hsActivated = false
     }
 
     // create label renderer for text
@@ -225,6 +226,7 @@ const annotationComponent = {
     this.label = document.createElement('h1')
     this.label.style.color = 'white'
     this.label.style.opacity = 0
+    this.label.style.display = 'none'  // ✅ 핵심 수정: 초기에 완전히 숨김
     this.label.style.fontFamily = '\'Nunito\', sans-serif'
     this.label.style.fontWeight = 'bold'
     this.label.style.fontSize = '1.3em'
@@ -243,10 +245,16 @@ const annotationComponent = {
     // hotspot-group이 숨겨진 상태면 처리 건너뜀 (scale 전환 중 빨간 구름 방지)
     const group = this.el.parentNode
     if (group && !group.object3D.visible) {
-      this.deactivateLabel()
-      // opacity 강제 0 유지
-      if (this.el.components.material) this.el.components.material.material.opacity = 0
-      if (this.torus && this.torus.components.material) this.torus.components.material.material.opacity = 0
+      if (this.hsActivated || this.labelActivated) {
+        this.el.removeAttribute('animation__fading')
+        this.torus.removeAttribute('animation__fade')
+        if (this.el.components.material) this.el.components.material.material.opacity = 0
+        if (this.torus.components.material) this.torus.components.material.material.opacity = 0
+        this.label.style.display = 'none'
+        this.label.style.opacity = 0
+        this.hsActivated = false
+        this.labelActivated = false
+      }
       return
     }
 
