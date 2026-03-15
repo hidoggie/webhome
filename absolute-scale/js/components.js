@@ -95,6 +95,8 @@ const annotationComponent = {
 
     this.labelActivated = false
     this.hsActivated = false
+    this.autoDismissTimer = null
+    this._hotspotJustClicked = false  // ✅ 충돌 방지 플래그
 
     // hotspot inner - 초기 opacity 0
     this.el.setAttribute('radius', 0.03)
@@ -214,6 +216,42 @@ const annotationComponent = {
       this.hsActivated = false
     }
 
+    this.startAutoDismiss = () => {
+      clearTimeout(this.autoDismissTimer)
+      this.autoDismissTimer = setTimeout(() => {
+        this.deactivateLabel()
+      }, 3000)
+    }
+
+      // ✅ 2. hotspot 클릭 핸들러
+    this.el.addEventListener('click', () => {
+      this._hotspotJustClicked = true
+      setTimeout(() => { this._hotspotJustClicked = false }, 100)  // 100ms 후 플래그 해제
+
+      if (this.labelActivated) {
+        clearTimeout(this.autoDismissTimer)
+        this.deactivateLabel()
+      } else {
+        document.querySelectorAll('[annotation]').forEach(el => {
+          if (el !== this.el && el.components.annotation) {
+            clearTimeout(el.components.annotation.autoDismissTimer)
+            el.components.annotation.deactivateLabel()
+          }
+        })
+        this.activateLabel()
+        this.startAutoDismiss()
+      }
+    })
+
+  // ✅ 3. 빈 공간 터치 - 플래그로 hotspot 클릭과 구분
+    this.onSceneClick = () => {
+      if (this._hotspotJustClicked) return  // hotspot 클릭이면 무시
+      clearTimeout(this.autoDismissTimer)
+      this.deactivateLabel()
+    }
+    this.el.sceneEl.canvas.addEventListener('touchstart', this.onSceneClick)
+    this.el.sceneEl.canvas.addEventListener('click', this.onSceneClick)
+
     // create label renderer for text
     this.labelRenderer = new THREE.CSS2DRenderer()
     this.labelRenderer.setSize(window.innerWidth, window.innerHeight)
@@ -240,42 +278,6 @@ const annotationComponent = {
     this.worldPos = this.el.object3D.getWorldPosition(this.worldVec)
     this.labelObj.position.copy(new THREE.Vector3(this.worldPos.x, this.worldPos.y + this.data.offsetY, this.worldPos.z))
     this.scene.add(this.labelObj)
-
-  this.el.addEventListener('click', () => {
-    if (this.labelActivated) {
-      clearTimeout(this.autoDismissTimer)
-      this.deactivateLabel()
-    } else {
-      // 다른 hotspot label 먼저 닫기
-      document.querySelectorAll('[annotation]').forEach(el => {
-        if (el !== this.el && el.components.annotation) {
-          clearTimeout(el.components.annotation.autoDismissTimer)
-          el.components.annotation.deactivateLabel()
-        }
-      })
-      this.activateLabel()
-      this.startAutoDismiss()  // ✅ label 열릴 때 타이머 시작
-    }
-  })
-
-   // ✅ 자동 닫힘 타이머 (3초)
-  this.autoDismissTimer = null
-  this.startAutoDismiss = () => {
-    clearTimeout(this.autoDismissTimer)
-    this.autoDismissTimer = setTimeout(() => {
-      this.deactivateLabel()
-    }, 3000)
-  }
-
-  // ✅ 씬(빈 공간) 터치 시 모든 label 닫힘
-  this.onSceneClick = (e) => {
-    // hotspot 자체를 터치한 건 제외
-    if (e.target.closest && e.target.closest('[annotation]')) return
-    clearTimeout(this.autoDismissTimer)
-    this.deactivateLabel()
-  }
-  this.el.sceneEl.canvas.addEventListener('touchstart', this.onSceneClick)
-  this.el.sceneEl.canvas.addEventListener('click', this.onSceneClick)
   },
 
   remove() {
