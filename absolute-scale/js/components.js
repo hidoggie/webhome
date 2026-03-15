@@ -243,23 +243,53 @@ const annotationComponent = {
 
   this.el.addEventListener('click', () => {
     if (this.labelActivated) {
+      clearTimeout(this.autoDismissTimer)
       this.deactivateLabel()
     } else {
       // 다른 hotspot label 먼저 닫기
       document.querySelectorAll('[annotation]').forEach(el => {
         if (el !== this.el && el.components.annotation) {
+          clearTimeout(el.components.annotation.autoDismissTimer)
           el.components.annotation.deactivateLabel()
         }
       })
       this.activateLabel()
+      this.startAutoDismiss()  // ✅ label 열릴 때 타이머 시작
     }
   })
+
+   // ✅ 자동 닫힘 타이머 (3초)
+  this.autoDismissTimer = null
+  this.startAutoDismiss = () => {
+    clearTimeout(this.autoDismissTimer)
+    this.autoDismissTimer = setTimeout(() => {
+      this.deactivateLabel()
+    }, 3000)
+  }
+
+  // ✅ 씬(빈 공간) 터치 시 모든 label 닫힘
+  this.onSceneClick = (e) => {
+    // hotspot 자체를 터치한 건 제외
+    if (e.target.closest && e.target.closest('[annotation]')) return
+    clearTimeout(this.autoDismissTimer)
+    this.deactivateLabel()
+  }
+  this.el.sceneEl.canvas.addEventListener('touchstart', this.onSceneClick)
+  this.el.sceneEl.canvas.addEventListener('click', this.onSceneClick)
   },
+
+  remove() {
+    clearTimeout(this.autoDismissTimer)
+    this.el.sceneEl.canvas.removeEventListener('touchstart', this.onSceneClick)
+    this.el.sceneEl.canvas.removeEventListener('click', this.onSceneClick)
+  },
+
   tick() {
     // hotspot-group이 숨겨진 상태면 처리 건너뜀 (scale 전환 중 빨간 구름 방지)
     const group = this.el.parentNode
     if (group && !group.object3D.visible) {
       if (this.hsActivated || this.labelActivated) {
+        clearTimeout(this.autoDismissTimer)  // ✅ 타이머 정리 
         this.el.removeAttribute('animation__fading')
         this.torus.removeAttribute('animation__fade')
         if (this.el.components.material) this.el.components.material.material.opacity = 0
