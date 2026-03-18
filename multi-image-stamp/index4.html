@@ -196,12 +196,7 @@
     raycaster="objects: .cantap"
     cursor="fuse: false; rayOrigin: mouse;">
   </a-camera-->
-  <a-camera position="0 0 0"></a-camera>
-
-  <a-entity smart-target="name: macaw"><a-text value="macaw" align="center"></a-text></a-entity>
-  <a-entity smart-target="name: cardinal"><a-text value="cardinal" align="center"></a-text></a-entity>
-  <a-entity smart-target="name: blue-jay"><a-text value="blue jay" align="center"></a-text></a-entity>
-  <a-entity smart-target="name: puffin"><a-text value="puffin" align="center"></a-text></a-entity>
+  <a-camera position="0 0 0" look-controls="enabled: true">
 
   <a-entity
       id="VidEntity"
@@ -212,10 +207,17 @@
                 smoothness: 0.08;
                 spill: 1.0;
                 opacity: 1"
-      geometry="primitive: plane; height: 5; width: 3;"
-      position="0 -2 -1"
+      geometry="primitive: plane; height: 1.2; width: 0.7;"
+      position="0 0 -1"
       visible="false">
   </a-entity>
+</a-camera>
+
+  <a-entity smart-target="name: macaw"><a-text value="macaw" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: cardinal"><a-text value="cardinal" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: blue-jay"><a-text value="blue jay" align="center"></a-text></a-entity>
+  <a-entity smart-target="name: puffin"><a-text value="puffin" align="center"></a-text></a-entity>
+
 
   <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
   <a-light type="ambient" intensity="1"></a-light>
