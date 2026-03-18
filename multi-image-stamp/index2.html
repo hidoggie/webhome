@@ -10,7 +10,7 @@
   <script src="./../xr_st/xrextras.js"></script>
   <script src="./../xr_st/landing-page.js"></script>
   <script src="./../xr_st/aframe-extras-6.1.1.min.js"></script>
-  <script src="./../xr_st/aframe-chromakey-material.min.js"></script>
+  <script src="./../xr_st/aframe-chromakey-material-1.1.4.min.js"></script>
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
   <script type="module" src="./app.js"></script>
 
@@ -140,7 +140,6 @@
     <video
       id="completeVid"
       src="./assets/complete_video.mp4"
-      autoplay
       muted
       playsinline
       webkit-playsinline
@@ -171,7 +170,6 @@
                 opacity: 1"
       geometry="primitive: plane; height: 5; width: 5;"
       position="1.5 5 2"
-      play-video="video: #completeVid; autoplay: true"
       visible="false">
   </a-entity>
 
@@ -281,17 +279,25 @@
     const VidEntity = document.getElementById('VidEntity');
     const video = document.getElementById('completeVid');
 
-    VidEntity.setAttribute('visible', "true");
+    VidEntity.setAttribute('visible', 'true');
     video.currentTime = 0;
-    video.play();
 
-  // ✅ 영상 재생이 끝나면 그때 QR 팝업 표시
+    // 영상이 끝나면 QR 팝업 표시
     video.addEventListener('ended', function onEnded() {
-    video.removeEventListener('ended', onEnded); // 중복 실행 방지
-    VidEntity.setAttribute('visible', 'false');  // 영상 엔티티 숨기기
-    showComplete();
-  }, { once: true });
+      VidEntity.setAttribute('visible', 'false');
+      showComplete();
+    }, { once: true });
 
+    // video.play()는 Promise 반환 → 모바일에서 실패 시 catch 필요
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise.catch((err) => {
+        console.warn('video.play() failed:', err);
+        // 재생 실패 시 바로 완료 화면으로
+        VidEntity.setAttribute('visible', 'false');
+        showComplete();
+      });
+    }
   }
 
   // ─────────────────────────────────────────
