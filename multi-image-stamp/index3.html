@@ -151,7 +151,7 @@
 <!-- Toast -->
 <div id="toast"></div>
 
-<!-- 크로마키 캔버스 오버레이 (AR 씬 위에 투명 레이어로 합성) -->
+<!-- 크로마키 캔버스 오버레이 (AR 씬 위 투명 레이어) -->
 <canvas id="chromakey-canvas" style="
   display: none;
   position: fixed;
@@ -162,7 +162,7 @@
   pointer-events: none;
   background: transparent;
 "></canvas>
-<!-- 숨겨진 video 요소: 크로마키 소스 -->
+<!-- 크로마키 소스 비디오 (숨김) -->
 <video
   id="completeVid"
   src="./assets/complete_video.mp4"
@@ -282,14 +282,14 @@
     if (isPopupOpen) return;
     isPopupOpen = true;
     overlay.classList.add('show');
-    // 자동 닫힘 없음 → 확인 버튼을 눌러야 닫힘 (iOS 제스처 체인 유지)
+    // 자동 닫힘 없음 → 확인 버튼 탭으로만 닫힘 (iOS 제스처 체인 보장)
   }
 
   function closeCard() {
     overlay.classList.remove('show');
     setTimeout(() => { isPopupOpen = false; }, 300);
     if (stampedCount() === 4) {
-      showVideo(); // 확인 버튼 탭 → 즉시 호출 (setTimeout 없음 → iOS 허용)
+      showVideo(); // 확인 탭 → 즉시 호출 (setTimeout 없음 → iOS 허용)
     }
   }
 
@@ -300,48 +300,71 @@
   });
 
   // ─────────────────────────────────────────
-  //  Canvas 크로마키 (HTML 레이어 - iOS 완전 호환)
-  //  A-Frame chromakey 셰이더와 동일한 파라미터 적용
-  //  keyR/G/B: 0.1/0.9/0.2 → RGB(26,230,51)
-  //  threshold: 0.35 / smoothness: 0.08
+  //  HSV 기반 Canvas 크로마키 (고품질)
+  //  - RGB 거리 방식 대신 Hue로 초록 판별 → 더 정확
+  //  - smoothstep으로 경계 부드럽게 처리
+  //  - despill: 피사체 가장자리 초록빛 제거
   // ─────────────────────────────────────────
-  let chromakeyRAF = null; // requestAnimationFrame ID
+  let chromakeyRAF = null;
+
+  function rgbToHsv(r, g, b) {
+    const rn = r/255, gn = g/255, bn = b/255;
+    const max = Math.max(rn, gn, bn);
+    const min = Math.min(rn, gn, bn);
+    const delta = max - min;
+    let h = 0;
+    if (delta > 0) {
+      if      (max === gn) h = 60 * (((bn - rn) / delta) + 2);
+      else if (max === rn) h = 60 * (((gn - bn) / delta + 6) % 6);
+      else                 h = 60 * (((rn - gn) / delta) + 4);
+    }
+    return { h, s: max === 0 ? 0 : delta / max, v: max };
+  }
 
   function applyChromakey(ctx, canvas) {
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = canvas.width, h = canvas.height;
     const imageData = ctx.getImageData(0, 0, w, h);
     const d = imageData.data;
 
-    // 키 컬러 (A-Frame chromakey 파라미터와 동일)
-    const keyR = 26, keyG = 230, keyB = 51;
-    const threshold  = 0.35;
-    const smoothness = 0.08;
+    // ── 파라미터 (영상 초록 배경에 맞게 조정 가능) ──
+    const HUE_CENTER = 120;  // 초록 중심 hue (도)
+    const HUE_RANGE  = 40;   // ±40도 → 80~160도 범위 커버
+    const SAT_MIN    = 0.20; // 채도 최소값 (무채색 제외)
+    const THRESHOLD  = 0.35; // 키잉 강도 (낮출수록 더 공격적으로 제거)
+    const SMOOTHNESS = 0.15; // 경계 부드러움
+    // ─────────────────────────────────────────────
 
     for (let i = 0; i < d.length; i += 4) {
-      const r = d[i] / 255;
-      const g = d[i+1] / 255;
-      const b = d[i+2] / 255;
+      const r = d[i], g = d[i+1], b = d[i+2];
+      const { h: hue, s: sat } = rgbToHsv(r, g, b);
 
-      // 키 컬러와의 색 거리 계산
-      const dr = r - keyR / 255;
-      const dg = g - keyG / 255;
-      const db = b - keyB / 255;
-      const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+      const hueDiff = Math.abs(hue - HUE_CENTER);
+      if (hueDiff > HUE_RANGE || sat < SAT_MIN) continue;
 
-      // smoothstep으로 부드럽게 마스킹
+      // 그린니스: hue 중심에 가깝고 채도 높을수록 1
+      const greenness = (1 - hueDiff / HUE_RANGE) * sat;
+
+      // smoothstep alpha 계산
+      const lo = THRESHOLD - SMOOTHNESS;
+      const hi = THRESHOLD + SMOOTHNESS;
       let alpha;
-      if (dist < threshold - smoothness) {
-        alpha = 0; // 완전 투명 (키 컬러 영역)
-      } else if (dist < threshold + smoothness) {
-        alpha = (dist - (threshold - smoothness)) / (2 * smoothness);
+      if (greenness >= hi) {
+        alpha = 0;
+      } else if (greenness > lo) {
+        const t = (greenness - lo) / (hi - lo);
+        alpha = 1 - t * t * (3 - 2 * t); // smoothstep
       } else {
-        alpha = 1; // 완전 불투명 (피사체 영역)
+        alpha = 1;
+      }
+
+      // 디스필: 반투명 경계의 초록 채널을 억제
+      if (alpha < 1) {
+        const cap = Math.min(g, Math.max(r, b));
+        d[i+1] = Math.round(g * alpha + cap * (1 - alpha));
       }
 
       d[i+3] = Math.round(alpha * 255);
     }
-
     ctx.putImageData(imageData, 0, 0);
   }
 
@@ -353,29 +376,19 @@
     canvas.style.display = 'block';
     video.currentTime = 0;
 
-    // 안전 타이머 (영상 길이 + 5초)
-    const safetyTimer = setTimeout(finishVideo, 13000);
+    const safetyTimer = setTimeout(finishVideo, 13000); // 영상 길이 + 5초
 
     function drawLoop() {
       if (video.readyState >= 2) {
-        // 캔버스 크기를 화면에 맞춤
         canvas.width  = window.innerWidth;
         canvas.height = window.innerHeight;
-
-        // 영상을 화면 중앙에 비율 유지하며 그리기
-        const vRatio = video.videoWidth / video.videoHeight;
-        const sRatio = canvas.width / canvas.height;
-        let dw, dh, dx, dy;
-        if (vRatio > sRatio) {
-          dw = canvas.width;
-          dh = canvas.width / vRatio;
-        } else {
-          dh = canvas.height;
-          dw = canvas.height * vRatio;
-        }
-        dx = (canvas.width  - dw) / 2;
-        dy = (canvas.height - dh) / 2;
-
+        const vr = video.videoWidth / video.videoHeight;
+        const sr = canvas.width / canvas.height;
+        let dw, dh;
+        if (vr > sr) { dw = canvas.width;  dh = dw / vr; }
+        else         { dh = canvas.height; dw = dh * vr; }
+        const dx = (canvas.width  - dw) / 2;
+        const dy = (canvas.height - dh) / 2;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(video, dx, dy, dw, dh);
         applyChromakey(ctx, canvas);
@@ -395,11 +408,9 @@
 
     video.addEventListener('ended', finishVideo, { once: true });
 
-    const playPromise = video.play();
-    if (playPromise !== undefined) {
-      playPromise
-        .then(() => { drawLoop(); })
-        .catch(() => { finishVideo(); }); // 재생 실패 시 바로 완료 화면
+    const p = video.play();
+    if (p !== undefined) {
+      p.then(() => drawLoop()).catch(() => finishVideo());
     } else {
       drawLoop();
     }
@@ -504,7 +515,7 @@
   }
 
   // ─────────────────────────────────────────
-  //  XR8 CONFIG
+  //  XR8 CONFIG  (from original index.html)
   // ─────────────────────────────────────────
   const onxrloaded = async () => {
     const [r1, r2, r3, r4] = await Promise.all([
