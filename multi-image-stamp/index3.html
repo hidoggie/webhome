@@ -151,43 +151,27 @@
 <!-- Toast -->
 <div id="toast"></div>
 
-<!-- 전체화면 비디오 오버레이 (HTML 레이어 - iOS 완전 호환) -->
-<div id="video-overlay" style="
+<!-- 크로마키 캔버스 오버레이 (AR 씬 위에 투명 레이어로 합성) -->
+<canvas id="chromakey-canvas" style="
   display: none;
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100%;
   z-index: 9999;
-  background: #000;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-">
-  <video
-    id="completeVid"
-    src="./assets/complete_video.mp4"
-    muted
-    playsinline
-    webkit-playsinline
-    preload="auto"
-    style="width:100%; height:100%; object-fit:contain; display:block;">
-  </video>
-  <!-- 재생 실패 시 탭 안내 (iOS 최후 폴백) -->
-  <div id="tap-to-play" style="
-    display: none;
-    position: absolute;
-    inset: 0;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    font-size: 1.2rem;
-    text-align: center;
-    background: rgba(0,0,0,0.6);
-  ">
-    <div style="font-size:3rem; margin-bottom:12px;">▶</div>
-    <div>화면을 탭하여 영상 재생</div>
-  </div>
-</div>
+  pointer-events: none;
+  background: transparent;
+"></canvas>
+<!-- 숨겨진 video 요소: 크로마키 소스 -->
+<video
+  id="completeVid"
+  src="./assets/complete_video.mp4"
+  muted
+  playsinline
+  webkit-playsinline
+  preload="auto"
+  style="display:none;">
+</video>
 
 <!-- AR Scene -->
 <a-scene
@@ -298,16 +282,14 @@
     if (isPopupOpen) return;
     isPopupOpen = true;
     overlay.classList.add('show');
-    // 자동 닫힘 없음 → 사용자가 반드시 확인 버튼을 눌러야 닫힘
+    // 자동 닫힘 없음 → 확인 버튼을 눌러야 닫힘 (iOS 제스처 체인 유지)
   }
 
   function closeCard() {
     overlay.classList.remove('show');
     setTimeout(() => { isPopupOpen = false; }, 300);
-
     if (stampedCount() === 4) {
-      // 확인 버튼 탭이 곧 iOS 사용자 제스처 → 즉시 showVideo() 호출 (setTimeout 없음)
-      showVideo();
+      showVideo(); // 확인 버튼 탭 → 즉시 호출 (setTimeout 없음 → iOS 허용)
     }
   }
 
@@ -318,25 +300,95 @@
   });
 
   // ─────────────────────────────────────────
-  //  Show Complete Video (HTML 오버레이 - iOS 완전 호환)
-  //  확인 버튼 탭 → 즉시 호출되므로 iOS 제스처 체인 유지
+  //  Canvas 크로마키 (HTML 레이어 - iOS 완전 호환)
+  //  A-Frame chromakey 셰이더와 동일한 파라미터 적용
+  //  keyR/G/B: 0.1/0.9/0.2 → RGB(26,230,51)
+  //  threshold: 0.35 / smoothness: 0.08
   // ─────────────────────────────────────────
-  function showVideo() {
-    const videoOverlay = document.getElementById('video-overlay');
-    const tapToPlay    = document.getElementById('tap-to-play');
-    const video        = document.getElementById('completeVid');
+  let chromakeyRAF = null; // requestAnimationFrame ID
 
-    videoOverlay.style.display = 'flex';
-    tapToPlay.style.display    = 'none';
+  function applyChromakey(ctx, canvas) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const d = imageData.data;
+
+    // 키 컬러 (A-Frame chromakey 파라미터와 동일)
+    const keyR = 26, keyG = 230, keyB = 51;
+    const threshold  = 0.35;
+    const smoothness = 0.08;
+
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i] / 255;
+      const g = d[i+1] / 255;
+      const b = d[i+2] / 255;
+
+      // 키 컬러와의 색 거리 계산
+      const dr = r - keyR / 255;
+      const dg = g - keyG / 255;
+      const db = b - keyB / 255;
+      const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+
+      // smoothstep으로 부드럽게 마스킹
+      let alpha;
+      if (dist < threshold - smoothness) {
+        alpha = 0; // 완전 투명 (키 컬러 영역)
+      } else if (dist < threshold + smoothness) {
+        alpha = (dist - (threshold - smoothness)) / (2 * smoothness);
+      } else {
+        alpha = 1; // 완전 불투명 (피사체 영역)
+      }
+
+      d[i+3] = Math.round(alpha * 255);
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  function showVideo() {
+    const canvas = document.getElementById('chromakey-canvas');
+    const video  = document.getElementById('completeVid');
+    const ctx    = canvas.getContext('2d', { willReadFrequently: true });
+
+    canvas.style.display = 'block';
     video.currentTime = 0;
 
-    // 안전 타이머: ended 미발화 대비 (영상 길이 + 5초 여유)
+    // 안전 타이머 (영상 길이 + 5초)
     const safetyTimer = setTimeout(finishVideo, 13000);
+
+    function drawLoop() {
+      if (video.readyState >= 2) {
+        // 캔버스 크기를 화면에 맞춤
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        // 영상을 화면 중앙에 비율 유지하며 그리기
+        const vRatio = video.videoWidth / video.videoHeight;
+        const sRatio = canvas.width / canvas.height;
+        let dw, dh, dx, dy;
+        if (vRatio > sRatio) {
+          dw = canvas.width;
+          dh = canvas.width / vRatio;
+        } else {
+          dh = canvas.height;
+          dw = canvas.height * vRatio;
+        }
+        dx = (canvas.width  - dw) / 2;
+        dy = (canvas.height - dh) / 2;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, dx, dy, dw, dh);
+        applyChromakey(ctx, canvas);
+      }
+      chromakeyRAF = requestAnimationFrame(drawLoop);
+    }
 
     function finishVideo() {
       clearTimeout(safetyTimer);
       video.removeEventListener('ended', finishVideo);
-      videoOverlay.style.display = 'none';
+      cancelAnimationFrame(chromakeyRAF);
+      chromakeyRAF = null;
+      canvas.style.display = 'none';
       video.pause();
       showComplete();
     }
@@ -345,14 +397,11 @@
 
     const playPromise = video.play();
     if (playPromise !== undefined) {
-      playPromise.catch(() => {
-        // 자동재생 실패 시 탭 안내 표시 (iOS 최후 폴백)
-        tapToPlay.style.display = 'flex';
-        tapToPlay.addEventListener('click', () => {
-          tapToPlay.style.display = 'none';
-          video.play().catch(finishVideo);
-        }, { once: true });
-      });
+      playPromise
+        .then(() => { drawLoop(); })
+        .catch(() => { finishVideo(); }); // 재생 실패 시 바로 완료 화면
+    } else {
+      drawLoop();
     }
   }
 
@@ -448,16 +497,14 @@
   refreshUI();
 
   // ─────────────────────────────────────────
-  //  페이지 재진입 시 QR 복원
-  //  (다른 앱 다녀오거나 reload 한 경우)
-  //  이미 코드가 발급된 상태면 동영상 없이 바로 완료 화면 표시
+  //  페이지 재진입 시 QR 복원 (reload / 앱 전환 후 복귀)
   // ─────────────────────────────────────────
   if (localStorage.getItem('birdRewardCode') && stampedCount() === 4) {
     showComplete();
   }
 
   // ─────────────────────────────────────────
-  //  XR8 CONFIG  (from original index.html)
+  //  XR8 CONFIG
   // ─────────────────────────────────────────
   const onxrloaded = async () => {
     const [r1, r2, r3, r4] = await Promise.all([
