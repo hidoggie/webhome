@@ -200,15 +200,14 @@
 
   <a-entity
       id="VidEntity"
-      material="shader: chromakey;
-                src: #completeVid;
+      material="src: #completeVid;
                 color: 0.1 0.9 0.2;
                 threshold: 0.35;
                 smoothness: 0.08;
                 spill: 1.0;
                 opacity: 1"
       geometry="primitive: plane; height: 5; width: 3;"
-      position="0 5 5"
+      position="0 1.6 -2"
       visible="false">
   </a-entity>
 
@@ -318,19 +317,28 @@
 // 재생 버튼 클릭 이벤트 - 오직 재생에만 집중
 document.getElementById('play-video-btn').addEventListener('click', function() {
   const video = document.getElementById('completeVid');
+  const vidEntity = document.getElementById('VidEntity');
   const overlay = document.getElementById('video-overlay');
   
   // iOS에서 가장 안전한 실행 순서
   video.muted = true; 
+  video.load(); // iOS를 위해 다시 로드
+
   video.play().then(() => {
     overlay.style.display = 'none'; // 버튼 숨기기
-    showVideo(); // A-Frame 엔티티 가시성 조절
+    vidEntity.setAttribute('visible', 'true');
+
+    vidEntity.setAttribute('material', 'src', ''); 
+    setTimeout(() => {
+      vidEntity.setAttribute('material', 'src', '#completeVid');
+    }, 10);
+
+    console.log("iOS Video Success at Position 0 1.6 -2");
   }).catch(err => {
-    console.error("재생 실패:", err);
+    console.error("Playback failed:", err);
     showComplete();
   });
-});
-  
+});  
   // ─────────────────────────────────────────
   //  Show Complete Video
   // ─────────────────────────────────────────
