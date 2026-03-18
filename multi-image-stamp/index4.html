@@ -19,6 +19,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="./index.css">
   <style>
+    #completeVid {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+    }
     #confirm-btn {
       display: block;
       margin: 12px auto 0;
@@ -41,6 +48,15 @@
 </head>
 
 <body>
+<video
+    id="completeVid"
+    src="./assets/mute_birds.mp4"
+    muted
+    playsinline
+    webkit-playsinline
+    crossorigin="anonymous"
+    preload="auto">
+  </video>
 
 <!-- Top bar showing stamp progress -->
 <div id="stamp-bar">
@@ -162,15 +178,6 @@
   xrweb="disableWorldTracking: true">
 
   <a-assets>
-    <video
-      id="completeVid"
-      src="./assets/mute_birds.mp4"
-      muted
-      playsinline
-      webkit-playsinline
-      crossorigin="anonymous"
-      preload="auto">
-    </video>
   </a-assets>
 
   <a-camera
@@ -283,7 +290,6 @@
   //  OPEN / CLOSE CARD
   // ─────────────────────────────────────────
   let isPopupOpen = false; // 팝업이 열려있는지 확인하는 잠금 변수
-  let isVideoUnlocked = false; // iOS 비디오 잠금 해제 상태 플래그
 
   function openCard() {
     if (isPopupOpen) return;
@@ -293,34 +299,25 @@
 
   function closeCard() {
     const video = document.getElementById('completeVid');
-    const count = stampedCount();
 
-// [iOS 핵심] 클릭 이벤트의 가장 상위에서 비디오를 조작해야 함
-    if (count === 4) {
-      // 4번째 스탬프라면 즉시 재생 시도 (제스처 체인 유지)
-      video.muted = true; 
-      video.play().then(() => {
-        showVideo(); // 재생 성공 시 가시성 제어 함수 호출
-      }).catch(err => {
-        console.error("iOS Playback Error:", err);
-        showComplete(); // 재생 실패 시 바로 완료 화면으로
-      });
-    } else {
-      // 4번째가 아닐 때는 비디오 '잠금 해제'만 시도
-      if (!isVideoUnlocked) {
-        video.play().then(() => {
-          video.pause();
-          video.currentTime = 0;
-          isVideoUnlocked = true;
-        }).catch(() => { /* 대기 */ });
+// [iOS 핵심] 버튼을 누를 때마다 무조건 비디오 재생을 시도함
+    // 음소거 비디오이므로 제스처만 있으면 iOS가 재생을 허용합니다.
+    video.play().then(() => {
+      // 4번째 스탬프가 아닐 때는 일단 정지 (예열만 함)
+      if (stampedCount() < 4) {
+        video.pause();
+        video.currentTime = 0;
+      } else {
+        // 4번째 스탬프인 경우 showVideo 실행
+        showVideo();
       }
-    }
+    }).catch(err => {
+      console.log("Video priming pending user gesture...");
+    });
 
     overlay.classList.remove('show');
     setTimeout(() => { isPopupOpen = false; }, 300);
-
   }
-
   
   // ─────────────────────────────────────────
   //  Show Complete Video
@@ -329,17 +326,17 @@
     const VidEntity = document.getElementById('VidEntity');
     const video = document.getElementById('completeVid');
 
-// 이미 play()가 시작된 상태이므로 엔티티만 보여줌
+// 이미 play()가 호출된 상태이므로 가시성만 켭니다.
     VidEntity.setAttribute('visible', 'true');
+    video.currentTime = 0;
 
-    // 영상이 끝나면 QR 팝업 표시
+    // 영상 종료 이벤트
     video.onended = function() {
       VidEntity.setAttribute('visible', 'false');
-      video.pause();
       showComplete();
     };
   }
-  
+
   document.getElementById('confirm-btn').addEventListener('click', closeCard);
   closeBtn.addEventListener('click', closeCard);
 
