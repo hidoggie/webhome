@@ -18,6 +18,25 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" type="text/css" href="./index.css">
+  <style>
+    #confirm-btn {
+      display: block;
+      margin: 12px auto 0;
+      padding: 10px 36px;
+      background: #2d6a4f;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      font-size: 1rem;
+      font-family: 'Noto Sans KR', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+    }
+    #confirm-btn:active {
+      opacity: 0.8;
+    }
+  </style>
 
 </head>
 
@@ -98,6 +117,7 @@
           <span id="stamp-count-num">0</span> / 4 완료
         </div>
         <div class="card-footer-text">각 새를 카메라로 인식하면 도장이 찍힙니다</div>
+        <button id="confirm-btn">확인</button>
       </div>
     </div>
   </div>
@@ -146,9 +166,9 @@
       id="completeVid"
       src="./assets/complete_video.mp4"
       muted
-      autoplay
       playsinline
       webkit-playsinline
+      crossorigin="anonymous"
       preload="auto">
     </video>
   </a-assets>
@@ -265,54 +285,27 @@
   let isPopupOpen = false; // 팝업이 열려있는지 확인하는 잠금 변수
 
   function openCard() {
-   // 이미 팝업이 열려있다면 중복 실행 방지
     if (isPopupOpen) return;
-
     isPopupOpen = true;
-
     overlay.classList.add('show');
-
-    setTimeout(function(){
-        closeCard();
-    },3000);
+    // 자동 닫힘 제거 → 사용자가 확인 버튼을 눌러야 닫힘
   }
 
   function closeCard() {
     overlay.classList.remove('show');
-
-   // 팝업이 완전히 사라진 후(애니메이션 고려) 잠금을 해제
-    setTimeout(() => {
-      isPopupOpen = false;
-    }, 300);
+    setTimeout(() => { isPopupOpen = false; }, 300);
 
     if (stampedCount() === 4) {
-      setTimeout(showVideo, 400);
+      // 확인 버튼 탭 → 즉시 showVideo (setTimeout 없음 → iOS 제스처 체인 유지)
+      showVideo();
     }
   }
 
+  document.getElementById('confirm-btn').addEventListener('click', closeCard);
   closeBtn.addEventListener('click', closeCard);
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) closeCard();
   });
-
-  // ─────────────────────────────────────────
-  //  iOS 비디오 잠금 해제
-  //  iOS는 최초 사용자 터치 시 video를 play/pause 해야
-  //  이후 프로그래밍 방식 재생이 허용됨
-  // ─────────────────────────────────────────
-  let iosVideoUnlocked = false;
-  function unlockIOSVideo() {
-    if (iosVideoUnlocked) return;
-    const video = document.getElementById('completeVid');
-    if (!video) return;
-    const p = video.play();
-    if (p !== undefined) {
-      p.then(() => { video.pause(); video.currentTime = 0; }).catch(() => {});
-    }
-    iosVideoUnlocked = true;
-  }
-  document.addEventListener('touchstart', unlockIOSVideo, { once: true });
-  document.addEventListener('click',      unlockIOSVideo, { once: true });
 
   // ─────────────────────────────────────────
   //  Show Complete Video
@@ -321,28 +314,21 @@
     const VidEntity = document.getElementById('VidEntity');
     const video = document.getElementById('completeVid');
 
-    // 안전 장치: ended 이벤트가 발생 안 할 경우를 대비한 타임아웃 (영상 길이 + 여유 5초)
-    const safetyTimer = setTimeout(() => {
-      VidEntity.setAttribute('visible', 'false');
-      showComplete();
-    }, 30000); // 영상이 30초 이상이면 이 값을 늘리세요
-
     VidEntity.setAttribute('visible', 'true');
     video.currentTime = 0;
 
     // 영상이 끝나면 QR 팝업 표시
     video.addEventListener('ended', function onEnded() {
-      clearTimeout(safetyTimer);
       VidEntity.setAttribute('visible', 'false');
       showComplete();
     }, { once: true });
 
-    // iOS 포함 모든 환경에서 재생 시도
+    // video.play()는 Promise 반환 → 모바일에서 실패 시 catch 필요
     const playPromise = video.play();
     if (playPromise !== undefined) {
       playPromise.catch((err) => {
         console.warn('video.play() failed:', err);
-        clearTimeout(safetyTimer);
+        // 재생 실패 시 바로 완료 화면으로
         VidEntity.setAttribute('visible', 'false');
         showComplete();
       });
