@@ -293,33 +293,34 @@
 
   function closeCard() {
     const video = document.getElementById('completeVid');
+    const count = stampedCount();
 
-// [iOS 최적화] 사용자가 '확인'을 누르는 즉시 비디오 객체를 브라우저에 등록(Unlock)
-    if (!isVideoUnlocked) {
-      video.load(); // 비디오 리소스 로드 시작
-      const silentPlay = video.play();
-      if (silentPlay !== undefined) {
-        silentPlay.then(() => {
+// [iOS 핵심] 클릭 이벤트의 가장 상위에서 비디오를 조작해야 함
+    if (count === 4) {
+      // 4번째 스탬프라면 즉시 재생 시도 (제스처 체인 유지)
+      video.muted = true; 
+      video.play().then(() => {
+        showVideo(); // 재생 성공 시 가시성 제어 함수 호출
+      }).catch(err => {
+        console.error("iOS Playback Error:", err);
+        showComplete(); // 재생 실패 시 바로 완료 화면으로
+      });
+    } else {
+      // 4번째가 아닐 때는 비디오 '잠금 해제'만 시도
+      if (!isVideoUnlocked) {
+        video.play().then(() => {
           video.pause();
           video.currentTime = 0;
           isVideoUnlocked = true;
-          console.log('iOS Video Unlocked');
-        }).catch(e => console.warn('Priming pending...'));
+        }).catch(() => { /* 대기 */ });
       }
     }
+
     overlay.classList.remove('show');
     setTimeout(() => { isPopupOpen = false; }, 300);
 
-    if (stampedCount() === 4) {
-      showVideo();
-    }
   }
 
-document.getElementById('confirm-btn').addEventListener('click', closeCard);
-  closeBtn.addEventListener('click', closeCard);
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) closeCard();
-  });
   
   // ─────────────────────────────────────────
   //  Show Complete Video
@@ -328,31 +329,19 @@ document.getElementById('confirm-btn').addEventListener('click', closeCard);
     const VidEntity = document.getElementById('VidEntity');
     const video = document.getElementById('completeVid');
 
-// 제스처 Context를 유지하기 위해 다른 설정보다 play()를 먼저 시도
-    const playPromise = video.play();
+// 이미 play()가 시작된 상태이므로 엔티티만 보여줌
+    VidEntity.setAttribute('visible', 'true');
 
-    if (playPromise !== undefined) {
-      playPromise.then(() => {
-        // 재생이 시작된 것이 확정된 후 엔티티를 보여줌 (검은 화면 방지)
-        VidEntity.setAttribute('visible', 'true');
-        console.log('Video playing');
-      }).catch((err) => {
-        console.error('Final play failed:', err);
-        // 재생 실패 시 지연 없이 바로 완료 결과 화면으로 이동
-        showComplete();
-      });
-    } else {
-      // Promise를 지원하지 않는 구형 환경 대응
-      VidEntity.setAttribute('visible', 'true');
-    }
-
-// 영상이 끝나면 QR 팝업 표시
+    // 영상이 끝나면 QR 팝업 표시
     video.onended = function() {
       VidEntity.setAttribute('visible', 'false');
-      video.pause(); // 명시적 정지
+      video.pause();
       showComplete();
     };
   }
+  
+  document.getElementById('confirm-btn').addEventListener('click', closeCard);
+  closeBtn.addEventListener('click', closeCard);
 
   // ─────────────────────────────────────────
   //  COMPLETE SCREEN
