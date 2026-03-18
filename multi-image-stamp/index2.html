@@ -13,6 +13,7 @@
   <script src="./../xr_st/aframe-chromakey-material-1.1.4.min.js"></script>
   <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
   <script type="module" src="./app.js"></script>
+  <script src="./qrcode.min.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400;600&display=swap" rel="stylesheet">
@@ -113,6 +114,11 @@
       4종의 새를 모두 발견했습니다<br>
       아래 코드를 스태프에게 보여주세요
     </div>
+
+    <div id="qrcode-container" style="display: flex; justify-content: center; margin: 20px 0; background: white; padding: 15px; border-radius: 12px; width: fit-content; margin-left: auto; margin-right: auto;">
+      <div id="qrcode"></div>
+    </div>
+
     <div class="complete-code-box">
       <div class="complete-code-label">사은품 수령 코드</div>
       <div id="reward-code">BIRD-0000</div>
@@ -136,7 +142,6 @@
   xrweb="disableWorldTracking: true">
 
   <a-assets>
-
     <video
       id="completeVid"
       src="./assets/complete_video.mp4"
@@ -169,8 +174,8 @@
                 spill: 1.0;
                 opacity: 1"
       geometry="primitive: plane; height: 5; width: 5;"
-      position="1.5 5 2"
-      visible="false">
+      position="1.5 5 5"
+     >
   </a-entity>
 
   <a-light type="directional" intensity="0.5" position="1 1 1"></a-light>
@@ -257,13 +262,31 @@
   // ─────────────────────────────────────────
   //  OPEN / CLOSE CARD
   // ─────────────────────────────────────────
+  let isPopupOpen = false; // 팝업이 열려있는지 확인하는 잠금 변수
+
   function openCard() {
+   // 이미 팝업이 열려있다면 중복 실행 방지
+    if (isPopupOpen) return;
+
+    isPopupOpen = true;
+
     overlay.classList.add('show');
+
+    setTimeout(function(){
+        closeCard();
+    },3000);
   }
+
   function closeCard() {
     overlay.classList.remove('show');
+
+   // 팝업이 완전히 사라진 후(애니메이션 고려) 잠금을 해제
+    setTimeout(() => {
+      isPopupOpen = false;
+    }, 300);
+
     if (stampedCount() === 4) {
-      setTimeout(showVideo, 400);     
+      setTimeout(showComplete, 400);
     }
   }
 
@@ -306,6 +329,19 @@
   function showComplete() {
     const code = generateCode();
     rewardCodeEl.textContent = code;
+
+// QR 코드 생성
+    const qrcodeContainer = document.getElementById("qrcode");
+    qrcodeContainer.innerHTML = ""; // 기존 내용 초기화
+    new QRCode(qrcodeContainer, {
+      text: code,
+      width: 160,
+      height: 160,
+      colorDark : "#000000",
+      colorLight : "#ffffff",
+      correctLevel : QRCode.CorrectLevel.H
+    });
+
     completeScreen.classList.add('show');
     logGiftDispense(code);
   }
@@ -315,8 +351,8 @@
   // ─────────────────────────────────────────
   function stampBird(bird) {
     if (stampState[bird]) {
-      showToast(`이미 찍은 도장입니다: ${bird}`);
-      openCard();
+   //   showToast(`이미 찍은 도장입니다: ${bird}`);
+   //   openCard();
       return;
     }
 
@@ -370,10 +406,10 @@
 
   // 같은 이미지를 다시 인식했을 때도 팝업 열기
   scene.addEventListener('xrimageupdated', ({detail}) => {
-    const name = detail.name;
-    if (BIRDS.includes(name) && stampState[name]) {
-      openCard();
-    }
+ //   const name = detail.name;
+ //   if (BIRDS.includes(name) && stampState[name]) {
+ //     openCard();
+ //   }
   });
 
   refreshUI();
