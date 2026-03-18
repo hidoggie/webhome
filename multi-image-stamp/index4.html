@@ -139,6 +139,13 @@
   </div>
 </div>
 
+<div id="video-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:2000; flex-direction:column; align-items:center; justify-content:center;">
+  <div style="color:white; font-size:1.2rem; margin-bottom:20px; text-align:center; font-family:'Gowun Batang', serif;">
+    🎉 탐험을 모두 마쳤습니다!<br>특별한 영상을 확인해보세요.
+  </div>
+  <button id="play-video-btn" style="padding:15px 40px; background:#f39c12; color:white; border:none; border-radius:30px; font-size:1.1rem; font-weight:bold; cursor:pointer;">▶ 영상 재생</button>
+</div>
+
 <!-- Complete Screen -->
 <div id="complete-screen">
   <div class="complete-inner">
@@ -297,27 +304,32 @@
     overlay.classList.add('show');
   }
 
-  function closeCard() {
-    const video = document.getElementById('completeVid');
+ function closeCard() {
+  const count = stampedCount();
+  overlay.classList.remove('show');
+  setTimeout(() => { isPopupOpen = false; }, 300);
 
-// [iOS 핵심] 버튼을 누를 때마다 무조건 비디오 재생을 시도함
-    // 음소거 비디오이므로 제스처만 있으면 iOS가 재생을 허용합니다.
-    video.play().then(() => {
-      // 4번째 스탬프가 아닐 때는 일단 정지 (예열만 함)
-      if (stampedCount() < 4) {
-        video.pause();
-        video.currentTime = 0;
-      } else {
-        // 4번째 스탬프인 경우 showVideo 실행
-        showVideo();
-      }
-    }).catch(err => {
-      console.log("Video priming pending user gesture...");
-    });
-
-    overlay.classList.remove('show');
-    setTimeout(() => { isPopupOpen = false; }, 300);
+  if (count === 4) {
+    // 4번째 스탬프인 경우, 즉시 재생 버튼 레이어를 띄움
+    document.getElementById('video-overlay').style.display = 'flex';
   }
+}
+
+// 재생 버튼 클릭 이벤트 - 오직 재생에만 집중
+document.getElementById('play-video-btn').addEventListener('click', function() {
+  const video = document.getElementById('completeVid');
+  const overlay = document.getElementById('video-overlay');
+  
+  // iOS에서 가장 안전한 실행 순서
+  video.muted = true; 
+  video.play().then(() => {
+    overlay.style.display = 'none'; // 버튼 숨기기
+    showVideo(); // A-Frame 엔티티 가시성 조절
+  }).catch(err => {
+    console.error("재생 실패:", err);
+    showComplete();
+  });
+});
   
   // ─────────────────────────────────────────
   //  Show Complete Video
