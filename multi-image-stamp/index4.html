@@ -20,12 +20,16 @@
   <link rel="stylesheet" type="text/css" href="./index.css">
   <style>
     #completeVid {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
+      display: none; /* JS에서 flex로 변경 */
+      position: fixed; 
+      inset: 0; 
+      background: rgba(0,0,0,0.8); 
+      z-index: 99999; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center;
     }
+
     #confirm-btn {
       display: block;
       margin: 12px auto 0;
@@ -187,11 +191,12 @@
   <a-assets>
   </a-assets>
 
-  <a-camera
+  <!--a-camera
     position="0 4 10"
     raycaster="objects: .cantap"
     cursor="fuse: false; rayOrigin: mouse;">
-  </a-camera>
+  </a-camera-->
+  <a-camera position="0 0 0"></a-camera>
 
   <a-entity smart-target="name: macaw"><a-text value="macaw" align="center"></a-text></a-entity>
   <a-entity smart-target="name: cardinal"><a-text value="cardinal" align="center"></a-text></a-entity>
@@ -200,14 +205,15 @@
 
   <a-entity
       id="VidEntity"
-      material="src: #completeVid;
+      material="shader: chromakey;
+                src: #completeVid;
                 color: 0.1 0.9 0.2;
                 threshold: 0.35;
                 smoothness: 0.08;
                 spill: 1.0;
                 opacity: 1"
-      geometry="primitive: plane; height: 5; width: 3;"
-      position="0 1.6 -2"
+      geometry="primitive: plane; height: 1.6; width: 0.9;"
+      position="0 0 -1"
       visible="false">
   </a-entity>
 
@@ -314,51 +320,53 @@
   }
 }
 
-// 재생 버튼 클릭 이벤트 - 오직 재생에만 집중
+// ─────────────────────────────────────────
+//  VIDEO PLAYBACK (iOS Optimized)
+// ─────────────────────────────────────────
 document.getElementById('play-video-btn').addEventListener('click', function() {
   const video = document.getElementById('completeVid');
   const vidEntity = document.getElementById('VidEntity');
-  const overlay = document.getElementById('video-overlay');
+  const vOverlay = document.getElementById('video-overlay');
   
-  // iOS에서 가장 안전한 실행 순서
-  video.muted = true; 
-  video.load(); // iOS를 위해 다시 로드
-
+  // 1. 비디오 강제 활성화 (음소거 필수)
+  video.muted = true;
+  
   video.play().then(() => {
-    overlay.style.display = 'none'; // 버튼 숨기기
+    // 재생 성공 시 UI 정리 및 엔티티 표시
+    vOverlay.style.display = 'none'; 
     vidEntity.setAttribute('visible', 'true');
-
-    vidEntity.setAttribute('material', 'src', ''); 
-    setTimeout(() => {
-      vidEntity.setAttribute('material', 'src', '#completeVid');
-    }, 10);
-
-    console.log("iOS Video Success at Position 0 1.6 -2");
-  }).catch(err => {
-    console.error("Playback failed:", err);
-    showComplete();
-  });
-});  
-  // ─────────────────────────────────────────
-  //  Show Complete Video
-  // ─────────────────────────────────────────
-  function showVideo() {
-    const VidEntity = document.getElementById('VidEntity');
-    const video = document.getElementById('completeVid');
-
-// 이미 play()가 호출된 상태이므로 가시성만 켭니다.
-    VidEntity.setAttribute('visible', 'true');
     video.currentTime = 0;
 
-    // 영상 종료 이벤트
-    video.onended = function() {
-      VidEntity.setAttribute('visible', 'false');
-      showComplete();
+    // 2. [iOS 핵심] 텍스처 강제 업데이트 루틴
+    // 영상 프레임이 멈춰있는 현상을 방지합니다.
+    const refreshMaterial = () => {
+      const mesh = vidEntity.getObject3D('mesh');
+      if (mesh && mesh.material && mesh.material.map) {
+        mesh.material.map.needsUpdate = true;
+      }
+      // 영상이 보이고 재생 중일 때만 반복
+      if (vidEntity.getAttribute('visible') === true && !video.paused) {
+        requestAnimationFrame(refreshMaterial);
+      }
     };
-  }
+    refreshMaterial();
 
-  document.getElementById('confirm-btn').addEventListener('click', closeCard);
-  closeBtn.addEventListener('click', closeCard);
+  }).catch(err => {
+    console.error("iOS Playback Error:", err);
+    // 재생 실패 시 지연 없이 결과 화면으로
+    showComplete();
+  });
+});
+
+// 비디오가 끝나면 실행되는 이벤트 (단일화)
+document.getElementById('completeVid').onended = function() {
+  const vidEntity = document.getElementById('VidEntity');
+  vidEntity.setAttribute('visible', 'false');
+  showComplete();
+};
+
+document.getElementById('confirm-btn').addEventListener('click', closeCard);
+closeBtn.addEventListener('click', closeCard);
 
   // ─────────────────────────────────────────
   //  COMPLETE SCREEN
