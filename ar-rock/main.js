@@ -7,7 +7,7 @@ const _settings = {
 
   // to get this parameters, open /dev/models3D/handWithPlaceholders.blend
   // and look the pose of CubePalm mesh:
-  scale: 0.1, 
+  scale: 0.05,   // 원래 0.6
   translation: [0, -9, -1.68],
   euler: [Math.PI/2 + Math.PI/4, 0, 0, "XYZ"], // X,Y,Z,W
 
