@@ -13,7 +13,7 @@
 
 const HandTrackerThreeHelper = (function(){
   // private variables:
-  const NNPath = '../../neuralNets/';
+  const NNPath = '../neuralNets/';
   const _defaultSpec = {
     handTrackerCanvas: null,
     VTOCanvas: null,
