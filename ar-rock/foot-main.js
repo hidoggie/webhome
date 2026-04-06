@@ -3,6 +3,7 @@ const _settings = {
   threshold: 0.9, // detection sensitivity, between 0 and 1. best: 0.8
   NNVersion: 31, // best: 31
 
+/*
   // CONVERSES SHOES:
   // 3D models:
   shoeRightPath: 'assets/converseShoe2.glb',
@@ -12,8 +13,8 @@ const _settings = {
   // pose settings:
   scale: 0.95,
   translation: [0, -0.02, 0], // Z -> verical, Y+ -> front way
-
-  /*
+*/
+  
   // BALLERINA SHOES:  
   // 3D models:
   shoeRightPath: 'assets/ballerinaShoe.glb',
@@ -23,7 +24,7 @@ const _settings = {
   // pose settings:
   scale: 1.2,
   translation: [0, 0.01, -0.02], // Z -> verical
-  //*/
+  //
 
   // debug flags:
   debugCube: false, // Add a cube
