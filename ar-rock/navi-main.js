@@ -3,27 +3,27 @@ const SETTINGS = {
   pages: [
     {
       id: 'Home',
-      title: 'WebAR.rocks'
+      title: 'Suzisoft'
     },
     {
       id: 'Hand',
-      title: 'WebAR.rocks.hand'
+      title: 'Suzisoft.hand'
     },
     {
       id: 'Face',
-      title: 'WebAR.rocks.face'
+      title: 'Suzisoft.face'
     },
     /*{
       id: 'Mirror',
-      title: 'WebAR.rocks.mirror'
+      title: 'Suzisoft.mirror'
     },*/
     {
       id: 'Image',
-      title: 'WebAR.rocks.image'
+      title: 'Suzisoft.image'
     },
     {
       id: 'Object',
-      title: 'WebAR.rocks.object'
+      title: 'Suzisoft.object'
     },
     {
       id: 'Philosophy'
