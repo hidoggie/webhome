@@ -1,0 +1,267 @@
+/* GENERAL */
+
+body {
+  /* disable scrolling:; */
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  overflow: hidden;
+  
+  margin: 0;
+  background: #BDBDBD;
+  color: #eee;
+  box-sizing: border-box;
+}
+
+a {
+  text-decoration: none;
+}
+
+.content {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+
+  /*align-items: center;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;*/
+}
+
+.banner {
+  background-image: url('../assets/banner.png');
+  background-repeat: no-repeat;
+  background-size: 200px;
+  z-index: 1;
+  position: fixed;
+  top: 12px; left: 24px;
+  width: 200px; height: 32px;
+}
+
+/* NOTICE */
+.notice {
+  position: fixed;
+  bottom: 10%;
+  left: 0;
+  width: 100vw;
+
+  /*align-self: center;*/
+  text-align: center;
+
+  line-height: 1.5em;
+  font-size: 18px;
+  font-family: 'Anonymous Pro';
+  color: #aaa;
+}
+
+.notice a {
+  cursor: pointer;
+  font-weight: bold;
+  color: #eee;
+}
+
+.notice.hovering a {
+  color: white;
+}
+
+.noticeCameraOn {
+  display: none;
+}
+
+.noticeImage {
+  width: 60px;
+  fill: #eee;
+}
+
+/*.beforeNotice {
+  flex-grow: 1;
+  align-self: flex-start;
+}
+
+.afterNotice {
+  flex-grow: 1;
+  align-self: flex-end;
+}*/
+
+
+/* ELLIPSE MENU */
+.tileImage {
+  width: 40px;
+  flex-grow: 1;
+  margin-left: 24px;
+  fill: #eee;
+}
+
+.tile {
+  width: 96px;
+  height: 96px;
+  margin-left: -48px;
+  margin-top: -48px;
+  position: fixed;
+  z-index: 1;
+
+  display: flex;
+  flex-direction: column;
+
+  box-sizing: border-box;
+  border: 3px solid #eee;
+  border-radius: 12px;
+  
+  text-align: center;
+  cursor: pointer;
+}
+
+.tile.hovering {
+  transition: 0.5s;
+  border: 3px solid white;
+  color: white;
+}
+.tile.hovering .tileImage {
+  fill: white!important;
+}
+
+
+
+.tileTitle {
+  flex-grow: 1;
+  font-weight: bold;
+  font-size: 14px;
+  font-family: 'Anonymous Pro';
+}
+
+
+/* PAGES */
+.pageContainer{
+  display: none;
+
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  z-index: 10;
+
+  font-family: 'Anonymous Pro';
+  color: #eee;
+}
+.page {
+  outline: 4px solid #eee;
+  display: none;
+  flex-direction: column;
+  
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vh;
+
+  margin-left: auto;
+  margin-right: auto;
+  margin-top: 0;
+}
+.pageHeader {
+  flex-grow: 1;
+}
+.pageContent {
+  display: none;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+.pageMiddle {
+  flex-grow: 1;
+  font-family: 'Source Sans Pro', sans-serif;
+  font-size: 18px;
+}
+.pageMiddle h1{
+  font-family: 'Anonymous Pro';
+}
+
+
+.pageContent li {
+  line-height: 1em;
+}
+
+.pageContent a {
+  cursor: pointer;
+  font-weight: bold;
+  color: #eee;
+}
+
+.pageContent a.hovering {
+  color: white;
+}
+
+/*.pageFooter {
+  background-color: black;
+  color: #eee;
+
+  height: 36px;
+  text-align: center;
+  padding-top: 12px;
+
+  font-size: 24px;
+  font-weight: bold;
+
+  cursor: pointer;
+}
+.pageFooterBackIcon {
+  fill: #eee;
+  width: 24px;
+  vertical-align: middle;
+  margin-top: -6px;
+}
+
+.pageFooter:hover{
+  color: white;
+}
+.pageFooter:hover .pageFooterBackIcon{
+  fill: white;
+}*/
+#pageMiddleBack {
+  font-family: 'Anonymous Pro';
+  background-color: #eee;
+  color: black;
+
+  float: right;
+  text-align: right;
+
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 24px;
+
+  cursor: pointer;
+  padding-right: 128px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+#pageMiddleBack.hovering {
+  background-color: white;
+}
+.pageMiddleBackIcon {
+  fill: black;
+  width: 24px;
+  vertical-align: middle;
+  margin-top: -6px;
+}
+.pageMiddleBackIcon.hovering {
+  /*fill: white;*/
+}
+
+/* HAND NAVIGATION */
+.handNavigationCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+/* Avoid z-index bug when canvas is mirrored with a CSS transform:; */
+.handNavigationCanvasPointerContainer{
+  position: fixed;
+  z-index: 300;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+#handNavigationCanvasVideo {
+  z-index: -1;
+}
+#handNavigationCanvasPointer {
+  z-index: 300;
+}
