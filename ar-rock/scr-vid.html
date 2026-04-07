@@ -1,0 +1,93 @@
+
+<!DOCTYPE html>
+<html  lang="ko">
+
+<head>
+  <meta charset="utf-8"/>
+
+  <title>Hand Tracking Video Open</title>
+  <meta name="viewport" content="width=device-width, initial-scale=0.86" />
+
+  <!--link rel="icon" type="image/png" href="images/favicons/favicon16.png" sizes="16x16"/>
+  <link rel="icon" type="image/png" href="images/favicons/favicon32.png" sizes="32x32"/>
+  <link rel="icon" type="image/png" href="images/favicons/favicon64.png" sizes="64x64"/-->
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+  
+  <script src="commonJS/WebARRocksHand.js"></script>
+  <script src="commonJS/WebARRocksLMStabilizer.js"></script>
+  <script src="commonJS/HandTrackerNavigationHelper.js"></script>  
+
+  <script src='./scr-vid.js'></script>
+
+  <link href="https://fonts.googleapis.com/css?family=Anonymous+Pro&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/scr-vid-style.css"/>
+
+</head>
+
+<body>
+  <div class='banner'> </div>
+    
+  <canvas class='handNavigationCanvas' width="1" height="1" id='handNavigationCanvasVideo'></canvas>
+  <div class='handNavigationCanvasPointerContainer'>
+    <canvas class='handNavigationCanvas' width="1" height="1" id='handNavigationCanvasPointer'></canvas>
+  </div>
+
+  <div class='content'>
+    <div class='notice'>
+      <div class='noticeAllowCamera'>
+        <svg version="1.1" class="noticeImage"  xmlns="http://www.w3.org/2000/svg" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"></path></svg><br/>
+        <a id='enableCamera' href='#'>&gt; Enable your camera &lt;</a><br/>
+        to enjoy hand controlled navigation
+      </div>
+      <div class='noticeCameraOn'>
+        <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" class="noticeImage" viewBox="0 0 30 30" xml:space="preserve">
+          <g transform="translate(-390 -200)">
+            <g xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="finger-pinch-7">
+            <path d="M416,212c-0.414,0-0.8,0.128-1.12,0.346c-0.274-0.779-1.01-1.346-1.88-1.346c-0.414,0-0.8,0.128-1.12,0.346    c-0.274-0.779-1.01-1.346-1.88-1.346c-0.365,0-0.704,0.106-1,0.279V210c0-0.818-0.498-1.553-1.257-1.857l-5-2    c-1.029-0.413-2.189,0.088-2.601,1.114c-0.41,1.025,0.089,2.189,1.114,2.6l3.743,1.497V217v2v0.615l-0.645-0.242l-2.641-4.401    c-0.568-0.947-1.797-1.254-2.744-0.686c-0.947,0.568-1.254,1.797-0.686,2.744l3,5c0.232,0.388,0.59,0.685,1.013,0.844l4.703,1.764    V229h1v-5l-0.171-0.121l-5.18-1.943c-0.211-0.079-0.391-0.229-0.507-0.421l-3-5c-0.138-0.229-0.178-0.498-0.113-0.757    c0.065-0.259,0.227-0.477,0.456-0.615c0.155-0.093,0.333-0.143,0.513-0.143c0.355,0,0.677,0.182,0.859,0.486l2.82,4.701    l2.323,0.871V217v-6.323l-4.372-1.749c-0.248-0.099-0.442-0.289-0.548-0.534c-0.104-0.246-0.108-0.518-0.009-0.765    c0.153-0.383,0.518-0.63,0.927-0.63c0.127,0,0.253,0.024,0.373,0.073l5.001,2c0.381,0.152,0.628,0.517,0.628,0.928v2v5h1v-5    c0-0.551,0.449-1,1-1s1,0.449,1,1v1v4h1v-4c0-0.551,0.449-1,1-1s1,0.449,1,1v1v3h1v-3c0-0.551,0.449-1,1-1s1,0.449,1,1v3v1v4.838    l-1,3V229h1v-3l1-3v-5v-1v-3C418,212.9,417.1,212,416,212z"/>
+            <polygon points="396.696,215.685 394.879,211.561 391.152,214.09 391.712,214.918 393.802,213.501 391.973,219.862     392.934,220.138 394.762,213.777 395.78,216.087   "/>
+            <polygon points="397.498,200.641 395.67,207.002 394.653,204.692 393.737,205.095 395.553,209.218 399.281,206.688 398.72,205.86     396.631,207.278 398.459,200.916   "/>
+          </g>
+          </g>
+        </svg><br/>Pinch to click<br/>
+        Hand open, fully visible<br/>
+        <a id='changeCamera' href='#'>&gt; Change camera &lt;</a>
+      </div>
+    </div>
+
+    <div id='ellipseMenu'>
+      <div class='tile' id='tileFace'>
+        <svg version="1.1" class="tileImage"  xmlns="http://www.w3.org/2000/svg" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.33 8 8.5 8 7 8.67 7 9.5 7.67 11 8.5 11zm3.5 6.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"></path></svg>
+        <div class='tileTitle'>WebAR.rocks<br/>.face</div>
+      </div>
+    </div>
+
+    <div class='pageContainer'>
+      <div class='page'>
+        <div class='pageHeader'></div>
+
+        <div class='pageMiddle'>
+          <div id='pageMiddleBack'>
+            <svg version="1.1" class="pageMiddleBackIcon"  xmlns="http://www.w3.org/2000/svg" focusable="false" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.51 3.87L15.73 2.1 5.84 12l9.9 9.9 1.77-1.77L9.38 12l8.13-8.13z"></path></svg>
+            BACK
+          </div>
+          <div class='pageContent' id='pagePhilosophy'>
+            <h1>Video Open</h1>
+            <video id="video" controls="false" autoplay="true" preload="auto" poster="http://media.w3.org/2010/05/sintel/poster.png">
+              <source id="mp4" src="http://media.w3.org/2010/05/sintel/trailer.mp4" type="video/mp4">
+              <source id="webm" src="http://media.w3.org/2010/05/sintel/trailer.webm" type="video/webm">
+              <source id="ogv" src="http://media.w3.org/2010/05/sintel/trailer.ogv" type="video/ogg">
+            </video>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>
