@@ -227,7 +227,7 @@ function get_pageTitle(pageParams){
 
 
 function open_page(pageId){
-  if (_state !== _states.idle || _openPageId === pageId){
+  if (_state !== _states.idle || (_openPageId && _openPageId === pageId)){
     return;
   }
   console.log('INFO in main.js: open_page ' + pageId);
@@ -237,12 +237,6 @@ function open_page(pageId){
   }
 
   _state = _states.busy;
-
-  // 타일 선택 즉시 비디오 재생 시작
-  const videoImmediate = document.querySelector('#page' + pageId + ' video');
-  if (videoImmediate) {
-    videoImmediate.play();
-  }
 
   // jquery selectors:
   const pageIdSelector = '#page' + pageId;
@@ -293,9 +287,15 @@ function open_page(pageId){
     const jqPage = $(pageIdSelector).show();
     $('.page').css('display', 'flex').hide().fadeIn(SETTINGS.fadeDuration, function(){
 
-      // hide content:
-      //$('.content').hide();
       $('.pageContainer').css({'backgroundColor': SETTINGS.pageBgColor});
+
+      // 페이지가 완전히 보인 후 비디오 재생
+      const video = document.querySelector(pageIdSelector + ' video');
+      if (video) {
+        video.play().catch(function(e){
+          console.log('Video play failed:', e);
+        });
+      }
 
       _state = _states.idle;
     });
@@ -305,7 +305,7 @@ function open_page(pageId){
 
 
 function close_page(){
-  if (_state !== _states.idle || _openPageId === 'Home'){
+  if (_state !== _states.idle || !_openPageId || _openPageId === 'Home'){
     return;
   }
   _state = _states.busy;
@@ -343,7 +343,7 @@ function close_page(){
     });
     jqTile.animate(cssFromState, SETTINGS.openPageDuration, function(){
       $('.pageContainer, .pageContent').hide();
-      _openPageId = null;
+      _openPageId = 'Home';
       document.title = _title0;
       _state = _states.idle;
     });
