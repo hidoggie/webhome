@@ -83,10 +83,12 @@ a {
 }
 
 .tile {
-  width: 96px;
-  height: 96px;
-  margin-left: -48px;
-  margin-top: -48px;
+  width: 140px !important;
+  height: 140px !important;
+  margin-left: -70px !important;
+  margin-top: -70px !important;
+  font-size: 1.2em !important;
+
   position: fixed;
   z-index: 1;
 
@@ -110,7 +112,18 @@ a {
   fill: white!important;
 }
 
-
+ .tile .tileImage {
+      width: 56px !important;
+      height: 56px !important;
+    }
+    /* 비디오 반응형 */
+    #video {
+      width: 100%;
+      max-width: 720px;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
 
 .tileTitle {
   flex-grow: 1;
