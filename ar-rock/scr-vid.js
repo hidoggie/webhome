@@ -5,6 +5,9 @@ const SETTINGS = {
       id: 'Home',
       title: 'Suzisoft'
     },
+    {
+      id: 'Philosophy'
+    },
   ],
   titleSep: '/',
   pageBgColor: 'transparent',//'rgba(255, 255, 255, 0.6)',
