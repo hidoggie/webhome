@@ -6,7 +6,7 @@ const SETTINGS = {
       title: 'Suzisoft'
     },
     {
-      id: 'Philosophy'
+      id: 'Video'
     },
   ],
   titleSep: '/',
@@ -237,7 +237,13 @@ function open_page(pageId){
   }
 
   _state = _states.busy;
-  
+
+  // 타일 선택 즉시 비디오 재생 시작
+  const videoImmediate = document.querySelector('#page' + pageId + ' video');
+  if (videoImmediate) {
+    videoImmediate.play();
+  }
+
   // jquery selectors:
   const pageIdSelector = '#page' + pageId;
   const tileSelector = '#tile' + pageId;
@@ -290,12 +296,6 @@ function open_page(pageId){
       // hide content:
       //$('.content').hide();
       $('.pageContainer').css({'backgroundColor': SETTINGS.pageBgColor});
-
-      // 페이지에 비디오가 있으면 자동 재생
-      const video = $(pageIdSelector).find('video').get(0);
-      if (video) {
-        video.play();
-      }
 
       _state = _states.idle;
     });
