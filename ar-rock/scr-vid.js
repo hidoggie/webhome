@@ -15,7 +15,7 @@ const SETTINGS = {
     top: 64,
     left: 64,
     right: 64,
-    bottom: 220
+    bottom: 64
   },
 
   maxAspectRatio: 2,//16/9,
@@ -291,6 +291,12 @@ function open_page(pageId){
       //$('.content').hide();
       $('.pageContainer').css({'backgroundColor': SETTINGS.pageBgColor});
 
+      // 페이지에 비디오가 있으면 자동 재생
+      const video = $(pageIdSelector).find('video').get(0);
+      if (video) {
+        video.play();
+      }
+
       _state = _states.idle;
     });
     
@@ -323,6 +329,13 @@ function close_page(){
   // trigger animation:
   $(fadeSelector).fadeIn(SETTINGS.fadeDuration);
   $('.page').fadeOut(SETTINGS.fadeDuration, function(){
+
+    // 페이지에 비디오가 있으면 일시 정지
+    const video = $('.pageContent video').get(0);
+    if (video) {
+      video.pause();
+      video.currentTime = 0;
+    }
 
     jqTile.css({
       backgroundColor: 'transparent',
