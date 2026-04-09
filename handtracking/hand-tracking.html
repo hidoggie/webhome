@@ -282,11 +282,12 @@
             if (mode === 'ring') scale = 0.5 / maxDim; // 반지는 보통 작아야 하니 0.5로 설정 (필요시 수정)
             model.scale.set(scale, scale, scale);
             
-            // 💡 2. 모델 회전 (Three.js는 라디안 단위 사용. Math.PI / 2 = 90도)
-            model.rotation.x = Math.PI / 2; // 모든 모델을 X축으로 90도 눕힘
-            
             if (mode === 'watch') {
                 model.rotation.y = Math.PI / 2; // 시계는 추가로 Y축 90도 회전
+                model.rotation.x = - Math.PI / 2; // 모든 모델을 X축으로 90도 눕힘
+            } else {
+            // 💡 2. 모델 회전 (Three.js는 라디안 단위 사용. Math.PI / 2 = 90도)
+            model.rotation.x = Math.PI / 2; // 모든 모델을 X축으로 90도 눕힘
             }
             
             // 💡 3. 빈 껍데기(Group)에 모델 넣기 (핵심!)
@@ -482,8 +483,8 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             
-  //          outputCanvas.width = window.innerWidth;
-  //          outputCanvas.height = window.innerHeight;
+     //       outputCanvas.width = window.innerWidth;
+    //        outputCanvas.height = window.innerHeight;
         }
         
         init();
