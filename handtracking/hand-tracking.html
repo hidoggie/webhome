@@ -183,7 +183,7 @@
         };
         let currentMode = 'ring';
  //       let videoElement, outputCanvas, webglCanvas, canvasCtx;
-        let videoElement, outputCanvas, webglCanvas;
+        let videoElement, webglCanvas;
 
         let hands;
         let gltfLoader;
@@ -267,46 +267,51 @@
         
         // 에셋 경로에서 GLB 모델 로드
         function loadGLBModels() {
-            document.getElementById('loading-text').innerText = '3D 모델 로딩 중...';
+    document.getElementById('loading-text').innerText = '3D 모델 로딩 중...';
+    
+    Object.keys(modelPaths).forEach(mode => {
+        gltfLoader.load(modelPaths[mode], (gltf) => {
+            const model = gltf.scene;
             
-            Object.keys(modelPaths).forEach(mode => {
-                gltfLoader.load(modelPaths[mode], (gltf) => {
-                    const model = gltf.scene;
-                    
-                    // 모델 크기 정규화 (보이는 크기가 너무 크거나 작지 않게 방어 코드 작성)
-                    const box = new THREE.Box3().setFromObject(model);
-                    const size = box.getSize(new THREE.Vector3());
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    
-                    // ※ 중요: 실제 준비하신 glb 파일의 스케일에 따라 아래 숫자를 조절하셔야 할 수 있습니다.
-       //             let scale = 0.3 / maxDim; 
-       //             if (mode === 'ring') scale = 0.1 / maxDim; // 반지는 보통 더 작게 세팅
-
-                    let scale = 0.8 / maxDim; // 팔찌, 공, 시계 크기 증가
-                    if (mode === 'ring') scale = 0.3 / maxDim; // 반지 크기 증가
-                    
-                    model.scale.set(scale, scale, scale);
-                    
-                    // 좌/우 양손을 위해 모델을 클론하여 저장
-                    handObjects.left[mode] = model.clone();
-                    handObjects.right[mode] = model.clone();
-                    
-                    handObjects.left[mode].visible = false;
-                    handObjects.right[mode].visible = false;
-                    
-                    scene.add(handObjects.left[mode]);
-                    scene.add(handObjects.right[mode]);
-                    
-                    modelsLoadedCount++;
-                    checkLoadingComplete();
-                }, undefined, (error) => {
-                    console.error(`${mode} 모델 로드 실패:`, error);
-                    // 실패해도 진행은 되도록 카운트 증가
-                    modelsLoadedCount++;
-                    checkLoadingComplete();
-                });
-            });
-        }
+            const box = new THREE.Box3().setFromObject(model);
+            const size = box.getSize(new THREE.Vector3());
+            const maxDim = Math.max(size.x, size.y, size.z);
+            
+            // 💡 1. 스케일 조절 (유저님이 원하신 1.5 적용!)
+            let scale = 1.5 / maxDim; 
+            if (mode === 'ring') scale = 0.5 / maxDim; // 반지는 보통 작아야 하니 0.5로 설정 (필요시 수정)
+            model.scale.set(scale, scale, scale);
+            
+            // 💡 2. 모델 회전 (Three.js는 라디안 단위 사용. Math.PI / 2 = 90도)
+            model.rotation.x = Math.PI / 2; // 모든 모델을 X축으로 90도 눕힘
+            
+            if (mode === 'watch') {
+                model.rotation.y = Math.PI / 2; // 시계는 추가로 Y축 90도 회전
+            }
+            
+            // 💡 3. 빈 껍데기(Group)에 모델 넣기 (핵심!)
+            const wrapperGroup = new THREE.Group();
+            wrapperGroup.add(model);
+            
+            // 이제 모델 대신 wrapperGroup을 양손 객체로 저장합니다.
+            handObjects.left[mode] = wrapperGroup.clone();
+            handObjects.right[mode] = wrapperGroup.clone();
+            
+            handObjects.left[mode].visible = false;
+            handObjects.right[mode].visible = false;
+            
+            scene.add(handObjects.left[mode]);
+            scene.add(handObjects.right[mode]);
+            
+            modelsLoadedCount++;
+            checkLoadingComplete();
+        }, undefined, (error) => {
+            console.error(`${mode} 모델 로드 실패:`, error);
+            modelsLoadedCount++;
+            checkLoadingComplete();
+        });
+    });
+}        
 
         function checkLoadingComplete() {
             if (modelsLoadedCount === totalModels) {
