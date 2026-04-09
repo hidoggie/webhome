@@ -147,7 +147,7 @@
 <body>
     <div id="container">
         <video id="video" autoplay playsinline></video>
-        <canvas id="output-canvas"></canvas>
+        <!--canvas id="output-canvas"></canvas-->
         <canvas id="webgl-canvas"></canvas>
         
         <div id="bottom-ui">
@@ -182,7 +182,9 @@
             right: { ring: null, bracelet: null, ball: null, watch: null } 
         };
         let currentMode = 'ring';
-        let videoElement, outputCanvas, webglCanvas, canvasCtx;
+ //       let videoElement, outputCanvas, webglCanvas, canvasCtx;
+        let videoElement, outputCanvas, webglCanvas;
+
         let hands;
         let gltfLoader;
         
@@ -218,9 +220,9 @@
         // 초기화
         function init() {
             videoElement = document.getElementById('video');
-            outputCanvas = document.getElementById('output-canvas');
+   //         outputCanvas = document.getElementById('output-canvas');
             webglCanvas = document.getElementById('webgl-canvas');
-            canvasCtx = outputCanvas.getContext('2d');
+  //          canvasCtx = outputCanvas.getContext('2d');
             
             gltfLoader = new THREE.GLTFLoader();
             
@@ -277,8 +279,11 @@
                     const maxDim = Math.max(size.x, size.y, size.z);
                     
                     // ※ 중요: 실제 준비하신 glb 파일의 스케일에 따라 아래 숫자를 조절하셔야 할 수 있습니다.
-                    let scale = 0.3 / maxDim; 
-                    if (mode === 'ring') scale = 0.1 / maxDim; // 반지는 보통 더 작게 세팅
+       //             let scale = 0.3 / maxDim; 
+       //             if (mode === 'ring') scale = 0.1 / maxDim; // 반지는 보통 더 작게 세팅
+
+                    let scale = 0.8 / maxDim; // 팔찌, 공, 시계 크기 증가
+                    if (mode === 'ring') scale = 0.3 / maxDim; // 반지 크기 증가
                     
                     model.scale.set(scale, scale, scale);
                     
@@ -333,8 +338,8 @@
             hands.setOptions({
                 maxNumHands: 2,
                 modelComplexity: 1,
-                minDetectionConfidence: 0.7,
-                minTrackingConfidence: 0.7
+                minDetectionConfidence: 0.8,  // 0.7 -> 0.8로 올려서 더 확실할 때만 추적하도록 변경
+                minTrackingConfidence: 0.8   // 0.7 -> 0.8로 올려서 더 확실할 때만 추적하도록 변경
             });
             
             hands.onResults(onResults);
@@ -355,8 +360,8 @@
         
         // 손 추적 결과 처리
         function onResults(results) {
-            canvasCtx.save();
-            canvasCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
+   //         canvasCtx.save();
+   //         canvasCtx.clearRect(0, 0, outputCanvas.width, outputCanvas.height);
             
             handDetectionState.left = false;
             handDetectionState.right = false;
@@ -372,7 +377,7 @@
             }
             
             updateAccessoryVisibility();
-            canvasCtx.restore();
+    //        canvasCtx.restore();
             renderer.render(scene, camera);
         }
         
@@ -442,9 +447,13 @@
         
         // 화면 좌표를 3D 좌표로 변환
         function updateObjectPosition(obj, landmark, handedness) {
-            const x = (landmark.x - 0.5) * 8;
-            const y = -(landmark.y - 0.5) * 8;
-            const z = -landmark.z * 8;
+     // 기존에 곱해주던 8을 10이나 12 정도로 조절하면서 화면과 일치하는지 테스트
+            const multiplier = 10;
+            const x = (landmark.x - 0.5) * multiplier;
+            const y = -(landmark.y - 0.5) * multiplier;
+   //         const z = -landmark.z * 8;
+            const z = -landmark.z * multiplier - 0.5;
+
             obj.position.set(handedness === 'left' ? -x : x, y, z);
         }
         
