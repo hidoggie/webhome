@@ -36,6 +36,7 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s;
         }
         .icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .icon-btn:active { transform: scale(0.95); }
 
         /* 하단 UI (촬영 버튼) */
         #bottom-ui {
@@ -74,14 +75,19 @@
             background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column;
             justify-content: center; align-items: center;
         }
+        #preview-media-container {
+            max-width: 90%; max-height: 70vh;
+        }
         #preview-content {
-            max-width: 90%; max-height: 70vh; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            max-width: 100%; max-height: 70vh; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         .modal-btns { display: flex; gap: 15px; margin-top: 20px; }
         .action-btn {
             padding: 10px 25px; border-radius: 25px; border: none; font-size: 16px; font-weight: bold;
             cursor: pointer; transition: 0.3s;
         }
+        .action-btn:hover { opacity: 0.8; transform: translateY(-2px); }
+        .action-btn:active { transform: translateY(0); }
         .btn-download { background: #4CAF50; color: white; }
         .btn-share { background: #2196F3; color: white; }
         .btn-close { background: #f44336; color: white; }
@@ -122,9 +128,9 @@
     <div id="preview-modal">
         <div id="preview-media-container"></div>
         <div class="modal-btns">
-            <button class="action-btn btn-download" id="download-btn">저장</button>
-            <button class="action-btn btn-share" id="share-btn">공유</button>
-            <button class="action-btn btn-close" id="close-modal-btn">닫기</button>
+            <button class="action-btn btn-download" id="download-btn">💾 저장</button>
+            <button class="action-btn btn-share" id="share-btn">📤 공유</button>
+            <button class="action-btn btn-close" id="close-modal-btn">❌ 닫기</button>
         </div>
     </div>
 
@@ -133,7 +139,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <script>
-        // 전역 변수
         let camera, scene, renderer;
         let ballObjects = { left: null, right: null };
         let videoElement, webglCanvas, compositeCanvas;
@@ -142,13 +147,15 @@
         let videoStream = null;
         let handDetectionState = { left: false, right: false };
 
-        // 캡처 & 녹화 관련 변수
         let pressTimer;
         let isRecording = false;
         let mediaRecorder;
         let recordedChunks = [];
         let previewBlobUrl = null;
         let isVideoPreview = false;
+        
+        // 💡 중요: 셔터 버튼을 누르고 있는 상태인지 추적하는 변수 추가
+        let isPressingShutter = false; 
 
         function init() {
             videoElement = document.getElementById('video');
@@ -161,7 +168,6 @@
             setupEventListeners();
         }
         
-        // --- 1. Three.js 설정 (공만 사용) ---
         function setupThreeJS() {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(63, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -171,7 +177,7 @@
                 canvas: webglCanvas, 
                 alpha: true,
                 antialias: true,
-                preserveDrawingBuffer: true // 💡 캡처 시 캔버스 내용 유지를 위해 필수!
+                preserveDrawingBuffer: true
             });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
@@ -192,7 +198,7 @@
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
                 
-                let scale = 1.2 / maxDim; // 공 크기 조절
+                let scale = 1.2 / maxDim;
                 model.scale.set(scale, scale, scale);
                 
                 const wrapperGroup = new THREE.Group();
@@ -215,10 +221,10 @@
             window.addEventListener('resize', onWindowResize);
         }
         
-        // --- 2. 카메라 제어 (전환 기능 지원) ---
         async function startCamera() {
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
+                videoStream = null;
             }
             
             const constraints = {
@@ -233,20 +239,25 @@
                 videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoElement.srcObject = videoStream;
                 
-                // CSS 좌우반전 처리 (전면 카메라이면 반전, 후면이면 정상)
                 document.getElementById('container').className = isFrontCamera ? 'mirrored' : '';
                 
-                await videoElement.play();
+                await new Promise((resolve) => {
+                    videoElement.onloadedmetadata = () => {
+                        videoElement.play();
+                        resolve();
+                    };
+                });
+                
                 document.getElementById('loading').style.display = 'none';
                 
-                processVideoFrame(); // MediaPipe 추적 시작
+                if (!hands) return;
+                processVideoFrame();
             } catch (err) {
                 console.error("카메라 접근 에러:", err);
                 alert("카메라 권한이 필요합니다.");
             }
         }
 
-        // --- 3. MediaPipe 설정 및 손 추적 ---
         function setupMediaPipe() {
             hands = new Hands({
                 locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
@@ -265,7 +276,6 @@
             if (videoElement.readyState >= 2) {
                 await hands.send({ image: videoElement });
             }
-            // 녹화 중이면 캔버스 지속 병합
             if (isRecording) drawToComposite();
             
             requestAnimationFrame(processVideoFrame);
@@ -291,60 +301,86 @@
             renderer.render(scene, camera);
         }
         
-        // --- 4. 손바닥 위치 계산 및 반전 버그 수정 ---
         function updateBallPosition(landmarks, handedness) {
             const ball = ballObjects[handedness];
             if (!ball) return;
             
-            // 손바닥 중앙 계산: 손목(0)과 중지 아래 관절(9)의 중간점 활용
             const wrist = landmarks[0];
-            const middleMCP = landmarks[9];
+            const indexMCP = landmarks[5];
+            const pinkyMCP = landmarks[17];
             
-            const palm = {
-                x: (wrist.x + middleMCP.x) / 2,
-                y: (wrist.y + middleMCP.y) / 2,
-                z: (wrist.z + middleMCP.z) / 2
+            const palmCenter = {
+                x: (wrist.x + indexMCP.x + pinkyMCP.x) / 3,
+                y: (wrist.y + indexMCP.y + pinkyMCP.y) / 3,
+                z: (wrist.z + indexMCP.z + pinkyMCP.z) / 3
+            };
+
+            const v1 = {
+                x: indexMCP.x - wrist.x,
+                y: indexMCP.y - wrist.y,
+                z: indexMCP.z - wrist.z
+            };
+            
+            const v2 = {
+                x: pinkyMCP.x - wrist.x,
+                y: pinkyMCP.y - wrist.y,
+                z: pinkyMCP.z - wrist.z
+            };
+            
+            const normal = {
+                x: v1.y * v2.z - v1.z * v2.y,
+                y: v1.z * v2.x - v1.x * v2.z,
+                z: v1.x * v2.y - v1.y * v2.x
+            };
+            
+            const length = Math.sqrt(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+            if (length > 0) {
+                normal.x /= length;
+                normal.y /= length;
+                normal.z /= length;
+            }
+            
+            const offsetDistance = 0.15;
+            
+            const ballPos = {
+                x: palmCenter.x + normal.x * offsetDistance,
+                y: palmCenter.y + normal.y * offsetDistance,
+                z: palmCenter.z + normal.z * offsetDistance
             };
 
             const multiplier = 10;
-            // 💡 반전 버그 수정: CSS 반전 상태와 관계없이 화면 좌표계 통일. 
-            // handedness 검사(삼항 연산자)를 제거하여 양손 모두 자연스럽게 움직이게 합니다.
-            const x = (palm.x - 0.5) * multiplier;
-            const y = -(palm.y - 0.5) * multiplier;
-            
-            // 공을 손바닥 '위'로 띄우기 위해 z값을 살짝 앞으로 당김
-            const z = -palm.z * multiplier - 1.0; 
+            const x = (ballPos.x - 0.5) * multiplier;
+            const y = -(ballPos.y - 0.5) * multiplier;
+            const z = -ballPos.z * multiplier;
 
             ball.position.set(x, y, z);
         }
 
-        // --- 5. 화면 캡처 및 녹화 기능 ---
         function drawToComposite() {
-            // 비디오와 동일한 비율로 캔버스 세팅
             compositeCanvas.width = videoElement.videoWidth || 1280;
             compositeCanvas.height = videoElement.videoHeight || 720;
             const ctx = compositeCanvas.getContext('2d');
             
             ctx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
             
-            // 전면 카메라일 경우 저장되는 이미지도 거울처럼 좌우 반전 시킴
             if (isFrontCamera) {
                 ctx.translate(compositeCanvas.width, 0);
                 ctx.scale(-1, 1);
             }
             
-            // 1. 비디오 그리기
             ctx.drawImage(videoElement, 0, 0, compositeCanvas.width, compositeCanvas.height);
-            // 2. 그 위에 3D 캔버스(공) 덮어쓰기
             ctx.drawImage(webglCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
             
             if (isFrontCamera) {
-                ctx.setTransform(1, 0, 0, 1, 0, 0); // 원상복구
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
             }
         }
 
         function takePhoto() {
             drawToComposite();
+            if (previewBlobUrl) {
+                URL.revokeObjectURL(previewBlobUrl);
+            }
             previewBlobUrl = compositeCanvas.toDataURL('image/jpeg', 0.9);
             isVideoPreview = false;
             showPreview();
@@ -355,7 +391,6 @@
             document.getElementById('shutter-btn').classList.add('recording');
             recordedChunks = [];
             
-            // 초당 30프레임으로 합성 캔버스 스트림 캡처
             const stream = compositeCanvas.captureStream(30);
             mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
             
@@ -365,7 +400,9 @@
             
             mediaRecorder.onstop = () => {
                 const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                if (previewBlobUrl) URL.revokeObjectURL(previewBlobUrl);
+                if (previewBlobUrl && isVideoPreview) {
+                    URL.revokeObjectURL(previewBlobUrl);
+                }
                 previewBlobUrl = URL.createObjectURL(blob);
                 isVideoPreview = true;
                 showPreview();
@@ -381,53 +418,71 @@
             mediaRecorder.stop();
         }
 
-        // --- 6. 이벤트 리스너 및 UI 제어 ---
         function setupEventListeners() {
             const btnCamera = document.getElementById('switch-camera-btn');
-            btnCamera.addEventListener('click', () => {
+            btnCamera.addEventListener('click', async () => {
                 isFrontCamera = !isFrontCamera;
-                startCamera();
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading-text').innerText = '카메라 전환 중...';
+                await startCamera();
             });
 
             const shutterBtn = document.getElementById('shutter-btn');
             
-            // 터치 및 마우스 이벤트 통합 지원
+            // 💡 터치 시작 로직 개선
             const handlePressStart = (e) => {
-                e.preventDefault();
-                // 500ms 이상 누르면 동영상 녹화 시작
-                pressTimer = setTimeout(() => startRecording(), 500);
+                e.preventDefault(); 
+                isPressingShutter = true; // 플래그 활성화
+                pressTimer = setTimeout(() => {
+                    if (isPressingShutter) startRecording();
+                }, 500);
             };
             
+            // 💡 터치 종료 로직 개선: 셔터 버튼을 누른 상태에서만 작동하도록 필터링
             const handlePressEnd = (e) => {
+                if (!isPressingShutter) return; // 셔터 버튼을 누른 상태가 아니면 다른 화면 터치는 무시함!
+                
                 e.preventDefault();
+                isPressingShutter = false; // 플래그 초기화
                 clearTimeout(pressTimer);
+                
                 if (isRecording) {
                     stopRecording();
                 } else {
-                    takePhoto(); // 짧게 탭한 경우 사진
+                    takePhoto(); 
                 }
             };
 
             shutterBtn.addEventListener('mousedown', handlePressStart);
             shutterBtn.addEventListener('touchstart', handlePressStart, {passive: false});
+            
+            // window에 이벤트를 걸어도 isPressingShutter 플래그가 필터링해줌
             window.addEventListener('mouseup', handlePressEnd);
             window.addEventListener('touchend', handlePressEnd);
 
-            // 미리보기 모달 버튼들
             document.getElementById('close-modal-btn').addEventListener('click', () => {
-                document.getElementById('preview-modal').style.display = 'none';
-                document.getElementById('preview-media-container').innerHTML = '';
+                const modal = document.getElementById('preview-modal');
+                modal.style.display = 'none';
+                
+                const container = document.getElementById('preview-media-container');
+                container.innerHTML = '';
             });
 
             document.getElementById('download-btn').addEventListener('click', () => {
+                if (!previewBlobUrl) return;
+                
                 const a = document.createElement('a');
                 a.href = previewBlobUrl;
-                a.download = isVideoPreview ? 'ar-video.webm' : 'ar-photo.jpg';
+                a.download = isVideoPreview ? `ar-video-${Date.now()}.webm` : `ar-photo-${Date.now()}.jpg`;
+                document.body.appendChild(a);
                 a.click();
+                document.body.removeChild(a);
             });
 
             document.getElementById('share-btn').addEventListener('click', async () => {
-                if (!navigator.share) {
+                if (!previewBlobUrl) return;
+                
+                if (!navigator.share && !navigator.canShare) {
                     alert('현재 브라우저에서는 공유 기능을 지원하지 않습니다.');
                     return;
                 }
@@ -444,13 +499,21 @@
                         file = new File([blob], 'ar-photo.jpg', { type: 'image/jpeg' });
                     }
 
+                    if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+                        alert('이 파일은 공유할 수 없습니다.');
+                        return;
+                    }
+
                     await navigator.share({
                         title: 'AR 손바닥 묘기',
                         text: '제가 만든 AR 화면을 확인해보세요!',
                         files: [file]
                     });
                 } catch (err) {
-                    console.log('공유 취소 또는 실패:', err);
+                    if (err.name !== 'AbortError') {
+                        console.error('공유 실패:', err);
+                        alert('공유 중 오류가 발생했습니다: ' + err.message);
+                    }
                 }
             });
         }
