@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Tracking AR - 손바닥 공 올리기</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #000; color: #fff; }
+        
+        #container { position: relative; width: 100vw; height: 100vh; }
+        
+        /* 카메라 방향에 따라 좌우 반전 클래스 토글 */
+        .mirrored #video, .mirrored #webgl-canvas { transform: scaleX(-1); }
+        
+        #video, #webgl-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+        
+        /* 숨겨진 합성용 캔버스 (사진/녹화용) */
+        #composite-canvas { display: none; }
+
+        /* 상단 UI (카메라 전환) */
+        #top-ui {
+            position: absolute; top: 20px; right: 20px; z-index: 10;
+        }
+        .icon-btn {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: rgba(0, 0, 0, 0.5); color: white; font-size: 24px;
+            cursor: pointer; backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s;
+        }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+        /* 하단 UI (촬영 버튼) */
+        #bottom-ui {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 10;
+        }
+        
+        #shutter-btn {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: white; border: 4px solid rgba(0,0,0,0.2);
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.4);
+            display: flex; justify-content: center; align-items: center;
+        }
+        #shutter-btn:active { transform: scale(0.9); }
+        
+        /* 녹화 중 애니메이션 */
+        #shutter-btn.recording {
+            background: #ff4444; border-color: rgba(255,0,0,0.3);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+
+        #instructions {
+            background: rgba(0, 0, 0, 0.6); padding: 8px 16px; border-radius: 20px;
+            font-size: 14px; backdrop-filter: blur(5px);
+        }
+
+        /* 미리보기 모달 UI */
+        #preview-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        #preview-content {
+            max-width: 90%; max-height: 70vh; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-btns { display: flex; gap: 15px; margin-top: 20px; }
+        .action-btn {
+            padding: 10px 25px; border-radius: 25px; border: none; font-size: 16px; font-weight: bold;
+            cursor: pointer; transition: 0.3s;
+        }
+        .btn-download { background: #4CAF50; color: white; }
+        .btn-share { background: #2196F3; color: white; }
+        .btn-close { background: #f44336; color: white; }
+
+        /* 로딩 UI */
+        .loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px; text-align: center; z-index: 50;
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white;
+            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="container" class="mirrored">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="webgl-canvas"></canvas>
+        <canvas id="composite-canvas"></canvas>
+        
+        <div id="top-ui">
+            <button class="icon-btn" id="switch-camera-btn" title="카메라 전환">🔄</button>
+        </div>
+        
+        <div id="bottom-ui">
+            <div id="shutter-btn" title="탭: 사진 / 길게: 동영상"></div>
+            <div id="instructions">탭하여 사진 찍기, 길게 눌러 동영상 녹화</div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div id="loading-text">초기화 중...</div>
+        </div>
+    </div>
+
+    <div id="preview-modal">
+        <div id="preview-media-container"></div>
+        <div class="modal-btns">
+            <button class="action-btn btn-download" id="download-btn">저장</button>
+            <button class="action-btn btn-share" id="share-btn">공유</button>
+            <button class="action-btn btn-close" id="close-modal-btn">닫기</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+
+    <script>
+        // 전역 변수
+        let camera, scene, renderer;
+        let ballObjects = { left: null, right: null };
+        let videoElement, webglCanvas, compositeCanvas;
+        let hands;
+        let isFrontCamera = true;
+        let videoStream = null;
+        let handDetectionState = { left: false, right: false };
+
+        // 캡처 & 녹화 관련 변수
+        let pressTimer;
+        let isRecording = false;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let previewBlobUrl = null;
+        let isVideoPreview = false;
+
+        function init() {
+            videoElement = document.getElementById('video');
+            webglCanvas = document.getElementById('webgl-canvas');
+            compositeCanvas = document.getElementById('composite-canvas');
+            
+            setupThreeJS();
+            setupMediaPipe();
+            startCamera();
+            setupEventListeners();
+        }
+        
+        // --- 1. Three.js 설정 (공만 사용) ---
+        function setupThreeJS() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(63, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: webglCanvas, 
+                alpha: true,
+                antialias: true,
+                preserveDrawingBuffer: true // 💡 캡처 시 캔버스 내용 유지를 위해 필수!
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setClearColor(0x000000, 0);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            dirLight.position.set(5, 5, 5);
+            scene.add(dirLight);
+
+            document.getElementById('loading-text').innerText = '3D 공 모델 로딩 중...';
+            
+            const gltfLoader = new THREE.GLTFLoader();
+            gltfLoader.load('assets/ball.glb', (gltf) => {
+                const model = gltf.scene;
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                
+                let scale = 1.2 / maxDim; // 공 크기 조절
+                model.scale.set(scale, scale, scale);
+                
+                const wrapperGroup = new THREE.Group();
+                wrapperGroup.add(model);
+                
+                ballObjects.left = wrapperGroup.clone();
+                ballObjects.right = wrapperGroup.clone();
+                ballObjects.left.visible = false;
+                ballObjects.right.visible = false;
+                
+                scene.add(ballObjects.left);
+                scene.add(ballObjects.right);
+                
+                document.getElementById('loading-text').innerText = '카메라 준비 중...';
+            }, undefined, (error) => {
+                console.error("공 모델 로드 실패:", error);
+                document.getElementById('loading-text').innerText = '모델 로드 실패';
+            });
+            
+            window.addEventListener('resize', onWindowResize);
+        }
+        
+        // --- 2. 카메라 제어 (전환 기능 지원) ---
+        async function startCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+            
+            const constraints = {
+                video: {
+                    facingMode: isFrontCamera ? 'user' : 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = videoStream;
+                
+                // CSS 좌우반전 처리 (전면 카메라이면 반전, 후면이면 정상)
+                document.getElementById('container').className = isFrontCamera ? 'mirrored' : '';
+                
+                await videoElement.play();
+                document.getElementById('loading').style.display = 'none';
+                
+                processVideoFrame(); // MediaPipe 추적 시작
+            } catch (err) {
+                console.error("카메라 접근 에러:", err);
+                alert("카메라 권한이 필요합니다.");
+            }
+        }
+
+        // --- 3. MediaPipe 설정 및 손 추적 ---
+        function setupMediaPipe() {
+            hands = new Hands({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+            });
+            
+            hands.setOptions({
+                maxNumHands: 2,
+                modelComplexity: 1,
+                minDetectionConfidence: 0.8,
+                minTrackingConfidence: 0.8
+            });
+            hands.onResults(onResults);
+        }
+
+        async function processVideoFrame() {
+            if (videoElement.readyState >= 2) {
+                await hands.send({ image: videoElement });
+            }
+            // 녹화 중이면 캔버스 지속 병합
+            if (isRecording) drawToComposite();
+            
+            requestAnimationFrame(processVideoFrame);
+        }
+
+        function onResults(results) {
+            handDetectionState.left = false;
+            handDetectionState.right = false;
+            
+            if (results.multiHandLandmarks) {
+                for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+                    const landmarks = results.multiHandLandmarks[i];
+                    const handedness = results.multiHandedness[i].label.toLowerCase();
+                    
+                    handDetectionState[handedness] = true;
+                    updateBallPosition(landmarks, handedness);
+                }
+            }
+            
+            if(ballObjects.left) ballObjects.left.visible = handDetectionState.left;
+            if(ballObjects.right) ballObjects.right.visible = handDetectionState.right;
+            
+            renderer.render(scene, camera);
+        }
+        
+        // --- 4. 손바닥 위치 계산 및 반전 버그 수정 ---
+        function updateBallPosition(landmarks, handedness) {
+            const ball = ballObjects[handedness];
+            if (!ball) return;
+            
+            // 손바닥 중앙 계산: 손목(0)과 중지 아래 관절(9)의 중간점 활용
+            const wrist = landmarks[0];
+            const middleMCP = landmarks[9];
+            
+            const palm = {
+                x: (wrist.x + middleMCP.x) / 2,
+                y: (wrist.y + middleMCP.y) / 2,
+                z: (wrist.z + middleMCP.z) / 2
+            };
+
+            const multiplier = 10;
+            // 💡 반전 버그 수정: CSS 반전 상태와 관계없이 화면 좌표계 통일. 
+            // handedness 검사(삼항 연산자)를 제거하여 양손 모두 자연스럽게 움직이게 합니다.
+            const x = (palm.x - 0.5) * multiplier;
+            const y = -(palm.y - 0.5) * multiplier;
+            
+            // 공을 손바닥 '위'로 띄우기 위해 z값을 살짝 앞으로 당김
+            const z = -palm.z * multiplier - 1.0; 
+
+            ball.position.set(x, y, z);
+        }
+
+        // --- 5. 화면 캡처 및 녹화 기능 ---
+        function drawToComposite() {
+            // 비디오와 동일한 비율로 캔버스 세팅
+            compositeCanvas.width = videoElement.videoWidth || 1280;
+            compositeCanvas.height = videoElement.videoHeight || 720;
+            const ctx = compositeCanvas.getContext('2d');
+            
+            ctx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+            
+            // 전면 카메라일 경우 저장되는 이미지도 거울처럼 좌우 반전 시킴
+            if (isFrontCamera) {
+                ctx.translate(compositeCanvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+            
+            // 1. 비디오 그리기
+            ctx.drawImage(videoElement, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            // 2. 그 위에 3D 캔버스(공) 덮어쓰기
+            ctx.drawImage(webglCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            
+            if (isFrontCamera) {
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // 원상복구
+            }
+        }
+
+        function takePhoto() {
+            drawToComposite();
+            previewBlobUrl = compositeCanvas.toDataURL('image/jpeg', 0.9);
+            isVideoPreview = false;
+            showPreview();
+        }
+
+        function startRecording() {
+            isRecording = true;
+            document.getElementById('shutter-btn').classList.add('recording');
+            recordedChunks = [];
+            
+            // 초당 30프레임으로 합성 캔버스 스트림 캡처
+            const stream = compositeCanvas.captureStream(30);
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
+            
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+            
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                if (previewBlobUrl) URL.revokeObjectURL(previewBlobUrl);
+                previewBlobUrl = URL.createObjectURL(blob);
+                isVideoPreview = true;
+                showPreview();
+            };
+            
+            mediaRecorder.start();
+        }
+
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) return;
+            isRecording = false;
+            document.getElementById('shutter-btn').classList.remove('recording');
+            mediaRecorder.stop();
+        }
+
+        // --- 6. 이벤트 리스너 및 UI 제어 ---
+        function setupEventListeners() {
+            const btnCamera = document.getElementById('switch-camera-btn');
+            btnCamera.addEventListener('click', () => {
+                isFrontCamera = !isFrontCamera;
+                startCamera();
+            });
+
+            const shutterBtn = document.getElementById('shutter-btn');
+            
+            // 터치 및 마우스 이벤트 통합 지원
+            const handlePressStart = (e) => {
+                e.preventDefault();
+                // 500ms 이상 누르면 동영상 녹화 시작
+                pressTimer = setTimeout(() => startRecording(), 500);
+            };
+            
+            const handlePressEnd = (e) => {
+                e.preventDefault();
+                clearTimeout(pressTimer);
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    takePhoto(); // 짧게 탭한 경우 사진
+                }
+            };
+
+            shutterBtn.addEventListener('mousedown', handlePressStart);
+            shutterBtn.addEventListener('touchstart', handlePressStart, {passive: false});
+            window.addEventListener('mouseup', handlePressEnd);
+            window.addEventListener('touchend', handlePressEnd);
+
+            // 미리보기 모달 버튼들
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                document.getElementById('preview-modal').style.display = 'none';
+                document.getElementById('preview-media-container').innerHTML = '';
+            });
+
+            document.getElementById('download-btn').addEventListener('click', () => {
+                const a = document.createElement('a');
+                a.href = previewBlobUrl;
+                a.download = isVideoPreview ? 'ar-video.webm' : 'ar-photo.jpg';
+                a.click();
+            });
+
+            document.getElementById('share-btn').addEventListener('click', async () => {
+                if (!navigator.share) {
+                    alert('현재 브라우저에서는 공유 기능을 지원하지 않습니다.');
+                    return;
+                }
+                
+                try {
+                    let file;
+                    if (isVideoPreview) {
+                        const response = await fetch(previewBlobUrl);
+                        const blob = await response.blob();
+                        file = new File([blob], 'ar-video.webm', { type: 'video/webm' });
+                    } else {
+                        const response = await fetch(previewBlobUrl);
+                        const blob = await response.blob();
+                        file = new File([blob], 'ar-photo.jpg', { type: 'image/jpeg' });
+                    }
+
+                    await navigator.share({
+                        title: 'AR 손바닥 묘기',
+                        text: '제가 만든 AR 화면을 확인해보세요!',
+                        files: [file]
+                    });
+                } catch (err) {
+                    console.log('공유 취소 또는 실패:', err);
+                }
+            });
+        }
+
+        function showPreview() {
+            const container = document.getElementById('preview-media-container');
+            container.innerHTML = '';
+            
+            if (isVideoPreview) {
+                const vid = document.createElement('video');
+                vid.src = previewBlobUrl;
+                vid.controls = true;
+                vid.autoplay = true;
+                vid.loop = true;
+                vid.id = 'preview-content';
+                container.appendChild(vid);
+            } else {
+                const img = document.createElement('img');
+                img.src = previewBlobUrl;
+                img.id = 'preview-content';
+                container.appendChild(img);
+            }
+            
+            document.getElementById('preview-modal').style.display = 'flex';
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        init();
+    </script>
+</body>
+</html>
