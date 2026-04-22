@@ -3,15 +3,15 @@
 // app.js is the main entry point for your 8th Wall web app. Code here will execute after head.html
 // is loaded, and before body.html is loaded.
 
-import {gameStateComponent} from './game-state'
-import {gestureDetectorComponent} from './gesture-detector'
-import {holdDragComponent} from './hold-drag'
-import {pinchScaleComponent} from './pinch-scale'
-import {twoFingerSpinComponent} from './two-finger-spin'
+import {gameStateComponent} from './game-state.js'
+import {gestureDetectorComponent} from './gesture-detector.js'
+import {holdDragComponent} from './hold-drag.js'
+import {pinchScaleComponent} from './pinch-scale.js'
+import {twoFingerSpinComponent} from './two-finger-spin.js'
 
 
-import {spiceCloudComponent} from './spice-cloud'
-import {spiceSpawnerComponent} from './spice-spawner'
+import {spiceCloudComponent} from './spice-cloud.js'
+import {spiceSpawnerComponent} from './spice-spawner.js'
 
 
 AFRAME.registerComponent('game-state', gameStateComponent())
