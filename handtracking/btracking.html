@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Body Tracking AR - 몸 주변 3D 모델</title>
+    <title>Body Tracking AR - 몸 중앙 3D 모델</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧘</text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,9 +11,10 @@
         
         #container { position: relative; width: 100vw; height: 100vh; }
         
-        .mirrored #video, .mirrored #webgl-canvas { transform: scaleX(-1); }
+        /* 💡 수정: 스켈레톤 캔버스도 좌우반전 되도록 추가 */
+        .mirrored #video, .mirrored #webgl-canvas, .mirrored #skeleton-canvas { transform: scaleX(-1); }
         
-        #video, #webgl-canvas {
+        #video, #webgl-canvas, #skeleton-canvas {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
@@ -101,6 +102,7 @@
 <body>
     <div id="container" class="mirrored">
         <video id="video" autoplay playsinline></video>
+        <canvas id="skeleton-canvas"></canvas>
         <canvas id="webgl-canvas"></canvas>
         <canvas id="composite-canvas"></canvas>
         
@@ -136,23 +138,17 @@
 
     <script>
         let camera, scene, renderer;
-        let videoElement, webglCanvas, compositeCanvas;
+        let videoElement, webglCanvas, skeletonCanvas, compositeCanvas;
         let pose;
         let isFrontCamera = true;
         let videoStream = null;
         let showSkeleton = true;
         
-        // 3D 모델들을 저장할 배열
         let bodyModels = [];
         
-        // 몸 주변에 배치할 3D 객체들
+        // 💡 수정: 몸 중앙만 표시하도록 간소화 (다른 설정 제거)
         const modelConfigs = [
-            { name: 'head_crown', landmark: 0, offset: { x: 0, y: 0.3, z: 0 }, scale: 0.15, color: 0xffd700, shape: 'crown' },
-            { name: 'left_shoulder', landmark: 11, offset: { x: -0.2, y: 0, z: 0 }, scale: 0.1, color: 0x00ffff, shape: 'sphere' },
-            { name: 'right_shoulder', landmark: 12, offset: { x: 0.2, y: 0, z: 0 }, scale: 0.1, color: 0xff00ff, shape: 'sphere' },
-            { name: 'left_hand', landmark: 15, offset: { x: 0, y: 0, z: 0 }, scale: 0.08, color: 0xff6b6b, shape: 'star' },
-            { name: 'right_hand', landmark: 16, offset: { x: 0, y: 0, z: 0 }, scale: 0.08, color: 0x4ecdc4, shape: 'star' },
-            { name: 'center', landmark: 11, offset: { x: 0, y: -0.5, z: 0 }, scale: 0.12, color: 0xffeb3b, shape: 'torus' },
+            { name: 'center', scale: 0.15, color: 0xffeb3b, shape: 'torus' }
         ];
 
         let pressTimer;
@@ -168,8 +164,13 @@
         function init() {
             videoElement = document.getElementById('video');
             webglCanvas = document.getElementById('webgl-canvas');
+            skeletonCanvas = document.getElementById('skeleton-canvas'); // 💡 수정
             compositeCanvas = document.getElementById('composite-canvas');
             
+            // 캔버스 크기 맞추기
+            skeletonCanvas.width = window.innerWidth;
+            skeletonCanvas.height = window.innerHeight;
+
             setupThreeJS();
             setupMediaPipe();
             startCamera();
@@ -208,79 +209,8 @@
         function createBodyModels() {
             modelConfigs.forEach(config => {
                 let geometry;
-                
-                switch(config.shape) {
-                    case 'crown':
-                        // 왕관 모양 (원뿔 + 작은 구체들)
-                        const crownGroup = new THREE.Group();
-                        const coneGeo = new THREE.ConeGeometry(0.3, 0.4, 6);
-                        const coneMat = new THREE.MeshPhongMaterial({ 
-                            color: config.color, 
-                            emissive: config.color,
-                            emissiveIntensity: 0.3,
-                            shininess: 100
-                        });
-                        const cone = new THREE.Mesh(coneGeo, coneMat);
-                        crownGroup.add(cone);
-                        
-                        // 왕관 위의 보석들
-                        for (let i = 0; i < 6; i++) {
-                            const angle = (i / 6) * Math.PI * 2;
-                            const gemGeo = new THREE.SphereGeometry(0.05);
-                            const gemMat = new THREE.MeshPhongMaterial({ 
-                                color: 0xff0000,
-                                emissive: 0xff0000,
-                                emissiveIntensity: 0.5
-                            });
-                            const gem = new THREE.Mesh(gemGeo, gemMat);
-                            gem.position.set(Math.cos(angle) * 0.3, 0.2, Math.sin(angle) * 0.3);
-                            crownGroup.add(gem);
-                        }
-                        
-                        bodyModels.push({ object: crownGroup, config });
-                        scene.add(crownGroup);
-                        return;
-                        
-                    case 'sphere':
-                        geometry = new THREE.SphereGeometry(0.5, 32, 32);
-                        break;
-                        
-                    case 'star':
-                        // 별 모양 (여러 원뿔 조합)
-                        const starGroup = new THREE.Group();
-                        for (let i = 0; i < 5; i++) {
-                            const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
-                            const spikeGeo = new THREE.ConeGeometry(0.1, 0.5, 4);
-                            const spikeMat = new THREE.MeshPhongMaterial({ 
-                                color: config.color,
-                                emissive: config.color,
-                                emissiveIntensity: 0.4
-                            });
-                            const spike = new THREE.Mesh(spikeGeo, spikeMat);
-                            spike.position.set(Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, 0);
-                            spike.rotation.z = angle + Math.PI / 2;
-                            starGroup.add(spike);
-                        }
-                        
-                        const centerGeo = new THREE.SphereGeometry(0.2);
-                        const centerMat = new THREE.MeshPhongMaterial({ 
-                            color: config.color,
-                            emissive: config.color,
-                            emissiveIntensity: 0.5
-                        });
-                        const center = new THREE.Mesh(centerGeo, centerMat);
-                        starGroup.add(center);
-                        
-                        bodyModels.push({ object: starGroup, config });
-                        scene.add(starGroup);
-                        return;
-                        
-                    case 'torus':
-                        geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 32);
-                        break;
-                        
-                    default:
-                        geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                if (config.shape === 'torus') {
+                    geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 32);
                 }
                 
                 const material = new THREE.MeshPhongMaterial({ 
@@ -291,6 +221,9 @@
                 });
                 const mesh = new THREE.Mesh(geometry, material);
                 
+                // 💡 수정: 처음에 생성할 때는 무조건 보이지 않게 숨겨둠 (뭉쳐보이는 현상 해결)
+                mesh.visible = false; 
+
                 bodyModels.push({ object: mesh, config });
                 scene.add(mesh);
             });
@@ -308,8 +241,8 @@
                 smoothLandmarks: true,
                 enableSegmentation: false,
                 smoothSegmentation: false,
-                minDetectionConfidence: 0.5,
-                minTrackingConfidence: 0.5
+                minDetectionConfidence: 0.6, // 💡 수정: 사람이 없을때 깜빡이는 현상을 줄이기 위해 신뢰도 상향
+                minTrackingConfidence: 0.6
             });
             
             pose.onResults(onPoseResults);
@@ -361,28 +294,33 @@
                 
                 if (showSkeleton) {
                     drawSkeleton(results);
+                } else {
+                    // 스켈레톤을 껐을 경우 캔버스 지우기
+                    const ctx = skeletonCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
                 }
             } else {
-                // 몸이 감지되지 않으면 모델 숨기기
-                bodyModels.forEach(({ object }) => {
-                    object.visible = false;
-                });
+                // 몸이 감지되지 않으면 3D 모델과 스켈레톤 모두 숨기기
+                bodyModels.forEach(({ object }) => object.visible = false);
+                const ctx = skeletonCanvas.getContext('2d');
+                ctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
             }
         }
         
         function drawSkeleton(results) {
-            const ctx = webglCanvas.getContext('2d', { willReadFrequently: true });
+            // 💡 수정: WebGL 캔버스가 아닌 스켈레톤 전용 2D 캔버스에 그리기 (토글 오류 해결)
+            const ctx = skeletonCanvas.getContext('2d');
             if (!ctx) return;
             
             ctx.save();
-            ctx.clearRect(0, 0, webglCanvas.width, webglCanvas.height);
+            ctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
             
+            // 캔버스와 비디오 비율을 맞추기 위한 로직
             if (isFrontCamera) {
-                ctx.translate(webglCanvas.width, 0);
+                ctx.translate(skeletonCanvas.width, 0);
                 ctx.scale(-1, 1);
             }
             
-            // 스켈레톤 그리기
             if (results.poseLandmarks) {
                 drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
                     color: '#00ff00',
@@ -400,61 +338,50 @@
         }
         
         function updateBodyModels(landmarks) {
-            const videoWidth = videoElement.videoWidth;
-            const videoHeight = videoElement.videoHeight;
-            
             bodyModels.forEach(({ object, config }) => {
-                const landmark = landmarks[config.landmark];
-                
-                if (landmark && landmark.visibility > 0.5) {
-                    // 랜드마크를 3D 좌표로 변환
-                    let x = (landmark.x - 0.5) * 2;
-                    let y = -(landmark.y - 0.5) * 2;
-                    const z = -landmark.z * 2;
+                if (config.name === 'center') {
+                    // 💡 수정: 양쪽 어깨(11, 12)와 양쪽 골반(23, 24)의 평균점을 구해 몸통의 진짜 중앙을 계산
+                    const lShoulder = landmarks[11];
+                    const rShoulder = landmarks[12];
+                    const lHip = landmarks[23];
+                    const rHip = landmarks[24];
                     
-                    // 전면 카메라일 경우 좌우 반전
-                    if (isFrontCamera) {
-                        x = -x;
-                    }
-                    
-                    // 오프셋 적용
-                    x += config.offset.x;
-                    y += config.offset.y;
-                    
-                    object.position.set(x, y, z + config.offset.z);
-                    object.scale.setScalar(config.scale);
-                    object.visible = true;
-                    
-                    // 회전 애니메이션
-                    object.rotation.y += 0.02;
-                    if (config.shape === 'torus') {
+                    if (lShoulder && rShoulder && lHip && rHip &&
+                        lShoulder.visibility > 0.6 && rShoulder.visibility > 0.6) {
+                        
+                        const centerX = (lShoulder.x + rShoulder.x + lHip.x + rHip.x) / 4;
+                        const centerY = (lShoulder.y + rShoulder.y + lHip.y + rHip.y) / 4;
+                        const centerZ = (lShoulder.z + rShoulder.z + lHip.z + rHip.z) / 4;
+
+                        let x = (centerX - 0.5) * 2;
+                        let y = -(centerY - 0.5) * 2;
+                        const z = -centerZ * 2;
+                        
+                        if (isFrontCamera) {
+                            x = -x;
+                        }
+                        
+                        object.position.set(x, y, z);
+                        object.scale.setScalar(config.scale);
+                        object.visible = true; // 인식되었을 때만 보이게 함
+                        
+                        object.rotation.y += 0.02;
                         object.rotation.x += 0.01;
+                    } else {
+                        object.visible = false;
                     }
-                } else {
-                    object.visible = false;
                 }
             });
         }
         
         function animate() {
             requestAnimationFrame(animate);
-            
-            // 추가 애니메이션 효과
-            bodyModels.forEach(({ object, config }) => {
-                if (object.visible && config.shape === 'sphere') {
-                    // 구체는 위아래로 살짝 움직임
-                    const time = Date.now() * 0.001;
-                    object.position.y += Math.sin(time * 2) * 0.002;
-                }
-            });
-            
             renderer.render(scene, camera);
         }
         
         function drawToComposite() {
             compositeCanvas.width = videoElement.videoWidth;
             compositeCanvas.height = videoElement.videoHeight;
-            
             const ctx = compositeCanvas.getContext('2d');
             
             if (isFrontCamera) {
@@ -463,11 +390,16 @@
             }
             
             ctx.drawImage(videoElement, 0, 0, compositeCanvas.width, compositeCanvas.height);
-            ctx.drawImage(webglCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
             
             if (isFrontCamera) {
-                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                ctx.setTransform(1, 0, 0, 1, 0, 0); // 원상복구 후 그래픽 요소들을 덮어씌움
             }
+            
+            // 💡 수정: 합성할 때 스켈레톤과 3D 캔버스를 모두 포함
+            if (showSkeleton) {
+                ctx.drawImage(skeletonCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            }
+            ctx.drawImage(webglCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
         }
 
         function takePhoto() {
@@ -484,6 +416,15 @@
             isRecording = true;
             document.getElementById('shutter-btn').classList.add('recording');
             recordedChunks = [];
+            
+            // 녹화가 진행되는 동안 캔버스 계속 업데이트
+            const recordLoop = () => {
+                if (isRecording) {
+                    drawToComposite();
+                    requestAnimationFrame(recordLoop);
+                }
+            };
+            recordLoop();
             
             const stream = compositeCanvas.captureStream(30);
             
@@ -537,8 +478,9 @@
             btnSkeleton.addEventListener('click', () => {
                 showSkeleton = !showSkeleton;
                 if (!showSkeleton) {
-                    const ctx = webglCanvas.getContext('2d');
-                    ctx.clearRect(0, 0, webglCanvas.width, webglCanvas.height);
+                    // 스켈레톤을 끄면 화면에서 즉시 지워줌
+                    const ctx = skeletonCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
                 }
             });
 
@@ -659,9 +601,11 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            // 💡 캔버스 크기 리사이징 추가
+            skeletonCanvas.width = window.innerWidth;
+            skeletonCanvas.height = window.innerHeight;
         }
         
-        // MediaPipe drawing utilities helper functions
         function drawConnectors(ctx, landmarks, connections, style) {
             connections.forEach(([start, end]) => {
                 const startPoint = landmarks[start];
@@ -671,8 +615,8 @@
                     ctx.beginPath();
                     ctx.strokeStyle = style.color;
                     ctx.lineWidth = style.lineWidth;
-                    ctx.moveTo(startPoint.x * webglCanvas.width, startPoint.y * webglCanvas.height);
-                    ctx.lineTo(endPoint.x * webglCanvas.width, endPoint.y * webglCanvas.height);
+                    ctx.moveTo(startPoint.x * skeletonCanvas.width, startPoint.y * skeletonCanvas.height);
+                    ctx.lineTo(endPoint.x * skeletonCanvas.width, endPoint.y * skeletonCanvas.height);
                     ctx.stroke();
                 }
             });
@@ -683,8 +627,8 @@
                 if (landmark.visibility > 0.5) {
                     ctx.beginPath();
                     ctx.arc(
-                        landmark.x * webglCanvas.width,
-                        landmark.y * webglCanvas.height,
+                        landmark.x * skeletonCanvas.width,
+                        landmark.y * skeletonCanvas.height,
                         style.radius,
                         0,
                         2 * Math.PI
@@ -698,7 +642,6 @@
             });
         }
         
-        // MediaPipe Pose connections
         const POSE_CONNECTIONS = [
             [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
             [9, 10], [11, 12], [11, 13], [13, 15], [15, 17], [15, 19], [15, 21],
