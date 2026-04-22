@@ -155,7 +155,6 @@
         let isVideoPreview = false;
         let isPressingShutter = false; 
 
-        // 💡 동적 비디오 포맷 설정을 위한 변수
         let videoMimeType = 'video/webm; codecs=vp9';
         let videoExtension = 'webm';
 
@@ -358,20 +357,49 @@
             ball.position.set(x, y, z);
         }
 
+        // 💡 수정된 핵심 함수: iOS 찌그러짐 현상 완벽 해결!
         function drawToComposite() {
-            compositeCanvas.width = videoElement.videoWidth || 1280;
-            compositeCanvas.height = videoElement.videoHeight || 720;
+            // 화면과 완전히 동일한 비율/해상도(기기 픽셀 비율 적용)인 webglCanvas의 크기를 기준으로 잡습니다.
+            const canvasW = webglCanvas.width;
+            const canvasH = webglCanvas.height;
+            
+            compositeCanvas.width = canvasW;
+            compositeCanvas.height = canvasH;
             const ctx = compositeCanvas.getContext('2d');
             
-            ctx.clearRect(0, 0, compositeCanvas.width, compositeCanvas.height);
+            ctx.clearRect(0, 0, canvasW, canvasH);
             
             if (isFrontCamera) {
-                ctx.translate(compositeCanvas.width, 0);
+                ctx.translate(canvasW, 0);
                 ctx.scale(-1, 1);
             }
             
-            ctx.drawImage(videoElement, 0, 0, compositeCanvas.width, compositeCanvas.height);
-            ctx.drawImage(webglCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            // 1. 비디오 그리기 (CSS의 object-fit: cover 효과를 JS로 수동 구현)
+            if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
+                const videoRatio = videoElement.videoWidth / videoElement.videoHeight;
+                const canvasRatio = canvasW / canvasH;
+                
+                let drawW = canvasW;
+                let drawH = canvasH;
+                let offsetX = 0;
+                let offsetY = 0;
+                
+                if (videoRatio > canvasRatio) {
+                    // 비디오가 캔버스보다 가로로 더 김 (좌우를 잘라냄)
+                    drawW = canvasH * videoRatio;
+                    offsetX = (canvasW - drawW) / 2;
+                } else {
+                    // 비디오가 캔버스보다 세로로 더 김 (위아래를 잘라냄)
+                    drawH = canvasW / videoRatio;
+                    offsetY = (canvasH - drawH) / 2;
+                }
+                
+                // 계산된 크기와 위치로 비디오를 그려 화면 밖으로 넘치는 부분을 잘라냅니다.
+                ctx.drawImage(videoElement, offsetX, offsetY, drawW, drawH);
+            }
+            
+            // 2. 3D 캔버스 덮어쓰기 (크기가 정확히 일치하므로 그대로 덮어씌움)
+            ctx.drawImage(webglCanvas, 0, 0, canvasW, canvasH);
             
             if (isFrontCamera) {
                 ctx.setTransform(1, 0, 0, 1, 0, 0);
@@ -395,7 +423,6 @@
             
             const stream = compositeCanvas.captureStream(30);
             
-            // 💡 iOS 등 브라우저 환경에 맞는 코덱 감지 및 설정
             if (MediaRecorder.isTypeSupported('video/mp4')) {
                 videoMimeType = 'video/mp4';
                 videoExtension = 'mp4';
@@ -403,7 +430,6 @@
                 videoMimeType = 'video/webm; codecs=h264';
                 videoExtension = 'webm';
             } else if (!MediaRecorder.isTypeSupported('video/webm; codecs=vp9')) {
-                // vp9 지원 안 되면 기본 webm으로 fallback
                 videoMimeType = 'video/webm';
                 videoExtension = 'webm';
             }
@@ -483,10 +509,14 @@
 
             document.getElementById('download-btn').addEventListener('click', () => {
                 if (!previewBlobUrl) return;
+
+                // 💡 수정됨: 저장 확인 팝업 (안드로이드 중복 클릭 방지)
+                if (!confirm('파일을 기기에 저장하시겠습니까?')) {
+                    return; 
+                }
                 
                 const a = document.createElement('a');
                 a.href = previewBlobUrl;
-                // 💡 감지된 확장자 적용
                 a.download = isVideoPreview ? `ar-video-${Date.now()}.${videoExtension}` : `ar-photo-${Date.now()}.jpg`;
                 document.body.appendChild(a);
                 a.click();
@@ -506,7 +536,6 @@
                     if (isVideoPreview) {
                         const response = await fetch(previewBlobUrl);
                         const blob = await response.blob();
-                        // 💡 공유 시에도 올바른 mimeType과 확장자 적용
                         file = new File([blob], `ar-video.${videoExtension}`, { type: videoMimeType });
                     } else {
                         const response = await fetch(previewBlobUrl);
@@ -544,7 +573,7 @@
                 vid.autoplay = true;
                 vid.loop = true;
                 vid.id = 'preview-content';
-                vid.playsInline = true; // 💡 iOS 전체화면 재생 방지
+                vid.playsInline = true;
                 container.appendChild(vid);
             } else {
                 const img = document.createElement('img');
