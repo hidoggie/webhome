@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Body Tracking AR - 몸 주변 3D 모델</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧘</text></svg>">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #000; color: #fff; }
+        
+        #container { position: relative; width: 100vw; height: 100vh; }
+        
+        .mirrored #video, .mirrored #webgl-canvas { transform: scaleX(-1); }
+        
+        #video, #webgl-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            pointer-events: none;
+        }
+        
+        #composite-canvas { display: none; }
+
+        #top-ui {
+            position: absolute; top: 20px; right: 20px; z-index: 10;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .icon-btn {
+            width: 50px; height: 50px; border-radius: 50%; border: none;
+            background: rgba(0, 0, 0, 0.5); color: white; font-size: 24px;
+            cursor: pointer; backdrop-filter: blur(5px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: 0.3s;
+        }
+        .icon-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .icon-btn:active { transform: scale(0.95); }
+
+        #bottom-ui {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 15px; z-index: 10;
+        }
+        
+        #shutter-btn {
+            width: 70px; height: 70px; border-radius: 50%;
+            background: white; border: 4px solid rgba(0,0,0,0.2);
+            cursor: pointer; transition: all 0.2s;
+            box-shadow: 0 0 0 4px rgba(255,255,255,0.4);
+            display: flex; justify-content: center; align-items: center;
+        }
+        #shutter-btn:active { transform: scale(0.9); }
+        
+        #shutter-btn.recording {
+            background: #ff4444; border-color: rgba(255,0,0,0.3);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+
+        #instructions {
+            background: rgba(0, 0, 0, 0.6); padding: 8px 16px; border-radius: 20px;
+            font-size: 14px; backdrop-filter: blur(5px); text-align: center;
+        }
+
+        #preview-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column;
+            justify-content: center; align-items: center;
+        }
+        #preview-media-container {
+            max-width: 90%; max-height: 70vh;
+        }
+        #preview-content {
+            max-width: 100%; max-height: 70vh; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .modal-btns { display: flex; gap: 15px; margin-top: 20px; }
+        .action-btn {
+            padding: 10px 25px; border-radius: 25px; border: none; font-size: 16px; font-weight: bold;
+            cursor: pointer; transition: 0.3s;
+        }
+        .action-btn:hover { opacity: 0.8; transform: translateY(-2px); }
+        .action-btn:active { transform: translateY(0); }
+        .btn-download { background: #4CAF50; color: white; }
+        .btn-share { background: #2196F3; color: white; }
+        .btn-close { background: #f44336; color: white; }
+
+        .loading {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8); padding: 30px; border-radius: 15px; text-align: center; z-index: 50;
+        }
+        .spinner {
+            border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid white;
+            border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 0 auto 15px auto;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="container" class="mirrored">
+        <video id="video" autoplay playsinline></video>
+        <canvas id="webgl-canvas"></canvas>
+        <canvas id="composite-canvas"></canvas>
+        
+        <div id="top-ui">
+            <button class="icon-btn" id="switch-camera-btn" title="카메라 전환">🔄</button>
+            <button class="icon-btn" id="toggle-skeleton-btn" title="스켈레톤 표시/숨김">🦴</button>
+        </div>
+        
+        <div id="bottom-ui">
+            <div id="shutter-btn" title="탭: 사진 / 길게: 동영상"></div>
+            <div id="instructions">전신이 보이도록 카메라 앞에 서세요<br>탭: 사진 / 길게 누르기: 동영상</div>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <div id="loading-text">초기화 중...</div>
+        </div>
+    </div>
+
+    <div id="preview-modal">
+        <div id="preview-media-container"></div>
+        <div class="modal-btns">
+            <button class="action-btn btn-download" id="download-btn">💾 저장</button>
+            <button class="action-btn btn-share" id="share-btn">📤 공유</button>
+            <button class="action-btn btn-close" id="close-modal-btn">❌ 닫기</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+
+    <script>
+        let camera, scene, renderer;
+        let videoElement, webglCanvas, compositeCanvas;
+        let pose;
+        let isFrontCamera = true;
+        let videoStream = null;
+        let showSkeleton = true;
+        
+        // 3D 모델들을 저장할 배열
+        let bodyModels = [];
+        
+        // 몸 주변에 배치할 3D 객체들
+        const modelConfigs = [
+            { name: 'head_crown', landmark: 0, offset: { x: 0, y: 0.3, z: 0 }, scale: 0.15, color: 0xffd700, shape: 'crown' },
+            { name: 'left_shoulder', landmark: 11, offset: { x: -0.2, y: 0, z: 0 }, scale: 0.1, color: 0x00ffff, shape: 'sphere' },
+            { name: 'right_shoulder', landmark: 12, offset: { x: 0.2, y: 0, z: 0 }, scale: 0.1, color: 0xff00ff, shape: 'sphere' },
+            { name: 'left_hand', landmark: 15, offset: { x: 0, y: 0, z: 0 }, scale: 0.08, color: 0xff6b6b, shape: 'star' },
+            { name: 'right_hand', landmark: 16, offset: { x: 0, y: 0, z: 0 }, scale: 0.08, color: 0x4ecdc4, shape: 'star' },
+            { name: 'center', landmark: 11, offset: { x: 0, y: -0.5, z: 0 }, scale: 0.12, color: 0xffeb3b, shape: 'torus' },
+        ];
+
+        let pressTimer;
+        let isRecording = false;
+        let mediaRecorder;
+        let recordedChunks = [];
+        let previewBlobUrl = null;
+        let isVideoPreview = false;
+        let isPressingShutter = false;
+        let videoMimeType = 'video/webm; codecs=vp9';
+        let videoExtension = 'webm';
+
+        function init() {
+            videoElement = document.getElementById('video');
+            webglCanvas = document.getElementById('webgl-canvas');
+            compositeCanvas = document.getElementById('composite-canvas');
+            
+            setupThreeJS();
+            setupMediaPipe();
+            startCamera();
+            setupEventListeners();
+        }
+        
+        function setupThreeJS() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(63, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.z = 5;
+            
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: webglCanvas, 
+                alpha: true,
+                antialias: true,
+                preserveDrawingBuffer: true
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setClearColor(0x000000, 0);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight.position.set(5, 5, 5);
+            scene.add(dirLight);
+            
+            const pointLight = new THREE.PointLight(0xffffff, 0.5);
+            pointLight.position.set(0, 0, 3);
+            scene.add(pointLight);
+
+            createBodyModels();
+            animate();
+        }
+        
+        function createBodyModels() {
+            modelConfigs.forEach(config => {
+                let geometry;
+                
+                switch(config.shape) {
+                    case 'crown':
+                        // 왕관 모양 (원뿔 + 작은 구체들)
+                        const crownGroup = new THREE.Group();
+                        const coneGeo = new THREE.ConeGeometry(0.3, 0.4, 6);
+                        const coneMat = new THREE.MeshPhongMaterial({ 
+                            color: config.color, 
+                            emissive: config.color,
+                            emissiveIntensity: 0.3,
+                            shininess: 100
+                        });
+                        const cone = new THREE.Mesh(coneGeo, coneMat);
+                        crownGroup.add(cone);
+                        
+                        // 왕관 위의 보석들
+                        for (let i = 0; i < 6; i++) {
+                            const angle = (i / 6) * Math.PI * 2;
+                            const gemGeo = new THREE.SphereGeometry(0.05);
+                            const gemMat = new THREE.MeshPhongMaterial({ 
+                                color: 0xff0000,
+                                emissive: 0xff0000,
+                                emissiveIntensity: 0.5
+                            });
+                            const gem = new THREE.Mesh(gemGeo, gemMat);
+                            gem.position.set(Math.cos(angle) * 0.3, 0.2, Math.sin(angle) * 0.3);
+                            crownGroup.add(gem);
+                        }
+                        
+                        bodyModels.push({ object: crownGroup, config });
+                        scene.add(crownGroup);
+                        return;
+                        
+                    case 'sphere':
+                        geometry = new THREE.SphereGeometry(0.5, 32, 32);
+                        break;
+                        
+                    case 'star':
+                        // 별 모양 (여러 원뿔 조합)
+                        const starGroup = new THREE.Group();
+                        for (let i = 0; i < 5; i++) {
+                            const angle = (i / 5) * Math.PI * 2 - Math.PI / 2;
+                            const spikeGeo = new THREE.ConeGeometry(0.1, 0.5, 4);
+                            const spikeMat = new THREE.MeshPhongMaterial({ 
+                                color: config.color,
+                                emissive: config.color,
+                                emissiveIntensity: 0.4
+                            });
+                            const spike = new THREE.Mesh(spikeGeo, spikeMat);
+                            spike.position.set(Math.cos(angle) * 0.3, Math.sin(angle) * 0.3, 0);
+                            spike.rotation.z = angle + Math.PI / 2;
+                            starGroup.add(spike);
+                        }
+                        
+                        const centerGeo = new THREE.SphereGeometry(0.2);
+                        const centerMat = new THREE.MeshPhongMaterial({ 
+                            color: config.color,
+                            emissive: config.color,
+                            emissiveIntensity: 0.5
+                        });
+                        const center = new THREE.Mesh(centerGeo, centerMat);
+                        starGroup.add(center);
+                        
+                        bodyModels.push({ object: starGroup, config });
+                        scene.add(starGroup);
+                        return;
+                        
+                    case 'torus':
+                        geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 32);
+                        break;
+                        
+                    default:
+                        geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+                }
+                
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: config.color,
+                    emissive: config.color,
+                    emissiveIntensity: 0.3,
+                    shininess: 80
+                });
+                const mesh = new THREE.Mesh(geometry, material);
+                
+                bodyModels.push({ object: mesh, config });
+                scene.add(mesh);
+            });
+        }
+        
+        function setupMediaPipe() {
+            pose = new Pose({
+                locateFile: (file) => {
+                    return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+                }
+            });
+            
+            pose.setOptions({
+                modelComplexity: 1,
+                smoothLandmarks: true,
+                enableSegmentation: false,
+                smoothSegmentation: false,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+            
+            pose.onResults(onPoseResults);
+        }
+        
+        async function startCamera() {
+            if (videoStream) {
+                videoStream.getTracks().forEach(track => track.stop());
+            }
+            
+            try {
+                const constraints = {
+                    video: {
+                        facingMode: isFrontCamera ? 'user' : 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
+                };
+                
+                videoStream = await navigator.mediaDevices.getUserMedia(constraints);
+                videoElement.srcObject = videoStream;
+                
+                await new Promise(resolve => {
+                    videoElement.onloadedmetadata = () => {
+                        videoElement.play();
+                        resolve();
+                    };
+                });
+                
+                document.getElementById('loading').style.display = 'none';
+                processVideo();
+                
+            } catch (error) {
+                console.error('카메라 접근 오류:', error);
+                document.getElementById('loading-text').innerText = '카메라 접근 실패: ' + error.message;
+            }
+        }
+        
+        async function processVideo() {
+            if (!videoElement.paused && !videoElement.ended) {
+                await pose.send({ image: videoElement });
+            }
+            requestAnimationFrame(processVideo);
+        }
+        
+        function onPoseResults(results) {
+            if (results.poseLandmarks) {
+                updateBodyModels(results.poseLandmarks);
+                
+                if (showSkeleton) {
+                    drawSkeleton(results);
+                }
+            } else {
+                // 몸이 감지되지 않으면 모델 숨기기
+                bodyModels.forEach(({ object }) => {
+                    object.visible = false;
+                });
+            }
+        }
+        
+        function drawSkeleton(results) {
+            const ctx = webglCanvas.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return;
+            
+            ctx.save();
+            ctx.clearRect(0, 0, webglCanvas.width, webglCanvas.height);
+            
+            if (isFrontCamera) {
+                ctx.translate(webglCanvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+            
+            // 스켈레톤 그리기
+            if (results.poseLandmarks) {
+                drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
+                    color: '#00ff00',
+                    lineWidth: 4
+                });
+                drawLandmarks(ctx, results.poseLandmarks, {
+                    color: '#ff0000',
+                    fillColor: '#ffffff',
+                    lineWidth: 2,
+                    radius: 6
+                });
+            }
+            
+            ctx.restore();
+        }
+        
+        function updateBodyModels(landmarks) {
+            const videoWidth = videoElement.videoWidth;
+            const videoHeight = videoElement.videoHeight;
+            
+            bodyModels.forEach(({ object, config }) => {
+                const landmark = landmarks[config.landmark];
+                
+                if (landmark && landmark.visibility > 0.5) {
+                    // 랜드마크를 3D 좌표로 변환
+                    let x = (landmark.x - 0.5) * 2;
+                    let y = -(landmark.y - 0.5) * 2;
+                    const z = -landmark.z * 2;
+                    
+                    // 전면 카메라일 경우 좌우 반전
+                    if (isFrontCamera) {
+                        x = -x;
+                    }
+                    
+                    // 오프셋 적용
+                    x += config.offset.x;
+                    y += config.offset.y;
+                    
+                    object.position.set(x, y, z + config.offset.z);
+                    object.scale.setScalar(config.scale);
+                    object.visible = true;
+                    
+                    // 회전 애니메이션
+                    object.rotation.y += 0.02;
+                    if (config.shape === 'torus') {
+                        object.rotation.x += 0.01;
+                    }
+                } else {
+                    object.visible = false;
+                }
+            });
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // 추가 애니메이션 효과
+            bodyModels.forEach(({ object, config }) => {
+                if (object.visible && config.shape === 'sphere') {
+                    // 구체는 위아래로 살짝 움직임
+                    const time = Date.now() * 0.001;
+                    object.position.y += Math.sin(time * 2) * 0.002;
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+        
+        function drawToComposite() {
+            compositeCanvas.width = videoElement.videoWidth;
+            compositeCanvas.height = videoElement.videoHeight;
+            
+            const ctx = compositeCanvas.getContext('2d');
+            
+            if (isFrontCamera) {
+                ctx.translate(compositeCanvas.width, 0);
+                ctx.scale(-1, 1);
+            }
+            
+            ctx.drawImage(videoElement, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            ctx.drawImage(webglCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            
+            if (isFrontCamera) {
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+            }
+        }
+
+        function takePhoto() {
+            drawToComposite();
+            if (previewBlobUrl) {
+                URL.revokeObjectURL(previewBlobUrl);
+            }
+            previewBlobUrl = compositeCanvas.toDataURL('image/jpeg', 0.9);
+            isVideoPreview = false;
+            showPreview();
+        }
+
+        function startRecording() {
+            isRecording = true;
+            document.getElementById('shutter-btn').classList.add('recording');
+            recordedChunks = [];
+            
+            const stream = compositeCanvas.captureStream(30);
+            
+            if (MediaRecorder.isTypeSupported('video/mp4')) {
+                videoMimeType = 'video/mp4';
+                videoExtension = 'mp4';
+            } else if (MediaRecorder.isTypeSupported('video/webm; codecs=h264')) {
+                videoMimeType = 'video/webm; codecs=h264';
+                videoExtension = 'webm';
+            } else if (!MediaRecorder.isTypeSupported('video/webm; codecs=vp9')) {
+                videoMimeType = 'video/webm';
+                videoExtension = 'webm';
+            }
+
+            mediaRecorder = new MediaRecorder(stream, { mimeType: videoMimeType });
+            
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+            
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: videoMimeType });
+                if (previewBlobUrl && isVideoPreview) {
+                    URL.revokeObjectURL(previewBlobUrl);
+                }
+                previewBlobUrl = URL.createObjectURL(blob);
+                isVideoPreview = true;
+                showPreview();
+            };
+            
+            mediaRecorder.start();
+        }
+
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) return;
+            isRecording = false;
+            document.getElementById('shutter-btn').classList.remove('recording');
+            mediaRecorder.stop();
+        }
+
+        function setupEventListeners() {
+            const btnCamera = document.getElementById('switch-camera-btn');
+            btnCamera.addEventListener('click', async () => {
+                isFrontCamera = !isFrontCamera;
+                document.getElementById('loading').style.display = 'block';
+                document.getElementById('loading-text').innerText = '카메라 전환 중...';
+                await startCamera();
+            });
+            
+            const btnSkeleton = document.getElementById('toggle-skeleton-btn');
+            btnSkeleton.addEventListener('click', () => {
+                showSkeleton = !showSkeleton;
+                if (!showSkeleton) {
+                    const ctx = webglCanvas.getContext('2d');
+                    ctx.clearRect(0, 0, webglCanvas.width, webglCanvas.height);
+                }
+            });
+
+            const shutterBtn = document.getElementById('shutter-btn');
+            
+            const handlePressStart = (e) => {
+                e.preventDefault();
+                isPressingShutter = true;
+                pressTimer = setTimeout(() => {
+                    if (isPressingShutter) startRecording();
+                }, 500);
+            };
+            
+            const handlePressEnd = (e) => {
+                if (!isPressingShutter) return;
+                
+                e.preventDefault();
+                isPressingShutter = false;
+                clearTimeout(pressTimer);
+                
+                if (isRecording) {
+                    stopRecording();
+                } else {
+                    takePhoto();
+                }
+            };
+
+            shutterBtn.addEventListener('mousedown', handlePressStart);
+            shutterBtn.addEventListener('touchstart', handlePressStart, {passive: false});
+            
+            window.addEventListener('mouseup', handlePressEnd);
+            window.addEventListener('touchend', handlePressEnd);
+
+            document.getElementById('close-modal-btn').addEventListener('click', () => {
+                const modal = document.getElementById('preview-modal');
+                modal.style.display = 'none';
+                
+                const container = document.getElementById('preview-media-container');
+                container.innerHTML = '';
+            });
+
+            document.getElementById('download-btn').addEventListener('click', () => {
+                if (!previewBlobUrl) return;
+                
+                const a = document.createElement('a');
+                a.href = previewBlobUrl;
+                a.download = isVideoPreview ? `body-ar-video-${Date.now()}.${videoExtension}` : `body-ar-photo-${Date.now()}.jpg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+
+            document.getElementById('share-btn').addEventListener('click', async () => {
+                if (!previewBlobUrl) return;
+                
+                if (!navigator.share && !navigator.canShare) {
+                    alert('현재 브라우저에서는 공유 기능을 지원하지 않습니다.');
+                    return;
+                }
+                
+                try {
+                    let file;
+                    if (isVideoPreview) {
+                        const response = await fetch(previewBlobUrl);
+                        const blob = await response.blob();
+                        file = new File([blob], `body-ar-video.${videoExtension}`, { type: videoMimeType });
+                    } else {
+                        const response = await fetch(previewBlobUrl);
+                        const blob = await response.blob();
+                        file = new File([blob], 'body-ar-photo.jpg', { type: 'image/jpeg' });
+                    }
+
+                    if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+                        alert('이 파일은 공유할 수 없습니다.');
+                        return;
+                    }
+
+                    await navigator.share({
+                        title: 'Body Tracking AR',
+                        text: '제가 만든 AR 화면을 확인해보세요!',
+                        files: [file]
+                    });
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        console.error('공유 실패:', err);
+                        alert('공유 중 오류가 발생했습니다: ' + err.message);
+                    }
+                }
+            });
+            
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function showPreview() {
+            const container = document.getElementById('preview-media-container');
+            container.innerHTML = '';
+            
+            if (isVideoPreview) {
+                const vid = document.createElement('video');
+                vid.src = previewBlobUrl;
+                vid.controls = true;
+                vid.autoplay = true;
+                vid.loop = true;
+                vid.id = 'preview-content';
+                vid.playsInline = true;
+                container.appendChild(vid);
+            } else {
+                const img = document.createElement('img');
+                img.src = previewBlobUrl;
+                img.id = 'preview-content';
+                container.appendChild(img);
+            }
+            
+            document.getElementById('preview-modal').style.display = 'flex';
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+        
+        // MediaPipe drawing utilities helper functions
+        function drawConnectors(ctx, landmarks, connections, style) {
+            connections.forEach(([start, end]) => {
+                const startPoint = landmarks[start];
+                const endPoint = landmarks[end];
+                
+                if (startPoint && endPoint && startPoint.visibility > 0.5 && endPoint.visibility > 0.5) {
+                    ctx.beginPath();
+                    ctx.strokeStyle = style.color;
+                    ctx.lineWidth = style.lineWidth;
+                    ctx.moveTo(startPoint.x * webglCanvas.width, startPoint.y * webglCanvas.height);
+                    ctx.lineTo(endPoint.x * webglCanvas.width, endPoint.y * webglCanvas.height);
+                    ctx.stroke();
+                }
+            });
+        }
+        
+        function drawLandmarks(ctx, landmarks, style) {
+            landmarks.forEach(landmark => {
+                if (landmark.visibility > 0.5) {
+                    ctx.beginPath();
+                    ctx.arc(
+                        landmark.x * webglCanvas.width,
+                        landmark.y * webglCanvas.height,
+                        style.radius,
+                        0,
+                        2 * Math.PI
+                    );
+                    ctx.fillStyle = style.fillColor;
+                    ctx.fill();
+                    ctx.strokeStyle = style.color;
+                    ctx.lineWidth = style.lineWidth;
+                    ctx.stroke();
+                }
+            });
+        }
+        
+        // MediaPipe Pose connections
+        const POSE_CONNECTIONS = [
+            [0, 1], [1, 2], [2, 3], [3, 7], [0, 4], [4, 5], [5, 6], [6, 8],
+            [9, 10], [11, 12], [11, 13], [13, 15], [15, 17], [15, 19], [15, 21],
+            [17, 19], [12, 14], [14, 16], [16, 18], [16, 20], [16, 22], [18, 20],
+            [11, 23], [12, 24], [23, 24], [23, 25], [24, 26], [25, 27], [26, 28],
+            [27, 29], [28, 30], [29, 31], [30, 32], [27, 31], [28, 32]
+        ];
+
+        init();
+    </script>
+</body>
+</html>
