@@ -357,9 +357,7 @@
             ball.position.set(x, y, z);
         }
 
-        // 💡 수정된 핵심 함수: iOS 찌그러짐 현상 완벽 해결!
         function drawToComposite() {
-            // 화면과 완전히 동일한 비율/해상도(기기 픽셀 비율 적용)인 webglCanvas의 크기를 기준으로 잡습니다.
             const canvasW = webglCanvas.width;
             const canvasH = webglCanvas.height;
             
@@ -374,7 +372,6 @@
                 ctx.scale(-1, 1);
             }
             
-            // 1. 비디오 그리기 (CSS의 object-fit: cover 효과를 JS로 수동 구현)
             if (videoElement.videoWidth > 0 && videoElement.videoHeight > 0) {
                 const videoRatio = videoElement.videoWidth / videoElement.videoHeight;
                 const canvasRatio = canvasW / canvasH;
@@ -385,20 +382,16 @@
                 let offsetY = 0;
                 
                 if (videoRatio > canvasRatio) {
-                    // 비디오가 캔버스보다 가로로 더 김 (좌우를 잘라냄)
                     drawW = canvasH * videoRatio;
                     offsetX = (canvasW - drawW) / 2;
                 } else {
-                    // 비디오가 캔버스보다 세로로 더 김 (위아래를 잘라냄)
                     drawH = canvasW / videoRatio;
                     offsetY = (canvasH - drawH) / 2;
                 }
                 
-                // 계산된 크기와 위치로 비디오를 그려 화면 밖으로 넘치는 부분을 잘라냅니다.
                 ctx.drawImage(videoElement, offsetX, offsetY, drawW, drawH);
             }
             
-            // 2. 3D 캔버스 덮어쓰기 (크기가 정확히 일치하므로 그대로 덮어씌움)
             ctx.drawImage(webglCanvas, 0, 0, canvasW, canvasH);
             
             if (isFrontCamera) {
@@ -510,9 +503,20 @@
             document.getElementById('download-btn').addEventListener('click', () => {
                 if (!previewBlobUrl) return;
 
-                // 💡 수정됨: 저장 확인 팝업 (안드로이드 중복 클릭 방지)
-                if (!confirm('파일을 기기에 저장하시겠습니까?')) {
-                    return; 
+                // 💡 추가됨: iOS 기기인지 판별하는 로직
+                const isIOS = [
+                    'iPad Simulator', 'iPhone Simulator', 'iPod Simulator',
+                    'iPad', 'iPhone', 'iPod'
+                ].includes(navigator.platform)
+                // 최신 아이패드(데스크톱 모드로 인식되는 경우) 대응
+                || (navigator.userAgent.includes("Mac") && "ontouchend" in document)
+                || /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+                // iOS가 아닐 때(안드로이드, PC 등)만 확인 팝업을 띄웁니다.
+                if (!isIOS) {
+                    if (!confirm('파일을 기기에 저장하시겠습니까?')) {
+                        return; 
+                    }
                 }
                 
                 const a = document.createElement('a');
