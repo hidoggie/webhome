@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Body Tracking AR - 몸 중앙 3D 모델</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧘</text></svg>">
+    <title>Body Tracking AR - 몸 중앙 공 올리기</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; overflow: hidden; background: #000; color: #fff; }
         
         #container { position: relative; width: 100vw; height: 100vh; }
         
-        /* 💡 수정: 스켈레톤 캔버스도 좌우반전 되도록 추가 */
+        /* 거울 모드: 화면에 보이는 요소들만 시각적으로 좌우 반전 처리 */
         .mirrored #video, .mirrored #webgl-canvas, .mirrored #skeleton-canvas { transform: scaleX(-1); }
         
         #video, #webgl-canvas, #skeleton-canvas {
@@ -22,7 +22,7 @@
             pointer-events: none;
         }
         
-        #composite-canvas { display: none; }
+        #composite-canvas { display: none; } /* 최종 사진/녹화 굽기용 캔버스 */
 
         #top-ui {
             position: absolute; top: 20px; right: 20px; z-index: 10;
@@ -132,6 +132,8 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
@@ -144,12 +146,9 @@
         let videoStream = null;
         let showSkeleton = true;
         
-        let bodyModels = [];
-        
-        // 💡 수정: 몸 중앙만 표시하도록 간소화 (다른 설정 제거)
-        const modelConfigs = [
-            { name: 'center', scale: 0.15, color: 0xffeb3b, shape: 'torus' }
-        ];
+        // 💡 3D 공 객체 저장용 변수
+        let ballModel = null;
+        let isModelLoaded = false;
 
         let pressTimer;
         let isRecording = false;
@@ -164,10 +163,9 @@
         function init() {
             videoElement = document.getElementById('video');
             webglCanvas = document.getElementById('webgl-canvas');
-            skeletonCanvas = document.getElementById('skeleton-canvas'); // 💡 수정
+            skeletonCanvas = document.getElementById('skeleton-canvas');
             compositeCanvas = document.getElementById('composite-canvas');
             
-            // 캔버스 크기 맞추기
             skeletonCanvas.width = window.innerWidth;
             skeletonCanvas.height = window.innerHeight;
 
@@ -192,40 +190,43 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setClearColor(0x000000, 0);
             
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
             scene.add(ambientLight);
-            const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
             dirLight.position.set(5, 5, 5);
             scene.add(dirLight);
-            
-            const pointLight = new THREE.PointLight(0xffffff, 0.5);
-            pointLight.position.set(0, 0, 3);
-            scene.add(pointLight);
 
             createBodyModels();
             animate();
         }
         
         function createBodyModels() {
-            modelConfigs.forEach(config => {
-                let geometry;
-                if (config.shape === 'torus') {
-                    geometry = new THREE.TorusGeometry(0.5, 0.2, 16, 32);
-                }
+            // 💡 수정 2: 토러스 대신 ball.glb 파일을 불러오도록 수정
+            const gltfLoader = new THREE.GLTFLoader();
+            document.getElementById('loading-text').innerText = '3D 공 모델 로딩 중...';
+            
+            gltfLoader.load('assets/ball.glb', (gltf) => {
+                const model = gltf.scene;
                 
-                const material = new THREE.MeshPhongMaterial({ 
-                    color: config.color,
-                    emissive: config.color,
-                    emissiveIntensity: 0.3,
-                    shininess: 80
-                });
-                const mesh = new THREE.Mesh(geometry, material);
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
                 
-                // 💡 수정: 처음에 생성할 때는 무조건 보이지 않게 숨겨둠 (뭉쳐보이는 현상 해결)
-                mesh.visible = false; 
-
-                bodyModels.push({ object: mesh, config });
-                scene.add(mesh);
+                let scale = 1.8 / maxDim; // 공 크기 조절 (화면에 맞게)
+                model.scale.set(scale, scale, scale);
+                
+                const wrapperGroup = new THREE.Group();
+                wrapperGroup.add(model);
+                wrapperGroup.visible = false; // 기본적으로 숨김
+                
+                ballModel = wrapperGroup;
+                scene.add(ballModel);
+                isModelLoaded = true;
+                
+                document.getElementById('loading-text').innerText = '카메라 준비 중...';
+            }, undefined, (error) => {
+                console.error("공 모델 로드 실패:", error);
+                document.getElementById('loading-text').innerText = '모델 로드 실패';
             });
         }
         
@@ -241,7 +242,7 @@
                 smoothLandmarks: true,
                 enableSegmentation: false,
                 smoothSegmentation: false,
-                minDetectionConfidence: 0.6, // 💡 수정: 사람이 없을때 깜빡이는 현상을 줄이기 위해 신뢰도 상향
+                minDetectionConfidence: 0.6,
                 minTrackingConfidence: 0.6
             });
             
@@ -265,6 +266,8 @@
                 videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 videoElement.srcObject = videoStream;
                 
+                document.getElementById('container').className = isFrontCamera ? 'mirrored' : '';
+
                 await new Promise(resolve => {
                     videoElement.onloadedmetadata = () => {
                         videoElement.play();
@@ -295,31 +298,25 @@
                 if (showSkeleton) {
                     drawSkeleton(results);
                 } else {
-                    // 스켈레톤을 껐을 경우 캔버스 지우기
                     const ctx = skeletonCanvas.getContext('2d');
                     ctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
                 }
             } else {
-                // 몸이 감지되지 않으면 3D 모델과 스켈레톤 모두 숨기기
-                bodyModels.forEach(({ object }) => object.visible = false);
+                if (ballModel) ballModel.visible = false;
                 const ctx = skeletonCanvas.getContext('2d');
                 ctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
             }
         }
         
         function drawSkeleton(results) {
-            // 💡 수정: WebGL 캔버스가 아닌 스켈레톤 전용 2D 캔버스에 그리기 (토글 오류 해결)
             const ctx = skeletonCanvas.getContext('2d');
             if (!ctx) return;
             
             ctx.save();
             ctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
             
-            // 캔버스와 비디오 비율을 맞추기 위한 로직
-            if (isFrontCamera) {
-                ctx.translate(skeletonCanvas.width, 0);
-                ctx.scale(-1, 1);
-            }
+            // 💡 수정 3: JS에서 반대 방향으로 뒤집던 ctx.scale(-1, 1) 로직 제거! 
+            // 이미 CSS 클래스(.mirrored)가 캔버스를 거울처럼 통째로 뒤집어주고 있기 때문에 이중으로 뒤집을 필요가 없습니다.
             
             if (results.poseLandmarks) {
                 drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {
@@ -338,40 +335,36 @@
         }
         
         function updateBodyModels(landmarks) {
-            bodyModels.forEach(({ object, config }) => {
-                if (config.name === 'center') {
-                    // 💡 수정: 양쪽 어깨(11, 12)와 양쪽 골반(23, 24)의 평균점을 구해 몸통의 진짜 중앙을 계산
-                    const lShoulder = landmarks[11];
-                    const rShoulder = landmarks[12];
-                    const lHip = landmarks[23];
-                    const rHip = landmarks[24];
-                    
-                    if (lShoulder && rShoulder && lHip && rHip &&
-                        lShoulder.visibility > 0.6 && rShoulder.visibility > 0.6) {
-                        
-                        const centerX = (lShoulder.x + rShoulder.x + lHip.x + rHip.x) / 4;
-                        const centerY = (lShoulder.y + rShoulder.y + lHip.y + rHip.y) / 4;
-                        const centerZ = (lShoulder.z + rShoulder.z + lHip.z + rHip.z) / 4;
+            if (!isModelLoaded || !ballModel) return;
 
-                        let x = (centerX - 0.5) * 2;
-                        let y = -(centerY - 0.5) * 2;
-                        const z = -centerZ * 2;
-                        
-                        if (isFrontCamera) {
-                            x = -x;
-                        }
-                        
-                        object.position.set(x, y, z);
-                        object.scale.setScalar(config.scale);
-                        object.visible = true; // 인식되었을 때만 보이게 함
-                        
-                        object.rotation.y += 0.02;
-                        object.rotation.x += 0.01;
-                    } else {
-                        object.visible = false;
-                    }
-                }
-            });
+            const lShoulder = landmarks[11];
+            const rShoulder = landmarks[12];
+            const lHip = landmarks[23];
+            const rHip = landmarks[24];
+            
+            if (lShoulder && rShoulder && lHip && rHip &&
+                lShoulder.visibility > 0.6 && rShoulder.visibility > 0.6) {
+                
+                const centerX = (lShoulder.x + rShoulder.x + lHip.x + rHip.x) / 4;
+                const centerY = (lShoulder.y + rShoulder.y + lHip.y + rHip.y) / 4;
+                const centerZ = (lShoulder.z + rShoulder.z + lHip.z + rHip.z) / 4;
+
+                const multiplier = 10;
+                
+                // 💡 수정 3: JS에서 X좌표를 억지로 뒤집던 로직 제거! CSS와 완벽히 동기화됩니다.
+                let x = (centerX - 0.5) * multiplier; 
+                let y = -(centerY - 0.5) * multiplier;
+                const z = -centerZ * multiplier;
+                
+                ballModel.position.set(x, y, z);
+                ballModel.visible = true; 
+                
+                // 공 자체의 회전 애니메이션
+                ballModel.rotation.y += 0.02;
+                ballModel.rotation.x += 0.01;
+            } else {
+                ballModel.visible = false;
+            }
         }
         
         function animate() {
@@ -384,6 +377,7 @@
             compositeCanvas.height = videoElement.videoHeight;
             const ctx = compositeCanvas.getContext('2d');
             
+            // 파일로 다운로드될 때는 진짜로 이미지를 뒤집어 구워내야 하므로 여기는 거울 모드를 유지합니다.
             if (isFrontCamera) {
                 ctx.translate(compositeCanvas.width, 0);
                 ctx.scale(-1, 1);
@@ -391,15 +385,14 @@
             
             ctx.drawImage(videoElement, 0, 0, compositeCanvas.width, compositeCanvas.height);
             
-            if (isFrontCamera) {
-                ctx.setTransform(1, 0, 0, 1, 0, 0); // 원상복구 후 그래픽 요소들을 덮어씌움
-            }
-            
-            // 💡 수정: 합성할 때 스켈레톤과 3D 캔버스를 모두 포함
             if (showSkeleton) {
                 ctx.drawImage(skeletonCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
             }
             ctx.drawImage(webglCanvas, 0, 0, compositeCanvas.width, compositeCanvas.height);
+            
+            if (isFrontCamera) {
+                ctx.setTransform(1, 0, 0, 1, 0, 0); 
+            }
         }
 
         function takePhoto() {
@@ -417,7 +410,6 @@
             document.getElementById('shutter-btn').classList.add('recording');
             recordedChunks = [];
             
-            // 녹화가 진행되는 동안 캔버스 계속 업데이트
             const recordLoop = () => {
                 if (isRecording) {
                     drawToComposite();
@@ -478,7 +470,6 @@
             btnSkeleton.addEventListener('click', () => {
                 showSkeleton = !showSkeleton;
                 if (!showSkeleton) {
-                    // 스켈레톤을 끄면 화면에서 즉시 지워줌
                     const ctx = skeletonCanvas.getContext('2d');
                     ctx.clearRect(0, 0, skeletonCanvas.width, skeletonCanvas.height);
                 }
@@ -524,6 +515,11 @@
 
             document.getElementById('download-btn').addEventListener('click', () => {
                 if (!previewBlobUrl) return;
+
+                // 💡 수정 1: 저장을 한 번 더 물어보는 확인창 추가 (안드로이드 중복 다운로드 방지)
+                if (!confirm('파일을 기기에 저장하시겠습니까?')) {
+                    return; 
+                }
                 
                 const a = document.createElement('a');
                 a.href = previewBlobUrl;
@@ -601,7 +597,6 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            // 💡 캔버스 크기 리사이징 추가
             skeletonCanvas.width = window.innerWidth;
             skeletonCanvas.height = window.innerHeight;
         }
