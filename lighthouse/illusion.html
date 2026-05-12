@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>일러스트 보물지도 - 풀스크린 최적화</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* html, body가 화면을 빈틈없이 채우도록 설정 */
+        html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: #2c3e50; }
+        
+        /* 지도 컨테이너를 100%로 꽉 채움 */
+        #map { width: 100%; height: 100%; background: transparent; }
+        
+        .my-marker { font-size: 40px; transition: all 0.3s ease; }
+        #info { position: absolute; top: 10px; left: 10px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 5px; font-size: 12px; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="info">풀스크린 지도 렌더링 중...</div>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 1. 이미지 영역 좌표 (이전 단계에서 맞추신 좌표를 그대로 사용하세요)
+        var swLat = 30.3715, swLng = 123.5969; 
+        var neLat = 39.8715, neLng = 132.5969; 
+        var imageBounds = [[swLat, swLng], [neLat, neLng]];
+
+        // 2. 초기 줌 레벨과 중심점 계산 (핵심!)
+        // 이미지가 작게 뜨지 않도록 중앙을 잡고 적당히 확대(zoom: 7 또는 8)해서 시작합니다.
+        var centerLat = (swLat + neLat) / 2;
+        var centerLng = (swLng + neLng) / 2;
+
+        var map = L.map('map', {
+            zoomControl: false,
+            attributionControl: false,
+            maxBounds: imageBounds,      // 지도를 이 영역 밖으로 못 끌게 막음
+            maxBoundsViscosity: 1.0,     // 용수철처럼 튕겨서 못 나가게 하는 강도 (1.0 = 완벽히 막음)
+            minZoom: 6,                  // 사용자가 너무 축소해서 빈 배경을 보는 것을 방지
+            maxZoom: 10                  // 너무 확대해서 이미지가 깨지는 것을 방지
+        }).setView([centerLat, centerLng], 7); // 중앙 지점에서 줌 레벨 7로 시작
+
+        // 3. 이미지 오버레이
+        var imageUrl = './map_chatgpt.png'; // 실제 이미지 URL로 교체하세요!
+        L.imageOverlay(imageUrl, imageBounds).addTo(map);
+
+        // --- 마커 및 GPS 추적 로직 ---
+
+        var customIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: '<div class="my-marker">🤠</div>',
+            iconSize: [40, 40],
+            iconAnchor: [20, 40]
+        });
+        
+        var playerMarker = null;
+
+        // 실시간 GPS 추적 (지도는 가만히 있고 마커만 움직임)
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
+                var newLatLng = new L.LatLng(lat, lng);
+
+                if (!playerMarker) {
+                    // 최초 위치 확인 시 마커 생성 및 내 위치로 화면 이동
+                    playerMarker = L.marker(newLatLng, {icon: customIcon}).addTo(map);
+                    map.setView(newLatLng, 8); // 내 위치를 찾으면 내 위치 중심으로 살짝 확대
+                } else {
+                    // 이후에는 부드럽게 마커만 이동
+                    playerMarker.setLatLng(newLatLng);
+                }
+                
+                document.getElementById('info').innerText = `내 위치: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            }, function(error) {
+                document.getElementById('info').innerText = "GPS를 찾을 수 없습니다.";
+            }, { enableHighAccuracy: true });
+        }
+    </script>
+</body>
+</html>
