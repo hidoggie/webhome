@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스탬프 투어 - 광역 뷰</title>
+    <title>스탬프 투어 - 광역 뷰 (스타일 적용)</title>
     
-    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc&callback=initMap"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
     
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
@@ -15,7 +15,7 @@
         .stamp-pin {
             width: 60px;
             height: 60px;
-            background-image: url('보물상자_또는_마스코트_이미지.png');
+            background-image: url('보물상자_또는_마스코트_이미지.png'); /* 실제 이미지 파일명으로 변경 필수! */
             background-size: cover;
             animation: floating 1.5s ease-in-out infinite alternate;
             cursor: pointer;
@@ -25,30 +25,15 @@
             100% { transform: translateY(-15px); }
         }
     </style>
-<script>
-  var map = new naver.maps.Map('map', {
-    center: new naver.maps.LatLng(37.5665, 126.9780), // 서울 좌표
-    zoom: 10,
-    mapTypeId: naver.maps.MapTypeId.NORMAL,
-    // 여기서 스타일 ID 적용
-    mapTypes: new naver.maps.MapTypeRegistry({
-      'styledMap': naver.maps.MapTypeOptions.getMapType('c27f8c73-7e51-4eac-bb6a-c9d223b4ba20')
-    })
-  });
-
-  // 스타일 맵으로 전환
-  map.setMapTypeId('styledMap');
-</script>
-
 </head>
 <body>
 
     <div id="map"></div>
 
     <script>
-        // 1. 지도 초기화 옵션 (지도스러움 지우기 핵심 설정)
+        // 2. 지도 초기화 (여기서 한 번만 깔끔하게 호출합니다)
         var map = new naver.maps.Map('map', {
-            center: new naver.maps.LatLng(37.5665, 126.9780), // 한반도 중앙 쯤
+            center: new naver.maps.LatLng(37.5665, 126.9780), // 한반도 중앙 쯤 (서울 기준)
             zoom: 7, // 전국이 다 보이는 줌 레벨
             minZoom: 6, // 너무 축소해서 지도가 작아지는 것 방지
             maxZoom: 9, // 광역 뷰이므로 너무 확대하지 못하게 막음
@@ -58,36 +43,28 @@
             mapDataControl: false, 
             scaleControl: false, 
             
-            // Map Style Editor에서 발급받은 커스텀 스타일 ID 적용 (GL 버전 기능)
-            // (주의: 일반 API 호출 시 mapTypes나 별도 파라미터로 스타일 ID를 맵핑하는 방식은 NCP 가이드를 참조하세요)
-            mapTypeId: naver.maps.MapTypeId.NORMAL,
-           // 여기서 스타일 ID 적용
-           mapTypes: new naver.maps.MapTypeRegistry({
-            'styledMap': naver.maps.MapTypeOptions.getMapType('c27f8c73-7e51-4eac-bb6a-c9d223b4ba20')
-           })
-
-            // [UX 선택] 모바일에서 두 손가락으로 화면이 돌아가는 것(회전) 방지
+            // [UX 선택] 모바일에서 두 손가락으로 화면이 돌아가는 것 방지
             disableTwoFingerTapZoom: true,
-            tileTransition: false
-        };
+            tileTransition: false,
 
-        // 지도 생성
-         map.setMapTypeId('styledMap');
+            // 3. ★ 네이버 지도 커스텀 스타일 적용의 핵심 ★
+            gl: true, // GL(벡터) 서브 모듈을 반드시 활성화해야 합니다.
+            customStyleId: 'c27f8c73-7e51-4eac-bb6a-c9d223b4ba20' // Style Editor에서 발행한 My Style ID
+        });
 
-
-        // 2. 큼직하고 귀여운 커스텀 일러스트 마커 올리기 (제주도 예시)
+        // 4. 큼직하고 귀여운 커스텀 일러스트 마커 올리기 (산지등대 예시)
         var SanjiMarker = new naver.maps.Marker({
-            position: new naver.maps.LatLng(33.5214, 126.5456), // 산지등대
+            position: new naver.maps.LatLng(33.5214, 126.5456), // 산지등대 좌표
             map: map,
-            // 기본 핀 대신 HTML 요소로 커스텀 마커 제작 (애니메이션 적용)
+            // 기본 핀 대신 HTML 요소로 커스텀 마커 제작 (둥둥 떠다니는 애니메이션)
             icon: {
                 content: '<div class="stamp-pin"></div>',
                 size: new naver.maps.Size(60, 60),
-                anchor: new naver.maps.Point(30, 60) // 마커의 뾰족한 끝(중앙 하단)을 좌표에 맞춤
+                anchor: new naver.maps.Point(30, 60) // 마커의 뾰족한 끝(중앙 하단)을 실제 좌표에 맞춤
             }
         });
 
-        // 마커 클릭 이벤트 (해당 지역 진입 안내 팝업 등)
+        // 5. 마커 클릭 이벤트
         naver.maps.Event.addListener(SanjiMarker, 'click', function() {
             alert("산지등대 구역입니다! 가까이 다가가면 AR 길찾기 모드가 켜집니다.");
         });
