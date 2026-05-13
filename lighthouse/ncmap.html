@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>스탬프 투어 - 광역 뷰 (스타일 적용)</title>
+    <title>스탬프 투어 - 광역 뷰 (다중 마커 및 내 위치)</title>
     
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
     
@@ -11,12 +11,13 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; }
         #map { width: 100%; height: 100%; }
         
-        /* 커스텀 마커(이벤트 핀) CSS 애니메이션 */
+        /* 1. 커스텀 마커(이벤트 핀) CSS 애니메이션 */
         .stamp-pin {
             width: 60px;
             height: 60px;
-            background-image: url('./img/sanji_icon_240.png'); /* 실제 이미지 파일명으로 변경 필수! */
+            /* 배경 이미지는 JS에서 동적으로 주입되므로 여기서 삭제합니다. */
             background-size: cover;
+            background-position: center;
             animation: floating 1.5s ease-in-out infinite alternate;
             cursor: pointer;
         }
@@ -24,49 +25,155 @@
             0% { transform: translateY(0); }
             100% { transform: translateY(-15px); }
         }
+
+        /* 내 위치 확인 버튼 UI */
+        .btn-my-location {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            padding: 12px 20px;
+            background-color: #ffffff;
+            color: #333;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-my-location:active {
+            background-color: #f0f0f0;
+        }
+
+        /* 내 현재 위치를 표시할 파란색 점 핀 */
+        .my-loc-pin {
+            width: 20px;
+            height: 20px;
+            background-color: #007bff;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 123, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
+        }
     </style>
 </head>
 <body>
 
+    <button id="btn-location" class="btn-my-location">🎯 내 위치 확인</button>
     <div id="map"></div>
 
     <script>
-        // 2. 지도 초기화 (여기서 한 번만 깔끔하게 호출합니다)
+        // --- 1. 데이터 설정 (10개 이벤트 지역 배열) ---
+        // img 속성에 각 지역에 맞는 개별 아이콘 이미지 경로를 넣어주세요.
+        var eventLocations = [
+            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png" },
+            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/ulgi_icon_240.png" },
+            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/ulgi_icon_240.png" },
+            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/ulgi_icon_240.png" },
+            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/ulgi_icon_240.png" },
+            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png" },
+            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png" },
+            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png" },
+            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png" },
+            { title: "속초등대", lat: 38.2137, lng: 128.6000, img: "./img/sokcho_icon.png" }
+        ];
+
+        // --- 2. 대한민국 영역 제한 설정 (북한 제외) ---
+        // 남서쪽(마라도 부근)과 북동쪽(고성/울릉도 부근)의 좌표를 기준 상자로 설정합니다.
+        var koreaBounds = new naver.maps.LatLngBounds(
+            new naver.maps.LatLng(32.5, 124.5), // 남서쪽 (South-West)
+            new naver.maps.LatLng(38.8, 131.5)  // 북동쪽 (North-East)
+        );
+
+        // --- 3. 지도 초기화 ---
         var map = new naver.maps.Map('map', {
-            center: new naver.maps.LatLng(36.804326, 127.934921), // 한반도 중앙 쯤 (서울 기준)
-            zoom: 7, // 전국이 다 보이는 줌 레벨
-            minZoom: 6, // 너무 축소해서 지도가 작아지는 것 방지
-            maxZoom: 9, // 광역 뷰이므로 너무 확대하지 못하게 막음
+            center: new naver.maps.LatLng(36.804326, 127.934921), 
+            zoom: 7, 
+            minZoom: 6, 
+            maxZoom: 9, 
+            maxBounds: koreaBounds, // ★ 지도 이동 제한 (대한민국 영역)
             
-            // UI 컨트롤 모두 숨김
             zoomControl: false, 
             mapDataControl: false, 
             scaleControl: false, 
-            
-            // [UX 선택] 모바일에서 두 손가락으로 화면이 돌아가는 것 방지
             disableTwoFingerTapZoom: true,
             tileTransition: false,
 
-            // 3. ★ 네이버 지도 커스텀 스타일 적용의 핵심 ★
-            gl: true, // GL(벡터) 서브 모듈을 반드시 활성화해야 합니다.
-            customStyleId: 'c27f8c73-7e51-4eac-bb6a-c9d223b4ba20' // Style Editor에서 발행한 My Style ID
+            gl: true, 
+            customStyleId: 'c27f8c73-7e51-4eac-bb6a-c9d223b4ba20' 
         });
 
-        // 4. 큼직하고 귀여운 커스텀 일러스트 마커 올리기 (산지등대 예시)
-        var SanjiMarker = new naver.maps.Marker({
-            position: new naver.maps.LatLng(33.5214, 126.5456), // 산지등대 좌표
-            map: map,
-            // 기본 핀 대신 HTML 요소로 커스텀 마커 제작 (둥둥 떠다니는 애니메이션)
-            icon: {
-                content: '<div class="stamp-pin"></div>',
-                size: new naver.maps.Size(60, 60),
-                anchor: new naver.maps.Point(30, 60) // 마커의 뾰족한 끝(중앙 하단)을 실제 좌표에 맞춤
+        // --- 4. 배열을 돌면서 10개의 마커 생성 ---
+        eventLocations.forEach(function(loc) {
+            var marker = new naver.maps.Marker({
+                position: new naver.maps.LatLng(loc.lat, loc.lng),
+                map: map,
+                icon: {
+                    // HTML 태그의 style에 배경 이미지를 동적으로 삽입합니다.
+                    content: `<div class="stamp-pin" style="background-image: url('${loc.img}');"></div>`,
+                    size: new naver.maps.Size(60, 60),
+                    anchor: new naver.maps.Point(30, 60)
+                }
+            });
+
+            // 각 마커의 클릭 이벤트
+            naver.maps.Event.addListener(marker, 'click', function() {
+                alert(loc.title + " 구역입니다! 가까이 다가가면 AR 길찾기 모드가 켜집니다.");
+            });
+        });
+
+        // --- 5. 내 위치 확인 기능 ---
+        var myLocationMarker = null; // 내 위치 핀을 저장할 변수
+
+        document.getElementById('btn-location').addEventListener('click', function() {
+            // 브라우저가 GPS(Geolocation)를 지원하는지 확인
+            if (navigator.geolocation) {
+                // 버튼 텍스트 변경으로 로딩 상태 표시
+                this.innerText = "⏳ 위치 찾는 중...";
+
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    var lat = position.coords.latitude;
+                    var lng = position.coords.longitude;
+                    var newLatLng = new naver.maps.LatLng(lat, lng);
+
+                    // 마커가 없으면 처음 생성, 이미 있으면 위치만 갱신
+                    if (!myLocationMarker) {
+                        myLocationMarker = new naver.maps.Marker({
+                            position: newLatLng,
+                            map: map,
+                            icon: {
+                                content: '<div class="my-loc-pin"></div>',
+                                size: new naver.maps.Size(20, 20),
+                                anchor: new naver.maps.Point(10, 10) // 점의 정중앙을 좌표에 맞춤
+                            }
+                        });
+                    } else {
+                        myLocationMarker.setPosition(newLatLng);
+                    }
+
+                    // 내 위치로 지도를 부드럽게 이동하고 줌 레벨을 살짝 당김
+                    map.setCenter(newLatLng);
+                    map.setZoom(8, true); // true를 주면 부드러운 애니메이션 효과 적용
+                    
+                    document.getElementById('btn-location').innerText = "🎯 내 위치 확인";
+
+                }, function(error) {
+                    alert("위치 정보를 가져올 수 없습니다. 스마트폰의 위치 서비스(GPS)가 켜져 있는지 확인해 주세요.");
+                    document.getElementById('btn-location').innerText = "🎯 내 위치 확인";
+                }, { 
+                    enableHighAccuracy: true, // 높은 정확도 (GPS) 사용
+                    timeout: 5000 // 5초 안에 못 찾으면 에러 처리
+                });
+            } else {
+                alert("현재 브라우저에서는 위치 서비스를 지원하지 않습니다.");
             }
-        });
-
-        // 5. 마커 클릭 이벤트
-        naver.maps.Event.addListener(SanjiMarker, 'click', function() {
-            alert("산지등대 구역입니다! 가까이 다가가면 AR 길찾기 모드가 켜집니다.");
         });
 
     </script>
