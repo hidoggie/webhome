@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Angry Birds AR Auth</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{overflow:hidden;background:#000;font-family:'Arial Black',Arial,sans-serif;touch-action:none;}
+  canvas{display:block;width:100vw;height:100vh;}
+
+  /* HUD */
+  #hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:20;display:none;}
+  #hud-top{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:rgba(0,0,0,0.5);}
+  #score-box{color:#f4a025;font-size:22px;font-weight:900;}
+  #goal-box{color:#fff;font-size:14px;}
+
+  /* Power Bar */
+  #power-wrap{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);width:200px;text-align:center;pointer-events:none;z-index:20;opacity:0;}
+  #power-wrap.show{opacity:1;}
+  #power-bg{width:100%;height:10px;background:rgba(0,0,0,.5);border:1px solid #fff;border-radius:5px;overflow:hidden;}
+  #power-fill{height:100%;width:0%;background:#00e676;}
+
+  /* Overlay */
+  #overlay{position:fixed;inset:0;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1a0a3e;color:#fff;text-align:center;padding:20px;}
+  .obtn{padding:15px 30px;font-size:20px;background:#f4a025;border:none;border-radius:10px;color:#fff;cursor:pointer;margin-top:20px;}
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div id="hud-top">
+    <div id="score-box">점수: <span id="sc">0</span></div>
+    <div id="goal-box">목표: <span id="goal-val">500</span></div>
+  </div>
+</div>
+
+<div id="power-wrap">
+  <div id="power-bg"><div id="power-fill"></div></div>
+</div>
+
+<div id="overlay">
+  <h1>AR 새총 인증</h1>
+  <p>바닥을 인식시킨 후 게임을 시작하세요.<br>500점을 획득하면 인증이 완료됩니다.</p>
+  <div id="ar-button-container"></div>
+</div>
+
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.150.1/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.150.1/examples/jsm/"
+    }
+  }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { ARButton } from 'three/addons/webxr/ARButton.js';
+
+// ═══════════════════════════════════════════════════════
+//  설정 변수 (이곳에서 목표 점수를 수정하세요)
+// ═══════════════════════════════════════════════════════
+const GOAL_SCORE = 500;
+const AUTH_REDIRECT_URL = 'ncmap.html';
+
+document.getElementById('goal-val').textContent = GOAL_SCORE;
+
+let renderer, scene, camera, controller;
+let reticle; // 바닥 감지용 링
+let hitTestSource = null;
+let hitTestSourceRequested = false;
+
+const G = {
+  score: 0,
+  running: false,
+  birds: [],
+  projs: [],
+  power: 0,
+  isDragging: false,
+  worldParent: new THREE.Group() // 모든 게임 오브젝트를 담을 그룹 (AR 좌표축용)
+};
+
+init();
+animate();
+
+function init() {
+  const container = document.createElement('div');
+  document.body.appendChild(container);
+
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.xr.enabled = true;
+  container.appendChild(renderer.domElement);
+
+  // AR 버튼 설정
+  const arButton = ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] });
+  document.getElementById('ar-button-container').appendChild(arButton);
+  
+  arButton.addEventListener('click', () => {
+    document.getElementById('overlay').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    G.running = true;
+  });
+
+  // 조명
+  scene.add(new THREE.AmbientLight(0xffffff, 1));
+  const light = new THREE.DirectionalLight(0xffffff, 0.8);
+  light.position.set(1, 2, 1);
+  scene.add(light);
+
+  // 바닥 감지 레티클
+  reticle = new THREE.Mesh(
+    new THREE.RingGeometry(0.1, 0.12, 32).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial()
+  );
+  reticle.visible = false;
+  scene.add(reticle);
+
+  scene.add(G.worldParent);
+
+  // 컨트롤러 (터치 입력)
+  controller = renderer.xr.getController(0);
+  controller.addEventListener('selectstart', onSelectStart);
+  controller.addEventListener('selectend', onSelectEnd);
+  scene.add(controller);
+
+  window.addEventListener('resize', onWindowResize);
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+// ═══════════════════════════════════════════════════════
+//  게임 로직
+// ═══════════════════════════════════════════════════════
+
+function onSelectStart() {
+  if (reticle.visible && G.birds.length === 0) {
+    // 게임 시작: 레티클 위치에 게임 월드 고정
+    G.worldParent.position.setFromMatrixPosition(reticle.matrix);
+    G.worldParent.quaternion.setFromRotationMatrix(reticle.matrix);
+    spawnBirds();
+  }
+  G.isDragging = true;
+  G.dragStartTime = performance.now();
+  document.getElementById('power-wrap').classList.add('show');
+}
+
+function onSelectEnd() {
+  if (!G.isDragging) return;
+  
+  const duration = (performance.now() - G.dragStartTime) / 1000;
+  G.power = Math.min(duration * 2, 1); // 0.5초면 풀파워
+
+  if (G.power > 0.1) {
+    fireProjectile(G.power);
+  }
+
+  G.isDragging = false;
+  document.getElementById('power-wrap').classList.remove('show');
+  document.getElementById('power-fill').style.width = '0%';
+}
+
+function fireProjectile(power) {
+  // 카메라 방향으로 발사
+  const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  const startPos = camera.position.clone();
+  
+  const geo = new THREE.SphereGeometry(0.04, 16, 16);
+  const mat = new THREE.MeshLambertMaterial({ color: 0xff8f00 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(startPos);
+  scene.add(mesh);
+
+  const speed = 2 + power * 6;
+  G.projs.push({
+    mesh,
+    vel: dir.multiplyScalar(speed),
+    gravity: new THREE.Vector3(0, -1.8, 0), // AR 공간에 맞춰 낮은 중력
+    alive: true,
+    life: 0
+  });
+}
+
+function spawnBirds() {
+  // 목표 지점 근처에 새 배치
+  for (let i = 0; i < 6; i++) {
+    const geo = new THREE.SphereGeometry(0.08, 16, 16);
+    const mat = new THREE.MeshLambertMaterial({ color: 0xe53935 });
+    const mesh = new THREE.Mesh(geo, mat);
+    
+    // 월드 중심(레티클 위치) 기준 상대 좌표
+    mesh.position.set(
+      (Math.random() - 0.5) * 2, 
+      0.5 + Math.random() * 1, 
+      -2 - Math.random() * 2
+    );
+    G.worldParent.add(mesh);
+    G.birds.push({ mesh, alive: true, pts: 100 });
+  }
+}
+
+function checkAuthSuccess() {
+  if (G.score >= GOAL_SCORE) {
+    G.running = false;
+    alert("인증 성공! 다음 화면으로 이동합니다.");
+    window.location.href = AUTH_REDIRECT_URL;
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  루프
+// ═══════════════════════════════════════════════════════
+
+function animate() {
+  renderer.setAnimationLoop(render);
+}
+
+function render(timestamp, frame) {
+  if (frame) {
+    // AR 바닥 감지 업데이트
+    const referenceSpace = renderer.xr.getReferenceSpace();
+    const session = renderer.xr.getSession();
+
+    if (hitTestSourceRequested === false) {
+      session.requestReferenceSpace('viewer').then((referenceSpace) => {
+        session.requestHitTestSource({ space: referenceSpace }).then((source) => {
+          hitTestSource = source;
+        });
+      });
+      hitTestSourceRequested = true;
+    }
+
+    if (hitTestSource) {
+      const hitTestResults = frame.getHitTestResults(hitTestSource);
+      if (hitTestResults.length) {
+        const hit = hitTestResults[0];
+        reticle.visible = true;
+        reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
+      } else {
+        reticle.visible = false;
+      }
+    }
+  }
+
+  // 게임 업데이트 (dt 사용)
+  const dt = 0.016; 
+
+  if (G.isDragging) {
+    const currentDur = (performance.now() - G.dragStartTime) / 1000;
+    const p = Math.min(currentDur * 2, 1);
+    document.getElementById('power-fill').style.width = (p * 100) + '%';
+  }
+
+  // 발사체 이동 및 충돌 감지
+  G.projs.forEach((p, pIdx) => {
+    if (!p.alive) return;
+    p.life += dt;
+    p.vel.addScaledVector(p.gravity, dt);
+    p.mesh.position.addScaledVector(p.vel, dt);
+
+    // 새와의 충돌 체크
+    G.birds.forEach((b, bIdx) => {
+      if (!b.alive) return;
+      // 월드 좌표계 변환 후 거리 계산
+      const birdWorldPos = new THREE.Vector3();
+      b.mesh.getWorldPosition(birdWorldPos);
+      
+      if (p.mesh.position.distanceTo(birdWorldPos) < 0.15) {
+        b.alive = false;
+        p.alive = false;
+        G.worldParent.remove(b.mesh);
+        scene.remove(p.mesh);
+        G.score += b.pts;
+        document.getElementById('sc').textContent = G.score;
+        checkAuthSuccess();
+      }
+    });
+
+    if (p.life > 3) {
+      p.alive = false;
+      scene.remove(p.mesh);
+    }
+  });
+
+  // 모든 새를 다 잡으면 새로 생성 (인증 점수 채울 때까지)
+  if (G.running && G.birds.length > 0 && G.birds.every(b => !b.alive)) {
+    G.birds = [];
+    spawnBirds();
+  }
+
+  renderer.render(scene, camera);
+}
+</script>
+</body>
+</html>
