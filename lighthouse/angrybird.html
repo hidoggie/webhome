@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Angry Birds Slingshot 3D</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{overflow:hidden;background:#000;font-family:'Arial Black',Arial,sans-serif;touch-action:none;}
+canvas{display:block;width:100vw;height:100vh;}
+
+/* ── HUD ── */
+#hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:20;}
+#hud-top{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;background:rgba(0,0,0,0.55);}
+#score-box{color:#f4a025;font-size:22px;font-weight:900;text-shadow:0 0 12px #f4a025;}
+#level-box{color:#fff;font-size:16px;font-weight:700;}
+#ammo-box{display:flex;gap:5px;align-items:center;}
+.aball{width:18px;height:18px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#6cf,#0077aa);
+  border:2px solid #00aaff;box-shadow:0 0 6px rgba(0,170,255,.5);}
+.aball.used{background:rgba(60,60,60,.4);border-color:rgba(255,255,255,.15);box-shadow:none;}
+
+/* ── POWER BAR ── */
+#power-wrap{position:fixed;bottom:220px;left:50%;transform:translateX(-50%);
+  width:200px;text-align:center;pointer-events:none;z-index:20;opacity:0;transition:opacity .25s;}
+#power-wrap.show{opacity:1;}
+#power-label{color:#fff;font-size:13px;margin-bottom:5px;
+  text-shadow:1px 1px 3px #000;}
+#power-bg{width:100%;height:18px;background:rgba(0,0,0,.55);
+  border:2px solid rgba(255,255,255,.3);border-radius:9px;overflow:hidden;}
+#power-fill{height:100%;width:0%;
+  background:linear-gradient(90deg,#00e676,#ffeb3b,#f44336);
+  border-radius:9px;transition:width .04s;}
+
+/* ── ANGLE HINT ── */
+#angle-hint{position:fixed;bottom:200px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,.7);font-size:12px;pointer-events:none;z-index:20;
+  background:rgba(0,0,0,.4);padding:4px 12px;border-radius:6px;}
+
+
+/* ── AUDIO CONTROLS ── */
+#audio-btn{position:fixed;top:16px;right:16px;z-index:30;
+  width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.4);
+  background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);transition:background .2s;pointer-events:all;}
+#audio-btn:hover{background:rgba(255,255,255,.2);}
+
+/* ── CROSSHAIR ── */
+#xhair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:30px;height:30px;pointer-events:none;z-index:20;}
+#xhair::before,#xhair::after{content:'';position:absolute;
+  background:rgba(255,255,255,.75);border-radius:1px;}
+#xhair::before{width:2px;height:100%;left:50%;top:0;transform:translateX(-50%);}
+#xhair::after{width:100%;height:2px;top:50%;left:0;transform:translateY(-50%);}
+#xdot{position:absolute;width:5px;height:5px;background:#f00;border-radius:50%;
+  top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px #f00;}
+
+/* ── FLASHES ── */
+.flash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:15;transition:opacity .15s;}
+#fhit{background:rgba(255,220,0,.3);}
+#fmiss{background:rgba(255,0,0,.18);}
+
+/* ── SCORE POPUP ── */
+#spop{position:fixed;top:35%;left:50%;transform:translate(-50%,-50%);
+  font-size:52px;font-weight:900;color:#f4a025;
+  text-shadow:0 0 24px #f4a025,3px 3px 0 #000;
+  opacity:0;pointer-events:none;z-index:25;transition:opacity .4s,transform .4s;}
+
+/* ── TIPS ── */
+#tips{position:fixed;bottom:12px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,.6);font-size:11px;text-align:center;
+  background:rgba(0,0,0,.4);padding:6px 14px;border-radius:7px;
+  pointer-events:none;z-index:20;line-height:1.7;}
+
+/* ── OVERLAY ── */
+#overlay{position:fixed;inset:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse,#1a0a3e,#050210);}
+#overlay.off{display:none;}
+.ot{font-size:clamp(34px,7vw,72px);font-weight:900;color:#f4a025;
+  text-shadow:0 0 36px #f4a025,4px 4px 0 #5a2d00;margin-bottom:6px;}
+.os{font-size:17px;color:#4fc3f7;margin-bottom:28px;}
+.oi{color:rgba(255,255,255,.65);font-size:13px;line-height:2.2;text-align:center;
+  background:rgba(255,255,255,.05);padding:12px 24px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.1);margin-bottom:24px;}
+.obtn{padding:14px 42px;font-size:20px;font-weight:900;
+  background:linear-gradient(135deg,#f4a025,#c84b00);color:#fff;
+  border:none;border-radius:50px;cursor:pointer;
+  box-shadow:0 8px 24px rgba(244,160,37,.5);
+  text-transform:uppercase;letter-spacing:2px;transition:transform .18s;}
+.obtn:hover,.obtn:active{transform:scale(1.07);}
+#fscr{font-size:38px;color:#fff;margin:12px 0;}
+#fmsg{color:rgba(255,255,255,.6);font-size:15px;margin-bottom:22px;}
+</style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-top">
+    <div id="score-box">🏆 <span id="sc">0</span></div>
+    <div id="level-box">Level <span id="lv">1</span></div>
+    <div id="ammo-box" id="ammo-box"></div>
+  </div>
+</div>
+
+<div id="power-wrap">
+  <div id="power-label">🐷 당기는 중...</div>
+  <div id="power-bg"><div id="power-fill"></div></div>
+</div>
+<div id="angle-hint"></div>
+
+<button id="audio-btn" title="음소거">🔊</button>
+<div id="xhair"><div id="xdot"></div></div>
+<div class="flash" id="fhit"></div>
+<div class="flash" id="fmiss"></div>
+<div id="spop"></div>
+<div id="tips">
+  📱 터치 드래그 → 조준 | 길게 → 세게<br>
+  🖱️ 클릭+드래그 → 조준 | 길게 → 세게 | 놓으면 발사
+</div>
+
+<!-- OVERLAY -->
+<div id="overlay">
+  <div style="font-size:48px;margin-bottom:14px;">🐦🐤🐧</div>
+  <div class="ot">ANGRY BIRDS 3D</div>
+  <div class="os">🐷 새총으로 새를 맞춰라!</div>
+  <div class="oi">
+    📱 <b>모바일:</b> 화면 드래그로 조준, 길게 당길수록 강하게<br>
+    🖱️ <b>PC:</b> 클릭+드래그로 조준, 길게 당길수록 강하게<br>
+    ✨ 발사하면 돼지가 포물선으로 날아가요!
+  </div>
+  <button class="obtn" id="startBtn">게임 시작! 🚀</button>
+  <div id="fscr" style="display:none">점수: <span id="fval">0</span></div>
+  <div id="fmsg"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  RENDERER + SCENE + CAMERA
+// ═══════════════════════════════════════════════════════
+const canvas = document.getElementById('c');
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(W(),H());
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x6ec6f0);
+scene.fog = new THREE.FogExp2(0x9fd8f0, 0.012);
+
+const camera = new THREE.PerspectiveCamera(70, W()/H(), 0.05, 300);
+camera.position.set(0, 0.5, 0);
+
+window.addEventListener('resize', () => {
+  renderer.setSize(W(),H());
+  camera.aspect = W()/H();
+  camera.updateProjectionMatrix();
+});
+
+// ═══════════════════════════════════════════════════════
+//  LIGHTS
+// ═══════════════════════════════════════════════════════
+scene.add(new THREE.AmbientLight(0xd0eeff, 0.8));
+const sun = new THREE.DirectionalLight(0xfff5cc, 1.2);
+sun.position.set(8, 20, 5);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.near = 0.1;
+sun.shadow.camera.far = 80;
+sun.shadow.camera.left = -20;
+sun.shadow.camera.right = 20;
+sun.shadow.camera.top = 20;
+sun.shadow.camera.bottom = -20;
+scene.add(sun);
+scene.add(new THREE.DirectionalLight(0xc8e8ff, 0.4).position.set(-5,10,-5) && new THREE.DirectionalLight(0xc8e8ff,0.4));
+
+// ═══════════════════════════════════════════════════════
+//  GROUND + SKY DETAILS
+// ═══════════════════════════════════════════════════════
+// Ground
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(300,300),
+  new THREE.MeshLambertMaterial({color:0x8ab34a})
+);
+ground.rotation.x = -Math.PI/2;
+ground.position.y = -3;
+ground.receiveShadow = true;
+scene.add(ground);
+
+// Ground patches
+for(let i=0;i<30;i++){
+  const p = new THREE.Mesh(
+    new THREE.PlaneGeometry(1+Math.random()*3, 0.5+Math.random()),
+    new THREE.MeshLambertMaterial({color:0x6a9a30})
+  );
+  p.rotation.x=-Math.PI/2; p.position.set((Math.random()-.5)*30,-2.98,(Math.random()-.5)*20-10);
+  scene.add(p);
+}
+
+// Trees (simple)
+function makeTree(x,y,z) {
+  const g=new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.15,.22,2,6), new THREE.MeshLambertMaterial({color:0x5d4037}));
+  trunk.position.y=1; g.add(trunk);
+  [0,0.8,1.5].forEach((py,i)=>{
+    const r=1.2-i*0.25;
+    const leaves = new THREE.Mesh(new THREE.ConeGeometry(r,1.6-i*0.1,7), new THREE.MeshLambertMaterial({color:i===0?0x2e7d32:0x388e3c}));
+    leaves.position.y=2.2+py; g.add(leaves);
+  });
+  g.position.set(x,y,z); scene.add(g);
+}
+[-12,-8,-15,-6,10,14,8,-11,13].forEach((x,i)=>makeTree(x,-3,-15+i%3*2));
+
+// Clouds
+function makeCloud(x,y,z) {
+  const g=new THREE.Group();
+  [[0,0,0,2.0],[-2,-.1,0,1.4],[2,.1,0,1.3],[.8,.9,0,1.1],[-1,.7,0,1.0]].forEach(([cx,cy,cz,r])=>{
+    const m=new THREE.Mesh(new THREE.SphereGeometry(r,8,6),new THREE.MeshLambertMaterial({color:0xffffff}));
+    m.position.set(cx,cy,cz); g.add(m);
+  });
+  g.position.set(x,y,z); scene.add(g); return g;
+}
+const clouds=[makeCloud(-12,10,-28),makeCloud(8,12,-32),makeCloud(0,9,-22),makeCloud(16,11,-25)];
+
+// ═══════════════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════════════
+const MAT = (color,rough=.7)=>new THREE.MeshLambertMaterial({color});
+const SPH = (r,color,seg=12)=>new THREE.Mesh(new THREE.SphereGeometry(r,seg,seg),MAT(color));
+const CYL = (rt,rb,h,color,seg=10)=>new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),MAT(color));
+const BOX = (w,h,d,color)=>new THREE.Mesh(new THREE.BoxGeometry(w,h,d),MAT(color));
+const CON = (r,h,color,seg=9)=>new THREE.Mesh(new THREE.ConeGeometry(r,h,seg),MAT(color));
+
+function place(parent,mesh,x,y,z,rx=0,ry=0,rz=0,sx=1,sy=sx,sz=sx){
+  mesh.position.set(x,y,z);
+  mesh.rotation.set(rx,ry,rz);
+  mesh.scale.set(sx,sy,sz);
+  parent.add(mesh);
+  return mesh;
+}
+const D2R = v=>v*Math.PI/180;
+
+// ═══════════════════════════════════════════════════════
+//  PIG HEAD BUILDER
+// ═══════════════════════════════════════════════════════
+function makePig(s) {
+  const g=new THREE.Group();
+  place(g,SPH(s,0x6abf3a),0,0,0);
+  // helmet
+  const helm=SPH(s*.88,0x546e7a,8);
+  helm.position.set(0,s*.42,0); helm.scale.set(1.12,.62,1.12); g.add(helm);
+  // band front
+  const bandF=CYL(.015*s,.015*s,s*1.1,0x37474f,8);
+  bandF.position.set(0,s*.1,0); bandF.rotation.z=D2R(90); g.add(bandF);
+  // eye whites
+  place(g,SPH(s*.27,0xffffff,8),-s*.45,s*.28,s*.78);
+  place(g,SPH(s*.27,0xffffff,8), s*.45,s*.28,s*.78);
+  // pupils
+  place(g,SPH(s*.13,0x111111,6),-s*.43,s*.30,s*.99);
+  place(g,SPH(s*.13,0x111111,6), s*.43,s*.30,s*.99);
+  // highlight
+  place(g,SPH(s*.055,0xffffff,5),-s*.37,s*.36,s*1.0);
+  place(g,SPH(s*.055,0xffffff,5), s*.37+s*.18,s*.36,s*1.0);
+  // snout
+  const sn=SPH(s*.36,0x50a020,8);
+  sn.position.set(0,-s*.1,s*.88); sn.scale.set(1.1,.85,.7); g.add(sn);
+  place(g,SPH(s*.09,0x2a6010,6),-s*.17,-s*.09,s*1.12);
+  place(g,SPH(s*.09,0x2a6010,6), s*.17,-s*.09,s*1.12);
+  // ears
+  place(g,SPH(s*.30,0x4caf50,7),-s*.94,s*.62,0);
+  place(g,SPH(s*.30,0x4caf50,7), s*.94,s*.62,0);
+  // smile
+  place(g,BOX(s*.28,s*.05,s*.04,0x1b5e20),0,-s*.2,s*.9,0,0,D2R(15));
+  return g;
+}
+
+// ═══════════════════════════════════════════════════════
+//  SLINGSHOT  (like image: low, wide Y, thick bands)
+// ═══════════════════════════════════════════════════════
+const slingshotGroup = new THREE.Group();
+
+// Handle / grip
+const handle = CYL(.07,.09,1.0,0x6d4c41,8);
+place(slingshotGroup,handle,0,-.3,0);
+// Grip rings
+[-.2,0,.2].forEach(dy=>{
+  const r=CYL(.11,.11,.07,0x5d4037,8);
+  r.position.set(0,-.3+dy,0); slingshotGroup.add(r);
+});
+
+// Left arm (angles outward and up)
+const leftArm=new THREE.Group();
+const laShaft=CYL(.055,.065,1.1,0x8d6e63,8);
+laShaft.position.y=.55;
+leftArm.add(laShaft);
+leftArm.position.set(-.08,.15,0);
+leftArm.rotation.z=D2R(28);
+leftArm.rotation.x=D2R(-5);
+slingshotGroup.add(leftArm);
+
+// Right arm
+const rightArm=new THREE.Group();
+const raShaft=CYL(.055,.065,1.1,0x8d6e63,8);
+raShaft.position.y=.55;
+rightArm.add(raShaft);
+rightArm.position.set(.08,.15,0);
+rightArm.rotation.z=D2R(-28);
+rightArm.rotation.x=D2R(-5);
+slingshotGroup.add(rightArm);
+
+// Tip knobs
+place(slingshotGroup,SPH(.08,0x4e342e,7),-.48,.98,0);
+place(slingshotGroup,SPH(.08,0x4e342e,7), .48,.98,0);
+
+// Band wraps at tips
+const wrapL=CYL(.1,.1,.12,0xffd600,8);
+place(slingshotGroup,wrapL,-.45,.96,0,D2R(90),0,0);
+const wrapR=CYL(.1,.1,.12,0xffd600,8);
+place(slingshotGroup,wrapR,.45,.96,0,D2R(90),0,0);
+const wrapL2=CYL(.09,.09,.1,0xf9a825,8);
+place(slingshotGroup,wrapL2,-.45,.84,0,D2R(90),0,0);
+const wrapR2=CYL(.09,.09,.1,0xf9a825,8);
+place(slingshotGroup,wrapR2,.45,.84,0,D2R(90),0,0);
+
+// Rubber bands (will be updated each frame)
+const bandMat = new THREE.MeshLambertMaterial({color:0xffd600});
+const bandLGeo = new THREE.CylinderGeometry(.025,.025,1,6);
+const bandRGeo = new THREE.CylinderGeometry(.025,.025,1,6);
+const bandLMesh = new THREE.Mesh(bandLGeo,bandMat);
+const bandRMesh = new THREE.Mesh(bandRGeo,bandMat);
+slingshotGroup.add(bandLMesh);
+slingshotGroup.add(bandRMesh);
+
+// Pouch / pig holder
+const pouch = makePig(.14);
+slingshotGroup.add(pouch);
+
+// Position slingshot in camera's view
+slingshotGroup.position.set(0,-1.8,-2.8);
+scene.add(slingshotGroup);
+
+// Tip positions in local slingshot space
+const LEFT_TIP  = new THREE.Vector3(-.48,.98,0);
+const RIGHT_TIP = new THREE.Vector3( .48,.98,0);
+
+function updateBands(pouchLocalPos) {
+  // Update band from left tip to pouch
+  const l=LEFT_TIP,r=RIGHT_TIP,p=pouchLocalPos;
+  
+  function updateBand(mesh,from,to){
+    const mid=new THREE.Vector3().addVectors(from,to).multiplyScalar(.5);
+    mesh.position.copy(mid);
+    const dir=new THREE.Vector3().subVectors(to,from);
+    const len=dir.length();
+    mesh.scale.set(1,len,1);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),dir.normalize());
+  }
+  updateBand(bandLMesh,l,p);
+  updateBand(bandRMesh,r,p);
+}
+
+// ═══════════════════════════════════════════════════════
+//  BIRD TYPES
+// ═══════════════════════════════════════════════════════
+const BTYPES=[
+  {name:'Red',   c:0xe53935,belly:0xffcdd2,brow:0xb71c1c,bk:0xff8f00,s:.70,pts:100},
+  {name:'Chuck', c:0xfdd835,belly:0xfff9c4,brow:0xf57f17,bk:0xf57f17,s:.80,pts:150},
+  {name:'Bomb',  c:0x212121,belly:0x9e9e9e,brow:0x000,   bk:0x616161,s:.75,pts:200},
+  {name:'Blues', c:0x42a5f5,belly:0xe3f2fd,brow:0x1565c0,bk:0xffb300,s:.60,pts:120},
+  {name:'White', c:0xf5f5f5,belly:0xffffff,brow:0x9e9e9e,bk:0xff8f00,s:.65,pts:130},
+];
+
+function makeBird3D(t){
+  const g=new THREE.Group();
+  const s=t.s;
+  place(g,SPH(s,t.c),0,0,0);
+  const bl=SPH(s*.54,t.belly,8);
+  bl.position.set(0,-s*.08,s*.58); bl.scale.set(1,1.05,.48); g.add(bl);
+  place(g,SPH(s*.26,0xffffff,8),-s*.29,s*.24,s*.74);
+  place(g,SPH(s*.26,0xffffff,8), s*.29,s*.24,s*.74);
+  place(g,SPH(s*.12,0x111111,6),-s*.28,s*.27,s*.97);
+  place(g,SPH(s*.12,0x111111,6), s*.28,s*.27,s*.97);
+  place(g,BOX(s*.33,s*.07,s*.04,t.brow),-s*.28,s*.52,s*.83,0,0,D2R(14));
+  place(g,BOX(s*.33,s*.07,s*.04,t.brow), s*.28,s*.52,s*.83,0,0,D2R(-14));
+  // beak
+  const bkt=CON(s*.17,s*.32,t.bk);
+  bkt.position.set(0,s*.06,s*.92); bkt.rotation.x=D2R(-60); g.add(bkt);
+  const bkb=CON(s*.13,s*.25,0xe65100);
+  bkb.position.set(0,-s*.07,s*.88); bkb.rotation.x=D2R(68); g.add(bkb);
+  // extras
+  if(t.name==='Red'){for(let i=0;i<3;i++){const c=CON(s*.065,s*.30,0xb71c1c);c.position.set((i-1)*s*.20,s*1.05,0);g.add(c);}}
+  else if(t.name==='Chuck'){const f=CON(s*.08,s*.55,0xf57f17);f.position.set(0,s*1.1,0);g.add(f);}
+  else if(t.name==='Bomb'){
+    const fu=CYL(.035*s,.035*s,s*.46,0x5d4037);
+    fu.position.set(s*.12,s*1.1,0);fu.rotation.z=D2R(30);g.add(fu);
+    place(g,SPH(s*.07,0xff6f00,6),s*.22,s*1.34,0);
+  }
+  else if(t.name==='Blues'){place(g,SPH(s*.15,0x1976d2,6),-s*.28,s*.7,s*.2);place(g,SPH(s*.15,0x1976d2,6),s*.28,s*.7,s*.2);}
+  else if(t.name==='White'){const e=CON(s*.09,s*.25,0xffa000);e.position.set(0,s*1.0,0);g.add(e);}
+  return g;
+}
+
+// ═══════════════════════════════════════════════════════
+//  FEATHERS  (for hit animation)
+// ═══════════════════════════════════════════════════════
+function spawnFeathers(wx,wy,wz,color){
+  for(let i=0;i<14;i++){
+    const f=new THREE.Mesh(
+      new THREE.PlaneGeometry(.06+Math.random()*.08,.18+Math.random()*.12),
+      new THREE.MeshLambertMaterial({color,side:THREE.DoubleSide,transparent:true,opacity:.95})
+    );
+    f.position.set(wx,wy,wz);
+    const vx=(Math.random()-.5)*.18, vy=.06+Math.random()*.12, vz=(Math.random()-.5)*.18;
+    const rx=Math.random()*Math.PI, rz=(Math.random()-.5)*.5;
+    scene.add(f);
+    let age=0;
+    const id=setInterval(()=>{
+      age+=.04;
+      f.position.x+=vx; f.position.y+=vy-9.8*.0025*age*age; f.position.z+=vz;
+      f.rotation.x+=.1; f.rotation.z+=rz*.2;
+      f.material.opacity=Math.max(0,.95-age*1.1);
+      if(age>1.2){clearInterval(id);scene.remove(f);}
+    },40);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════════════════════
+const G={
+  score:0,ammo:8,maxAmmo:8,level:1,
+  birds:[],projs:[],
+  running:false,
+  // slingshot drag state
+  dragging:false,
+  dragStart:{x:0,y:0},
+  dragCur:{x:0,y:0},
+  power:0,          // 0..1
+  aimYaw:0,         // radians
+  aimPitch:.12,     // radians (slight upward default)
+  camYaw:0,
+  camPitch:.05,
+  levelClearing:false,
+};
+
+// Pouch offset in slingshot local space (updated per drag)
+const pouchOffset = new THREE.Vector3(0,.65,0);
+
+// ═══════════════════════════════════════════════════════
+//  DOM REFS
+// ═══════════════════════════════════════════════════════
+const $sc   =document.getElementById('sc');
+const $lv   =document.getElementById('lv');
+const $ammo =document.getElementById('ammo-box');
+const $pfill=document.getElementById('power-fill');
+const $pw   =document.getElementById('power-wrap');
+const $fhit =document.getElementById('fhit');
+const $fmiss=document.getElementById('fmiss');
+const $spop =document.getElementById('spop');
+const $ov   =document.getElementById('overlay');
+const $ahint=document.getElementById('angle-hint');
+
+document.getElementById('startBtn').addEventListener('click',()=>{ if(!masterGain) initAudio(); sfxClick(); startGame(); });
+
+
+// ═══════════════════════════════════════════════════════
+//  INPUT  — 클릭/터치한 화면 위치를 향해 직접 발사
+// ═══════════════════════════════════════════════════════
+function getEventXY(e){
+  if(e.touches&&e.touches.length>0)              return {x:e.touches[0].clientX,       y:e.touches[0].clientY};
+  if(e.changedTouches&&e.changedTouches.length>0) return {x:e.changedTouches[0].clientX,y:e.changedTouches[0].clientY};
+  return {x:e.clientX,y:e.clientY};
+}
+
+// 화면 좌표 → 카메라 방향 벡터
+function screenToDir(sx,sy){
+  const ndc=new THREE.Vector2((sx/W())*2-1,-(sy/H())*2+1);
+  const ray=new THREE.Raycaster();
+  ray.setFromCamera(ndc,camera);
+  return ray.ray.direction.clone().normalize();
+}
+
+function onDragStart(e){
+  if(!G.running) return;
+  e.preventDefault();
+  const {x,y}=getEventXY(e);
+  G.dragging=true;
+  G.clickX=x; G.clickY=y;   // 조준점 = 클릭 시작 위치
+  G.dragStart={x,y};
+  G.dragCur={x,y};
+  G.power=0;
+  $pw.classList.add('show');
+  sfxPullStart();
+}
+function onDragMove(e){
+  if(!G.running||!G.dragging) return;
+  e.preventDefault();
+  const {x,y}=getEventXY(e);
+  G.dragCur={x,y};
+  const dx=G.dragCur.x-G.dragStart.x;
+  const dy=G.dragCur.y-G.dragStart.y;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  const maxDrag=Math.min(W(),H())*0.30;
+  G.power=Math.min(1,dist/maxDrag);
+  sfxPullUpdate(G.power);
+  $pfill.style.width=(G.power*100)+'%';
+  $ahint.textContent='파워: '+Math.round(G.power*100)+'%';
+  // 포대기 당기기 시각 효과
+  pouchOffset.set(0, 0.65-G.power*0.3, G.power*0.45);
+}
+function onDragEnd(e){
+  if(!G.running||!G.dragging) return;
+  e.preventDefault();
+  G.dragging=false;
+  $pw.classList.remove('show');
+  $ahint.textContent='';
+  sfxPullRelease();
+  if(G.ammo<=0||G.power<0.05){pouchOffset.set(0,.65,0);return;}
+  firePig(G.power, G.clickX, G.clickY);
+  G.ammo--;
+  refreshAmmo();
+  pouchOffset.set(0,.65,0);
+  if(G.ammo<=0) setTimeout(checkGO,2500);
+}
+
+canvas.addEventListener('mousedown',  onDragStart,{passive:false});
+canvas.addEventListener('mousemove',  onDragMove, {passive:false});
+canvas.addEventListener('mouseup',    onDragEnd,  {passive:false});
+canvas.addEventListener('mouseleave', onDragEnd,  {passive:false});
+canvas.addEventListener('touchstart', onDragStart,{passive:false});
+canvas.addEventListener('touchmove',  onDragMove, {passive:false});
+canvas.addEventListener('touchend',   onDragEnd,  {passive:false});
+canvas.addEventListener('touchcancel',onDragEnd,  {passive:false});
+
+// ═══════════════════════════════════════════════════════
+//  FIRE  — 화면 클릭 위치 방향으로 발사
+// ═══════════════════════════════════════════════════════
+function firePig(power, screenX, screenY){
+  // 클릭한 화면 위치를 3D 방향 벡터로 변환
+  const dir = screenToDir(screenX, screenY);
+  const spd = 3.0 + power * 12.0;   // 3 ~ 15 u/s
+  const vx  = dir.x * spd;
+  const vy  = dir.y * spd;
+  const vz  = dir.z * spd;
+
+  const sPos    = slingshotGroup.position.clone();
+  const startPos= new THREE.Vector3(sPos.x, sPos.y+0.65, sPos.z-0.3);
+  const pig     = makePig(0.28);
+  pig.position.copy(startPos);
+  scene.add(pig);
+  G.projs.push({mesh:pig, x:startPos.x,y:startPos.y,z:startPos.z,
+    vx,vy,vz, rx:0,ry:0,rz:0, alive:true,age:0});
+
+  // 새총 킥백
+  sfxFire();
+  sfxFlight();
+  slingshotGroup.position.z=-2.4;
+  setTimeout(()=>slingshotGroup.position.z=-2.8,130);
+}
+
+// ═══════════════════════════════════════════════════════
+//  SPAWN BIRDS
+// ═══════════════════════════════════════════════════════
+function spawnBirds(){
+  G.birds.forEach(b=>scene.remove(b.mesh));
+  G.birds=[];
+  G.levelClearing=false;
+
+  const count=5+G.level*2;
+  const xRange=6+G.level;
+  for(let i=0;i<count;i++){
+    const ti=Math.floor(Math.random()*BTYPES.length);
+    const type=BTYPES[ti];
+    const mesh=makeBird3D(type);
+    const wx=(Math.random()-.5)*xRange*2;
+    const wy=0.5+Math.random()*3.5;  // y: 0.5~4.0  (최대파워45도 y=4.4 커버)
+    const wz=-7-Math.random()*12;    // z: -7~-19   (최대파워45도 z=-24 커버)
+    mesh.position.set(wx,wy,wz);
+    mesh.castShadow=true;
+    scene.add(mesh);
+    G.birds.push({
+      mesh,wx,wy,wz,
+      vx:(Math.random()-.5)*.015,
+      vz:(Math.random()-.5)*.009,
+      phase:Math.random()*Math.PI*2,
+      fSpd:.4+Math.random()*.35,
+      fAmp:.20+Math.random()*.12,
+      rotSpd:(Math.random()-.5)*1.0,
+      rotY:0,
+      alive:true,dying:false,
+      dyingVx:0,dyingVy:0,dyingVz:0,
+      type,r:type.s*2.0,curY:wy,dyAge:0,   // 충돌 반경 크게
+    });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  HIT
+// ═══════════════════════════════════════════════════════
+function hitBird(b,p){
+  if(b.dying||!b.alive||!p.alive) return;
+  b.alive=false;
+  p.alive=false;
+  scene.remove(p.mesh);
+  G.score+=b.type.pts;
+  refreshHUD();
+  flash($fhit);
+  sfxBirdHit();
+  sfxScore();
+  showPop('+'+b.type.pts);
+
+  // Start dying animation
+  b.dying=true;
+  b.dyAge=0;
+  b.dyingVx=(Math.random()-.5)*.12;
+  b.dyingVy=.12+Math.random()*.08;
+  b.dyingVz=(Math.random()-.5)*.1;
+
+  // Feathers
+  spawnFeathers(b.wx,b.curY,b.wz,b.type.c);
+  // Flash sphere
+  const fl=SPH(.6,0xffff00,8);
+  fl.position.set(b.wx,b.curY,b.wz);
+  scene.add(fl);
+  setTimeout(()=>scene.remove(fl),140);
+}
+
+// ═══════════════════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════════════════
+function startGame(){
+  $ov.classList.add('off');
+  G.score=0;G.ammo=G.maxAmmo;G.level=1;
+  G.birds=[];G.projs=[];
+  G.running=true;G.levelClearing=false;
+  G.camYaw=0;G.camPitch=.08;
+  G.aimYaw=0;G.aimPitch=.30;
+  refreshHUD();refreshAmmo();
+  // Audio init & start BGM
+  if(!masterGain) initAudio();
+  else if(AC.state==='suspended') AC.resume();
+  sfxClick();
+  startBGM();
+  spawnBirds();
+}
+
+// ═══════════════════════════════════════════════════════
+//  HUD HELPERS
+// ═══════════════════════════════════════════════════════
+function refreshHUD(){$sc.textContent=G.score;$lv.textContent=G.level;}
+function refreshAmmo(){
+  $ammo.innerHTML='';
+  for(let i=0;i<G.maxAmmo;i++){
+    const d=document.createElement('div');
+    d.className='aball'+(i>=G.ammo?' used':'');
+    $ammo.appendChild(d);
+  }
+}
+function flash(el){el.style.opacity='1';setTimeout(()=>el.style.opacity='0',160);}
+function showPop(t){
+  $spop.textContent=t;$spop.style.opacity='1';$spop.style.transform='translate(-50%,-50%) scale(1.2)';
+  setTimeout(()=>{$spop.style.opacity='0';$spop.style.transform='translate(-50%,-75%) scale(.85)';},900);
+}
+function nextLevel(){
+  G.level++;G.ammo=G.maxAmmo;G.score+=G.level*200;
+  refreshHUD();refreshAmmo();
+  sfxLevelClear();
+  showPop('LEVEL '+G.level+'!');
+  setTimeout(spawnBirds,2200);
+}
+function checkGO(){
+  if(!G.running) return;
+  if(G.birds.filter(b=>b.alive||b.dying).length>0){
+    G.running=false;
+    sfxGameOver();
+    stopBGM();
+    document.getElementById('fval').textContent=G.score;
+    document.getElementById('fscr').style.display='block';
+    document.getElementById('fmsg').textContent=
+      G.score>2000?'🎉 새 사냥꾼!':G.score>800?'👍 잘했어요!':'🐷 돼지가 이겼어요...';
+    document.getElementById('startBtn').textContent='다시 시작 🔄';
+    $ov.classList.remove('off');
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════
+let prev=performance.now();
+let cloudT=0;
+
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=Math.min((now-prev)/1000,.05);
+  prev=now;
+  cloudT+=dt;
+
+  // Clouds drift
+  clouds.forEach((c,i)=>{c.position.x+=Math.sin(cloudT*.1+i)*.005;});
+
+  if(!G.running){renderer.render(scene,camera);return;}
+
+  // Camera smooth look
+  camera.rotation.order='YXZ';
+  if(!G.dragging){
+    camera.rotation.y+=(G.camYaw-camera.rotation.y)*.08;
+    camera.rotation.x+=(G.camPitch-camera.rotation.x)*.08;
+  } else {
+    camera.rotation.y+=(G.aimYaw-camera.rotation.y)*.12;
+    camera.rotation.x+=(G.aimPitch-camera.rotation.x)*.12;
+  }
+
+  // Slingshot: always at bottom center of camera view
+  const camDir=new THREE.Vector3(0,0,-1).applyEuler(camera.rotation);
+  const basePos=camera.position.clone()
+    .add(camDir.clone().multiplyScalar(2.8))
+    .add(new THREE.Vector3(0,-1.8,0));
+  slingshotGroup.position.lerp(basePos,.2);
+  slingshotGroup.rotation.y=camera.rotation.y;
+
+  // Update pouch & bands
+  pouch.position.copy(pouchOffset);
+  updateBands(pouchOffset);
+
+  // Birds
+  G.birds.forEach(b=>{
+    if(b.dying){
+      b.dyAge+=dt;
+      b.dyingVy-=dt*9.8*.08;
+      b.wx+=b.dyingVx; b.curY+=b.dyingVy; b.wz+=b.dyingVz;
+      b.mesh.rotation.z+=dt*8;
+      b.mesh.rotation.x+=dt*5;
+      b.mesh.position.set(b.wx,b.curY,b.wz);
+      // Fade out
+      b.mesh.traverse(m=>{if(m.material&&!m.material.transparent){m.material.transparent=true;}if(m.material)m.material.opacity=Math.max(0,1-b.dyAge*1.5);});
+      if(b.dyAge>1.2){scene.remove(b.mesh);b.dying=false;}
+      return;
+    }
+    if(!b.alive) return;
+    b.wx+=b.vx; b.wz+=b.vz;
+    b.phase+=dt*b.fSpd;
+    b.curY=b.wy+Math.sin(b.phase)*b.fAmp;
+    b.rotY+=b.rotSpd*dt;
+    if(Math.abs(b.wx)>14) b.vx*=-1;
+    if(b.wz>-4||b.wz<-20) b.vz*=-1;
+    b.mesh.position.set(b.wx,b.curY,b.wz);
+    b.mesh.rotation.y=b.rotY;
+  });
+
+  // Projectiles
+  G.projs.forEach(p=>{
+    if(!p.alive) return;
+    p.age += dt;
+    p.vy  -= 9.8 * dt;        // 실제 중력 9.8 m/s²
+    p.x   += p.vx * dt;       // dt 곱해서 frame-rate 독립적으로
+    p.y   += p.vy * dt;
+    p.z   += p.vz * dt;
+    p.rx  += dt * 7; p.ry += dt * 10; p.rz += dt * 4;
+    p.mesh.position.set(p.x, p.y, p.z);
+    p.mesh.rotation.set(p.rx, p.ry, p.rz);
+
+    if(p.y < -2.8){ scene.remove(p.mesh); p.alive=false; flash($fmiss); sfxMiss(); return; }
+    if(p.age > 12 || p.z < -28){ scene.remove(p.mesh); p.alive=false; return; }
+
+    G.birds.forEach(b=>{
+      if((!b.alive&&!b.dying)||!p.alive) return;
+      if(!b.alive) return;
+      const dx=p.x-b.wx,dy=p.y-b.curY,dz=p.z-b.wz;
+      if(dx*dx+dy*dy+dz*dz<(b.r+.14)*(b.r+.14)) hitBird(b,p);
+    });
+  });
+
+  // Level clear
+  if(!G.levelClearing&&G.birds.length>0&&G.birds.every(b=>!b.alive&&!b.dying)){
+    G.levelClearing=true;nextLevel();
+  }
+
+  renderer.render(scene,camera);
+}
+
+
+// ═══════════════════════════════════════════════════════
+//  WEB AUDIO ENGINE  (모든 사운드 프로시저럴 생성)
+// ═══════════════════════════════════════════════════════
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+let masterGain, bgmGain, sfxGain;
+let bgmNodes = [];
+let audioMuted = false;
+
+function initAudio(){
+  if(AC.state==='suspended') AC.resume();
+  masterGain = AC.createGain(); masterGain.gain.value=1; masterGain.connect(AC.destination);
+  bgmGain    = AC.createGain(); bgmGain.gain.value=0.32; bgmGain.connect(masterGain);
+  sfxGain    = AC.createGain(); sfxGain.gain.value=0.85; sfxGain.connect(masterGain);
+}
+
+function toggleMute(){
+  audioMuted=!audioMuted;
+  masterGain.gain.value=audioMuted?0:1;
+  document.getElementById('audio-btn').textContent=audioMuted?'🔇':'🔊';
+  if(!audioMuted && AC.state==='suspended') AC.resume();
+}
+document.getElementById('audio-btn').addEventListener('click',toggleMute);
+
+// ── 배경음악 (밝고 경쾌한 Angry Birds 분위기) ──────────────
+function startBGM(){
+  stopBGM();
+  if(AC.state==='suspended') AC.resume();
+
+  // 코드 진행: C Major  I-IV-V-vi loop
+  const BPM=112, beat=60/BPM;
+  const CHORDS=[
+    [261.63,329.63,392.00,523.25],  // C maj
+    [349.23,440.00,523.25,698.46],  // F maj
+    [392.00,493.88,587.33,783.99],  // G maj
+    [220.00,277.18,329.63,440.00],  // A min
+  ];
+  const BASS=[130.81,174.61,196.00,110.00];
+
+  let t=AC.currentTime+0.05;
+  const loopLen=CHORDS.length*beat*4;
+
+  function scheduleLoop(){
+    const loopStart=t;
+    CHORDS.forEach((chord,ci)=>{
+      const cStart=loopStart+ci*beat*4;
+
+      // --- 베이스 라인 ---
+      [0,2].forEach(b=>{
+        const o=AC.createOscillator();
+        const g=AC.createGain();
+        o.type='triangle'; o.frequency.value=BASS[ci];
+        g.gain.setValueAtTime(0,cStart+b*beat);
+        g.gain.linearRampToValueAtTime(0.4,cStart+b*beat+0.02);
+        g.gain.exponentialRampToValueAtTime(0.001,cStart+b*beat+beat*0.85);
+        o.connect(g); g.connect(bgmGain);
+        o.start(cStart+b*beat); o.stop(cStart+b*beat+beat*0.9);
+        bgmNodes.push(o);
+      });
+
+      // --- 코드 패드 ---
+      chord.forEach(freq=>{
+        const o=AC.createOscillator();
+        const g=AC.createGain();
+        o.type='sine'; o.frequency.value=freq;
+        g.gain.setValueAtTime(0,cStart);
+        g.gain.linearRampToValueAtTime(0.06,cStart+0.08);
+        g.gain.setValueAtTime(0.06,cStart+beat*3.5);
+        g.gain.linearRampToValueAtTime(0,cStart+beat*4);
+        o.connect(g); g.connect(bgmGain);
+        o.start(cStart); o.stop(cStart+beat*4+0.1);
+        bgmNodes.push(o);
+      });
+
+      // --- 멜로디 리드 ---
+      const MELODY=[
+        [523.25,0],[587.33,0.5],[659.26,1],[587.33,1.5],
+        [523.25,2],[493.88,2.5],[440.00,3],[493.88,3.5]
+      ];
+      MELODY.forEach(([freq,offset])=>{
+        const o=AC.createOscillator();
+        const g=AC.createGain();
+        o.type='square'; o.frequency.value=freq*(ci%2===0?1:1.059);
+        // 비브라토
+        const lfo=AC.createOscillator();
+        const lfoG=AC.createGain();
+        lfo.frequency.value=5.5; lfoG.gain.value=3;
+        lfo.connect(lfoG); lfoG.connect(o.frequency);
+        lfo.start(cStart+offset*beat);
+        lfo.stop(cStart+offset*beat+beat*0.45+0.05);
+        bgmNodes.push(lfo);
+
+        g.gain.setValueAtTime(0,cStart+offset*beat);
+        g.gain.linearRampToValueAtTime(0.07,cStart+offset*beat+0.03);
+        g.gain.exponentialRampToValueAtTime(0.001,cStart+offset*beat+beat*0.45);
+        o.connect(g); g.connect(bgmGain);
+        o.start(cStart+offset*beat); o.stop(cStart+offset*beat+beat*0.5);
+        bgmNodes.push(o);
+      });
+
+      // --- 퍼커션 (kick + hihat) ---
+      [0,1,2,3].forEach(b=>{
+        const bt=cStart+b*beat;
+        // kick
+        const ko=AC.createOscillator(), kg=AC.createGain();
+        ko.type='sine'; ko.frequency.setValueAtTime(120,bt); ko.frequency.exponentialRampToValueAtTime(40,bt+0.08);
+        kg.gain.setValueAtTime(0.7,bt); kg.gain.exponentialRampToValueAtTime(0.001,bt+0.12);
+        ko.connect(kg); kg.connect(bgmGain);
+        ko.start(bt); ko.stop(bt+0.15);
+        bgmNodes.push(ko);
+        // hihat (offbeat)
+        const hbuf=AC.createBuffer(1,AC.sampleRate*0.05,AC.sampleRate);
+        const hdata=hbuf.getChannelData(0);
+        for(let i=0;i<hdata.length;i++) hdata[i]=(Math.random()*2-1)*0.3;
+        const hs=AC.createBufferSource(), hg=AC.createGain();
+        const hf=AC.createBiquadFilter(); hf.type='highpass'; hf.frequency.value=6000;
+        hs.buffer=hbuf;
+        hg.gain.setValueAtTime(0.25,bt+beat*0.5); hg.gain.exponentialRampToValueAtTime(0.001,bt+beat*0.5+0.04);
+        hs.connect(hf); hf.connect(hg); hg.connect(bgmGain);
+        hs.start(bt+beat*0.5); hs.stop(bt+beat*0.5+0.05);
+        bgmNodes.push(hs);
+      });
+    });
+    t+=loopLen;
+    // 다음 루프 예약
+    bgmNodes._timer=setTimeout(scheduleLoop, (loopLen-0.5)*1000);
+  }
+  scheduleLoop();
+}
+
+function stopBGM(){
+  clearTimeout(bgmNodes._timer);
+  bgmNodes.forEach(n=>{try{n.stop(AC.currentTime+0.05);}catch(e){}});
+  bgmNodes=[];
+}
+
+// ── SFX 함수들 ─────────────────────────────────────────
+
+// 새총 당기는 소리 (삐걱 + 탄성)
+function sfxPull(power){
+  if(!sfxGain) return;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type='sawtooth';
+  o.frequency.setValueAtTime(200+power*300, AC.currentTime);
+  g.gain.setValueAtTime(0.15,AC.currentTime);
+  g.gain.linearRampToValueAtTime(0.05,AC.currentTime+0.12);
+  g.gain.linearRampToValueAtTime(0,AC.currentTime+0.18);
+  o.connect(g); g.connect(sfxGain);
+  o.start(); o.stop(AC.currentTime+0.2);
+}
+
+// 발사 (whoosh + spring snap)
+function sfxFire(){
+  if(!sfxGain) return;
+  // Snap
+  const snap=AC.createOscillator(), sg=AC.createGain();
+  snap.type='square'; snap.frequency.setValueAtTime(800,AC.currentTime);
+  snap.frequency.exponentialRampToValueAtTime(80,AC.currentTime+0.08);
+  sg.gain.setValueAtTime(0.4,AC.currentTime); sg.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.1);
+  snap.connect(sg); sg.connect(sfxGain); snap.start(); snap.stop(AC.currentTime+0.12);
+  // Whoosh (noise)
+  const buf=AC.createBuffer(1,AC.sampleRate*.35,AC.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
+  const ws=AC.createBufferSource(), wg=AC.createGain();
+  const wf=AC.createBiquadFilter(); wf.type='bandpass'; wf.frequency.value=800; wf.Q.value=0.5;
+  wg.gain.setValueAtTime(0,AC.currentTime+0.05);
+  wg.gain.linearRampToValueAtTime(0.3,AC.currentTime+0.1);
+  wg.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.4);
+  ws.buffer=buf; ws.connect(wf); wf.connect(wg); wg.connect(sfxGain);
+  ws.start(AC.currentTime+0.05); ws.stop(AC.currentTime+0.45);
+}
+
+// 돼지머리 날아가는 소리 (공기 마찰)
+function sfxFlight(){
+  if(!sfxGain) return;
+  const buf=AC.createBuffer(1,AC.sampleRate*.6,AC.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.5;
+  const ws=AC.createBufferSource(), wg=AC.createGain();
+  const wf=AC.createBiquadFilter(); wf.type='bandpass'; wf.frequency.value=400; wf.Q.value=2;
+  wg.gain.setValueAtTime(0,AC.currentTime);
+  wg.gain.linearRampToValueAtTime(0.18,AC.currentTime+0.05);
+  wg.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.5);
+  ws.buffer=buf; ws.connect(wf); wf.connect(wg); wg.connect(sfxGain);
+  ws.start(); ws.stop(AC.currentTime+0.6);
+}
+
+// 새 피격 (비명 + 깃털)
+function sfxBirdHit(){
+  if(!sfxGain) return;
+  // 비명: 빠른 피치 다운
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type='sawtooth';
+  o.frequency.setValueAtTime(900+Math.random()*400,AC.currentTime);
+  o.frequency.exponentialRampToValueAtTime(150,AC.currentTime+0.4);
+  g.gain.setValueAtTime(0.35,AC.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.45);
+  o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+0.5);
+  // 충격음
+  const buf=AC.createBuffer(1,AC.sampleRate*.1,AC.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1);
+  const bs=AC.createBufferSource(), bg2=AC.createGain();
+  bg2.gain.setValueAtTime(0.5,AC.currentTime); bg2.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.12);
+  bs.buffer=buf; bs.connect(bg2); bg2.connect(sfxGain); bs.start(); bs.stop(AC.currentTime+0.14);
+}
+
+// 바닥 충돌 (쿵)
+function sfxMiss(){
+  if(!sfxGain) return;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(160,AC.currentTime);
+  o.frequency.exponentialRampToValueAtTime(40,AC.currentTime+0.15);
+  g.gain.setValueAtTime(0.5,AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.2);
+  o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+0.22);
+  // 먼지 소리
+  const buf=AC.createBuffer(1,AC.sampleRate*.08,AC.sampleRate);
+  const d=buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*0.6;
+  const bs=AC.createBufferSource(), bg2=AC.createGain();
+  bg2.gain.setValueAtTime(0.25,AC.currentTime); bg2.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.1);
+  bs.buffer=buf; bs.connect(bg2); bg2.connect(sfxGain); bs.start(); bs.stop(AC.currentTime+0.12);
+}
+
+// 레벨 클리어 (팡파레)
+function sfxLevelClear(){
+  if(!sfxGain) return;
+  const notes=[523.25,659.26,783.99,1046.50,1318.51];
+  notes.forEach((freq,i)=>{
+    const t=AC.currentTime+i*0.12;
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type='square'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.25,t+0.02);
+    g.gain.setValueAtTime(0.25,t+0.08); g.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+    o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t+0.25);
+  });
+}
+
+// 게임 오버 (내려가는 멜로디)
+function sfxGameOver(){
+  if(!sfxGain) return;
+  const notes=[523.25,440.00,349.23,261.63];
+  notes.forEach((freq,i)=>{
+    const t=AC.currentTime+i*0.22;
+    const o=AC.createOscillator(), g=AC.createGain();
+    o.type='sawtooth'; o.frequency.value=freq;
+    g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.22,t+0.03);
+    g.gain.setValueAtTime(0.22,t+0.15); g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
+    o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t+0.32);
+  });
+}
+
+// 버튼 클릭
+function sfxClick(){
+  if(!sfxGain) return;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(600,AC.currentTime);
+  o.frequency.linearRampToValueAtTime(800,AC.currentTime+0.05);
+  g.gain.setValueAtTime(0.2,AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.1);
+  o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+0.12);
+}
+
+// 파워 충전 사운드 (점점 높아지는 긴장감)
+let pullOsc=null, pullG=null;
+function sfxPullStart(){
+  if(!sfxGain) return;
+  if(pullOsc){try{pullOsc.stop();}catch(e){}} 
+  pullOsc=AC.createOscillator(); pullG=AC.createGain();
+  pullOsc.type='sawtooth'; pullOsc.frequency.value=150;
+  pullG.gain.value=0.06;
+  pullOsc.connect(pullG); pullG.connect(sfxGain);
+  pullOsc.start();
+}
+function sfxPullUpdate(power){
+  if(!pullOsc) return;
+  pullOsc.frequency.value=150+power*550;
+  pullG.gain.value=0.06+power*0.08;
+}
+function sfxPullRelease(){
+  if(!pullOsc) return;
+  try{pullOsc.stop(AC.currentTime+0.05);}catch(e){}
+  pullOsc=null; pullG=null;
+}
+
+// 점수 팝업 소리
+function sfxScore(){
+  if(!sfxGain) return;
+  const o=AC.createOscillator(), g=AC.createGain();
+  o.type='sine'; o.frequency.setValueAtTime(1047,AC.currentTime);
+  o.frequency.linearRampToValueAtTime(1319,AC.currentTime+0.08);
+  g.gain.setValueAtTime(0.18,AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+0.2);
+  o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+0.22);
+}
+
+// ── 오디오를 게임 이벤트에 연결 ──
+animate(performance.now());
+refreshAmmo();
+</script>
+</body>
+</html>
