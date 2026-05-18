@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>대한민국 등대 여권</title>
+<style>
+  /* 기본 리셋 및 배경 설정 */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #2c3e50;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Noto Sans KR', sans-serif;
+    overflow: hidden;
+  }
+
+  /* 책 컨테이너 */
+  .book-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+  }
+
+  /* 공통 페이지 스타일 */
+  .page {
+    background-color: #f4ecd8; /* 오래된 종이 색상 */
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* 여권 커버 스타일 */
+  .page-cover {
+    background-color: #1a2b4c; /* 네이비 색상 가죽 느낌 */
+    color: #d4af37; /* 금박 텍스트 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border: 2px solid #0f192d;
+  }
+  .page-cover h1 {
+    font-size: 28px;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    line-height: 1.4;
+  }
+  .page-cover .logo {
+    font-size: 48px;
+    margin-bottom: 20px;
+  }
+
+  /* 내지 (해도 느낌) 스타일 */
+  .page-inner {
+    padding: 30px 20px;
+    background-image: 
+      linear-gradient(rgba(244, 236, 216, 0.9), rgba(244, 236, 216, 0.9)),
+      repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,0.03) 10px, rgba(0,0,0,0.03) 20px);
+  }
+  .page-inner h2 {
+    color: #333;
+    font-size: 18px;
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid rgba(0,0,0,0.1);
+  }
+
+  /* 스탬프 슬롯 레이아웃 */
+  .stamp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .stamp-slot {
+    aspect-ratio: 1;
+    border: 2px dashed rgba(0,0,0,0.2);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+  }
+  .stamp-label {
+    font-size: 12px;
+    color: #888;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  /* 획득한 스탬프 디자인 */
+  .stamp-mark {
+    position: absolute;
+    width: 85%;
+    height: 85%;
+    border: 4px double #005b96; /* 바다를 닮은 딥 블루 */
+    border-radius: 50%;
+    color: #005b96;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 14px;
+    transform: rotate(-15deg); /* 도장을 대충 찍은 듯한 기울기 */
+    
+    /* 핵심: 잉크가 종이에 스며든 듯한 효과 */
+    mix-blend-mode: multiply;
+    opacity: 0.85;
+    
+    /* 도장이 쾅 찍히는 타격감 애니메이션 */
+    animation: stampBounce 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  }
+
+  @keyframes stampBounce {
+    0% { transform: scale(2) rotate(-30deg); opacity: 0; }
+    50% { transform: scale(0.9) rotate(-10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(-15deg); }
+  }
+</style>
+</head>
+<body>
+
+<div class="book-container">
+  <div id="passport-book">
+    
+    <div class="page page-cover" data-density="hard">
+      <div class="logo">⚓</div>
+      <h1>대한민국<br>등대 여권</h1>
+      <p style="font-size: 12px; opacity: 0.7;">아름다운 해안선을 따라</p>
+    </div>
+
+    <div class="page page-inner" data-density="hard"></div>
+
+    <div class="page page-inner">
+      <h2>🌊 동해안 코스</h2>
+      <div class="stamp-grid">
+        <div class="stamp-slot">
+          <div class="stamp-mark">속초<br>등대</div>
+        </div>
+        <div class="stamp-slot">
+          <div class="stamp-mark" style="transform: rotate(10deg); animation-delay: 0.2s;">묵호<br>등대</div>
+        </div>
+        <div class="stamp-slot">
+          <span class="stamp-label">호미곶 등대</span>
+        </div>
+        <div class="stamp-slot">
+          <span class="stamp-label">울기 등대</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page page-inner">
+      <h2>🏝️ 남해안 코스</h2>
+      <div class="stamp-grid">
+        <div class="stamp-slot">
+          <span class="stamp-label">오동도 등대</span>
+        </div>
+        <div class="stamp-slot">
+          <span class="stamp-label">소매물도 등대</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page page-inner" data-density="hard"></div>
+
+    <div class="page page-cover" data-density="hard">
+      <p style="font-size: 12px; margin-top: auto; margin-bottom: 20px;">
+        등대 스탬프 투어 2026
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // PageFlip 초기화 설정
+    const pageFlip = new St.PageFlip(document.getElementById('passport-book'), {
+      width: 320,               // 기본 너비
+      height: 480,              // 기본 높이
+      size: "stretch",          // 컨테이너 크기에 맞춤
+      minWidth: 300,
+      maxWidth: 400,
+      minHeight: 400,
+      maxHeight: 600,
+      showCover: true,          // 표지 모드 활성화 (첫/끝 페이지를 하드커버로 처리)
+      mobileScrollSupport: false, // 모바일에서 터치 시 페이지 넘김에 집중
+      maxShadowOpacity: 0.5     // 페이지 넘길 때 생기는 그림자 농도
+    });
+
+    // HTML 내의 .page 요소들을 불러와서 책으로 구성
+    pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+  });
+</script>
+</body>
+</html>
