@@ -50,7 +50,7 @@ canvas{display:block;width:100vw;height:100vh;}
 /* ── FLASHES ── */
 .flash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:15;transition:opacity .15s;}
 #fhit{background:rgba(255,220,0,.3);}
-#fmiss{background:rgba(255,0,0,.18);}
+#fmiss{background:rgba(255,0,0,.18跡);}
 
 /* ── SCORE POPUP ── */
 #spop{position:fixed;top:35%;left:50%;transform:translate(-50%,-50%);
@@ -133,10 +133,25 @@ let reticle;
 let hitTestSource = null;
 let hitTestSourceRequested = false;
 
-// ── 변수 정의 순서 상단 배치 (Initialization 에러 해결) ──
+// ── 변수 정의 및 3D 기초 함수 최상단 배치 (Initialization 완전 해결) ──
 let slingshotGroup, bandLMesh, bandRMesh, pouch;
 const LEFT_TIP = new THREE.Vector3(-.48, .98, 0);
 const RIGHT_TIP = new THREE.Vector3(.48, .98, 0);
+
+const MAT = (color) => new THREE.MeshLambertMaterial({ color });
+const SPH = (r, color, seg = 12) => new THREE.Mesh(new THREE.SphereGeometry(r, seg, seg), MAT(color));
+const CYL = (rt, rb, h, color, seg = 10) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), MAT(color));
+const BOX = (w, h, d, color) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), MAT(color));
+const CON = (r, h, color, seg = 9) => new THREE.Mesh(new THREE.ConeGeometry(r, h, seg), MAT(color));
+
+function place(parent, mesh, x, y, z, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx) {
+  mesh.position.set(x, y, z);
+  mesh.rotation.set(rx, ry, rz);
+  mesh.scale.set(sx, sy, sz);
+  parent.add(mesh);
+  return mesh;
+}
+const D2R = v => v * Math.PI / 180;
 
 // ═══════════════════════════════════════════════════════
 //  GAME STATE
@@ -227,21 +242,6 @@ function init() {
 // ═══════════════════════════════════════════════════════
 //  3D ASSETS BUILDERS
 // ═══════════════════════════════════════════════════════
-const MAT = (color) => new THREE.MeshLambertMaterial({ color });
-const SPH = (r, color, seg = 12) => new THREE.Mesh(new THREE.SphereGeometry(r, seg, seg), MAT(color));
-const CYL = (rt, rb, h, color, seg = 10) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), MAT(color));
-const BOX = (w, h, d, color) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), MAT(color));
-const CON = (r, h, color, seg = 9) => new THREE.Mesh(new THREE.ConeGeometry(r, h, seg), MAT(color));
-
-function place(parent, mesh, x, y, z, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, sz = sx) {
-  mesh.position.set(x, y, z);
-  mesh.rotation.set(rx, ry, rz);
-  mesh.scale.set(sx, sy, sz);
-  parent.add(mesh);
-  return mesh;
-}
-const D2R = v => v * Math.PI / 180;
-
 function makePig(s) {
   const g = new THREE.Group();
   place(g, SPH(s, 0x6abf3a), 0, 0, 0);
