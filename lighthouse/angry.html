@@ -124,8 +124,6 @@ import { ARButton } from 'three/addons/webxr/ARButton.js';
 const GOAL_SCORE = 500;
 const AUTH_REDIRECT_URL = 'ncmap.html';
 
-document.getElementById('goal-val').textContent = GOAL_SCORE;
-
 const canvas = document.getElementById('c');
 const W = () => window.innerWidth;
 const H = () => window.innerHeight;
@@ -134,6 +132,11 @@ let renderer, scene, camera;
 let reticle;
 let hitTestSource = null;
 let hitTestSourceRequested = false;
+
+// ── 변수 정의 순서 상단 배치 (Initialization 에러 해결) ──
+let slingshotGroup, bandLMesh, bandRMesh, pouch;
+const LEFT_TIP = new THREE.Vector3(-.48, .98, 0);
+const RIGHT_TIP = new THREE.Vector3(.48, .98, 0);
 
 // ═══════════════════════════════════════════════════════
 //  GAME STATE
@@ -145,7 +148,7 @@ const G = {
   dragging: false,
   dragStartTime: 0,
   power: 0,
-  worldParent: new THREE.Group() // AR 공간에 소환할 월드 루트 객체
+  worldParent: new THREE.Group()
 };
 
 const pouchOffset = new THREE.Vector3(0, .65, 0);
@@ -161,6 +164,8 @@ const $spop = document.getElementById('spop');
 const $ov = document.getElementById('overlay');
 const $ahint = document.getElementById('angle-hint');
 
+// 실행
+document.getElementById('goal-val').textContent = GOAL_SCORE;
 init();
 
 function init() {
@@ -170,11 +175,9 @@ function init() {
   renderer.xr.enabled = true;
 
   scene = new THREE.Scene();
-  // 실시간 카메라 화면을 써야 하므로 백그라운드 색상/Fog 제거 및 투명화 처리
-  
   camera = new THREE.PerspectiveCamera(70, W() / H(), 0.01, 30);
 
-  // AR 버튼 추가 연동
+  // AR 버튼 연동
   const arButton = ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] });
   document.getElementById('ar-btn-container').appendChild(arButton);
   
@@ -199,7 +202,7 @@ function init() {
   sun.position.set(5, 15, 5);
   scene.add(sun);
 
-  // AR 바닥 감지 링(레티클)
+  // AR 레티클
   reticle = new THREE.Mesh(
     new THREE.RingGeometry(0.1, 0.12, 32).rotateX(-Math.PI / 2),
     new THREE.MeshBasicMaterial({ color: 0x00ffaa })
@@ -209,7 +212,7 @@ function init() {
 
   scene.add(G.worldParent);
 
-  // WebXR 전용 입력 컨트롤러 연동
+  // WebXR 컨트롤러 입력
   const controller = renderer.xr.getController(0);
   controller.addEventListener('selectstart', onDragStart);
   controller.addEventListener('selectend', onDragEnd);
@@ -218,12 +221,11 @@ function init() {
   buildSlingshot();
   refreshAmmo();
   
-  // 메인 루프 가동
   renderer.setAnimationLoop(animate);
 }
 
 // ═══════════════════════════════════════════════════════
-//  3D ASSETS BUILDERS (원본 에셋 코드 완전 복원)
+//  3D ASSETS BUILDERS
 // ═══════════════════════════════════════════════════════
 const MAT = (color) => new THREE.MeshLambertMaterial({ color });
 const SPH = (r, color, seg = 12) => new THREE.Mesh(new THREE.SphereGeometry(r, seg, seg), MAT(color));
@@ -263,10 +265,6 @@ function makePig(s) {
   return g;
 }
 
-let slingshotGroup, bandLMesh, bandRMesh, pouch;
-const LEFT_TIP = new THREE.Vector3(-.48, .98, 0);
-const RIGHT_TIP = new THREE.Vector3(.48, .98, 0);
-
 function buildSlingshot() {
   slingshotGroup = new THREE.Group();
   const handle = CYL(.07, .09, 1.0, 0x6d4c41, 8);
@@ -296,7 +294,6 @@ function buildSlingshot() {
   pouch = makePig(.14);
   slingshotGroup.add(pouch);
   
-  // 기본적으로 보이지 않다가 AR 바닥 터치 시 월드에 부착됨
   slingshotGroup.visible = false;
   G.worldParent.add(slingshotGroup);
 }
@@ -364,14 +361,12 @@ function spawnBirds() {
   G.birds.forEach(b => G.worldParent.remove(b.mesh));
   G.birds = [];
 
-  // 기본 난이도로 고정 고치기
   const count = 6;
   for (let i = 0; i < count; i++) {
     const ti = Math.floor(Math.random() * BTYPES.length);
     const type = BTYPES[ti];
     const mesh = makeBird3D(type);
     
-    // AR용 상대 위치 세팅 (새총 앞쪽 공간에 분산 배치)
     const wx = (Math.random() - .5) * 1.5;
     const wy = 0.3 + Math.random() * 0.8;
     const wz = -1.5 - Math.random() * 1.5;
@@ -397,11 +392,10 @@ function spawnBirds() {
 function onDragStart() {
   if (!G.running) return;
   
-  // 첫 바닥 터치 시 월드 좌표 정비 및 배치
   if (reticle.visible && !slingshotGroup.visible) {
     G.worldParent.position.setFromMatrixPosition(reticle.matrix);
     G.worldParent.quaternion.setFromRotationMatrix(reticle.matrix);
-    slingshotGroup.position.set(0, 0, 0); // 월드 기준 중심 배치
+    slingshotGroup.position.set(0, 0, 0);
     slingshotGroup.visible = true;
     spawnBirds();
   }
@@ -436,16 +430,14 @@ function onDragEnd() {
 }
 
 function firePig(power) {
-  // 카메라 정면 방향 벡터 계산
   const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
   
-  // AR 월드 기준 좌표계로 트랜스폼 역산
   const invMatrix = new THREE.Matrix4().copy(G.worldParent.matrixWorld).invert();
   const localStartPos = new THREE.Vector3(0, 0.65, -0.1).applyMatrix4(slingshotGroup.matrixWorld).applyMatrix4(invMatrix);
   const worldCamDir = camera.position.clone().add(dir).applyMatrix4(invMatrix);
   const localDir = new THREE.Vector3().subVectors(worldCamDir, localStartPos).normalize();
 
-  const spd = 1.5 + power * 5.0; // AR에 알맞은 속도로 튜닝
+  const spd = 1.5 + power * 5.0;
   const vx = localDir.x * spd;
   const vy = localDir.y * spd;
   const vz = localDir.z * spd;
@@ -491,7 +483,6 @@ function hitBird(b, p) {
   G.worldParent.add(fl);
   setTimeout(() => G.worldParent.remove(fl), 140);
 
-  // 실시간 인증 처리 체크
   checkAuthSuccess();
 }
 
@@ -499,7 +490,6 @@ function checkAuthSuccess() {
   if (G.score >= GOAL_SCORE) {
     G.running = false;
     stopBGM();
-    // 리다이렉트 확인 팝업창 출력 고려
     setTimeout(() => {
       if (confirm("목표 점수를 달성했습니다!\n인증 맵(ncmap.html) 페이지로 이동하시겠습니까?")) {
         window.location.href = AUTH_REDIRECT_URL;
@@ -515,7 +505,6 @@ function checkGO() {
     sfxGameOver();
     stopBGM();
     alert("기회를 모두 소진했습니다. 다시 시도해주세요!");
-    // 재도전을 위해 새로고침 혹은 상태 초기화
     window.location.reload();
   }
 }
@@ -577,23 +566,20 @@ function animate(timestamp, frame) {
     return;
   }
 
-  // 조준 중일 때 파워 바 누적 계산
   if (G.dragging) {
     const currentDur = (performance.now() - G.dragStartTime) / 1000;
-    G.power = Math.min(currentDur * 1.5, 1); // 약 0.7초면 풀파워
+    G.power = Math.min(currentDur * 1.5, 1);
     sfxPullUpdate(G.power);
     $pfill.style.width = (G.power * 100) + '%';
     $ahint.textContent = '파워: ' + Math.round(G.power * 100) + '%';
     pouchOffset.set(0, 0.65 - G.power * 0.1, G.power * 0.15);
   }
 
-  // 새총 밴드 물리선 랜더링
-  if (slingshotGroup.visible) {
+  if (slingshotGroup && slingshotGroup.visible) {
     pouch.position.copy(pouchOffset);
     updateBands(pouchOffset);
   }
 
-  // 새들의 호버링 및 연출 이동 애니메이션
   G.birds.forEach(b => {
     if (b.dying) {
       b.dyAge += dt; b.dyingVy -= dt * 9.8 * 0.05;
@@ -620,11 +606,10 @@ function animate(timestamp, frame) {
     b.mesh.rotation.y = b.rotY;
   });
 
-  // 발사체 포물선 투사 궤적 업데이트
   G.projs.forEach(p => {
     if (!p.alive) return;
     p.age += dt;
-    p.vy -= 4.0 * dt; // AR 중력치 보정 적용
+    p.vy -= 4.0 * dt;
     p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
     p.rx += dt * 7; p.ry += dt * 10; p.rz += dt * 4;
     p.mesh.position.set(p.x, p.y, p.z);
@@ -641,7 +626,6 @@ function animate(timestamp, frame) {
     });
   });
 
-  // 모든 대상을 잡으면 리젠 처리 (인증 완료까지 계속 순환 무한루프)
   if (G.birds.length > 0 && G.birds.every(b => !b.alive && !b.dying)) {
     spawnBirds();
   }
@@ -650,7 +634,7 @@ function animate(timestamp, frame) {
 }
 
 // ═══════════════════════════════════════════════════════
-//  WEB AUDIO ENGINE (소리 리소스 절약형 오디오 코드)
+//  WEB AUDIO ENGINE
 // ═══════════════════════════════════════════════════════
 const AC = new (window.AudioContext || window.webkitAudioContext)();
 let masterGain, bgmGain, sfxGain;
@@ -736,7 +720,6 @@ function sfxScore() {
   const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(1047, AC.currentTime); o.frequency.linearRampToValueAtTime(1319, AC.currentTime + 0.08); g.gain.setValueAtTime(0.18, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.2); o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime + 0.22);
 }
 
-// 음소거 토글 연동
 document.getElementById('audio-btn').addEventListener('click', () => {
   if(masterGain) {
     const isMuted = masterGain.gain.value === 0;
