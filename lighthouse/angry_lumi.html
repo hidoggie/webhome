@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Lumi vs Mumu - AR Auth</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{overflow:hidden;background:#000;font-family:'Arial Black',Arial,sans-serif;touch-action:none;}
+
+/* 웹캠(카메라) 배경 */
+#webcam {position:fixed;top:0;left:0;width:100vw;height:100vh;object-fit:cover;z-index:1;}
+
+/* Three.js 렌더링 캔버스 (투명) */
+canvas{position:fixed;top:0;left:0;display:block;width:100vw;height:100vh;z-index:5;}
+
+/* ── HUD ── */
+#hud{position:fixed;top:0;left:0;width:100%;pointer-events:none;z-index:20;}
+#hud-top{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;background:rgba(0,0,0,0.6);}
+#score-box{color:#f4a025;font-size:22px;font-weight:900;text-shadow:0 0 12px #f4a025;}
+#goal-box{color:#fff;font-size:15px;font-weight:700;}
+#time-box{color:#ff5252;font-size:20px;font-weight:900;text-shadow:0 0 10px #ff0000;}
+
+/* 남은 기회 표시 */
+#ammo-box{display:flex;gap:5px;align-items:center; position:absolute; top:55px; left:16px;}
+.aball{width:22px;height:22px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#ffcccb,#f44336);
+  border:2px solid #fff;box-shadow:0 0 8px rgba(244,67,54,.8);}
+.aball.used{background:rgba(60,60,60,.6);border-color:rgba(255,255,255,.2);box-shadow:none;}
+
+/* ── POWER BAR ── */
+#power-wrap{position:fixed;bottom:180px;left:50%;transform:translateX(-50%);
+  width:200px;text-align:center;pointer-events:none;z-index:20;opacity:0;transition:opacity .25s;}
+#power-wrap.show{opacity:1;}
+#power-label{color:#fff;font-size:13px;margin-bottom:5px;text-shadow:1px 1px 3px #000;}
+#power-bg{width:100%;height:18px;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.3);border-radius:9px;overflow:hidden;}
+#power-fill{height:100%;width:0%;background:linear-gradient(90deg,#00e676,#ffeb3b,#f44336);border-radius:9px;transition:width .04s;}
+
+#angle-hint{position:fixed;bottom:160px;left:50%;transform:translateX(-50%);
+  color:rgba(255,255,255,.9);font-size:12px;pointer-events:none;z-index:20;
+  background:rgba(0,0,0,.5);padding:4px 12px;border-radius:6px;}
+
+/* ── AUDIO CONTROLS ── */
+#audio-btn{position:fixed;top:55px;right:16px;z-index:30;
+  width:42px;height:42px;border-radius:50%;border:2px solid rgba(255,255,255,.4);
+  background:rgba(0,0,0,.55);color:#fff;font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(6px);transition:background .2s;pointer-events:all;}
+
+/* ── CROSSHAIR ── */
+#xhair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:30px;height:30px;pointer-events:none;z-index:20;}
+#xhair::before,#xhair::after{content:'';position:absolute;background:rgba(255,255,255,.75);border-radius:1px;}
+#xhair::before{width:2px;height:100%;left:50%;top:0;transform:translateX(-50%);}
+#xhair::after{width:100%;height:2px;top:50%;left:0;transform:translateY(-50%);}
+#xdot{position:absolute;width:5px;height:5px;background:#00e676;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 6px #00e676;}
+
+/* ── FLASHES & POPUP ── */
+.flash{position:fixed;inset:0;opacity:0;pointer-events:none;z-index:15;transition:opacity .15s;}
+#fhit{background:rgba(0,255,255,.3);}
+#fmiss{background:rgba(255,0,0,.18);}
+#spop{position:fixed;top:35%;left:50%;transform:translate(-50%,-50%);
+  font-size:52px;font-weight:900;color:#00e676;text-shadow:0 0 24px #00e676,3px 3px 0 #000;
+  opacity:0;pointer-events:none;z-index:25;transition:opacity .4s,transform .4s;}
+
+/* ── OVERLAY ── */
+#overlay{position:fixed;inset:0;z-index:50;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:radial-gradient(ellipse,#1a0a3e,#050210);}
+#overlay.off{display:none;}
+.ot{font-size:clamp(30px,6vw,60px);font-weight:900;color:#ff5252;text-shadow:0 0 36px #ff5252,4px 4px 0 #5a0000;margin-bottom:6px;text-align:center;}
+.os{font-size:18px;color:#4fc3f7;margin-bottom:28px;}
+.oi{color:rgba(255,255,255,.8);font-size:14px;line-height:1.8;text-align:center;
+  background:rgba(255,255,255,.1);padding:16px 24px;border-radius:12px;border:1px solid rgba(255,255,255,.2);margin-bottom:24px;}
+.obtn{padding:14px 42px;font-size:20px;font-weight:900;
+  background:linear-gradient(135deg,#ff5252,#c80000);color:#fff;
+  border:none;border-radius:50px;cursor:pointer;box-shadow:0 8px 24px rgba(244,67,54,.5);
+  text-transform:uppercase;letter-spacing:2px;transition:transform .18s;}
+.obtn:hover,.obtn:active{transform:scale(1.07);}
+</style>
+</head>
+<body>
+
+<video id="webcam" autoplay playsinline></video>
+<canvas id="c"></canvas>
+
+<div id="hud">
+  <div id="hud-top">
+    <div id="score-box">✨ <span id="sc">0</span></div>
+    <div id="goal-box">목표: 1000점</div>
+    <div id="time-box">⏱️ <span id="time-val">10</span>초</div>
+  </div>
+  <div id="ammo-box"></div>
+</div>
+
+<div id="power-wrap">
+  <div id="power-label">루미 파워 충전...</div>
+  <div id="power-bg"><div id="power-fill"></div></div>
+</div>
+<div id="angle-hint"></div>
+
+<button id="audio-btn" title="음소거">🔊</button>
+<div id="xhair"><div id="xdot"></div></div>
+<div class="flash" id="fhit"></div>
+<div class="flash" id="fmiss"></div>
+<div id="spop"></div>
+
+<div id="overlay">
+  <div class="ot">LUMI vs MUMU</div>
+  <div class="os">✨ 빛의 수호자 출동! 해무를 정화하라</div>
+  <div class="oi">
+    ⏱️ <b>제한 시간:</b> 10초<br>
+    🎯 <b>기회:</b> 단 5번의 루미 발사!<br>
+    🔵 <b>작은 무무일수록 점수가 높습니다.</b><br>
+    ✨ <b>1000점</b>을 달성하여 등대를 지켜내세요!
+  </div>
+  <button class="obtn" id="startBtn">전투 시작! 🚀</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  게임 설정
+// ═══════════════════════════════════════════════════════
+const GOAL_SCORE = 1000;
+const MAX_TIME = 10;
+const MAX_AMMO = 5;
+const AUTH_REDIRECT_URL = 'ncmap.html';
+
+const canvas = document.getElementById('c');
+const video = document.getElementById('webcam');
+const W = () => window.innerWidth;
+const H = () => window.innerHeight;
+
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(W(), H());
+renderer.setClearColor(0x000000, 0);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(70, W()/H(), 0.05, 300);
+camera.position.set(0, 0.5, 0);
+
+window.addEventListener('resize', () => {
+  renderer.setSize(W(), H());
+  camera.aspect = W() / H();
+  camera.updateProjectionMatrix();
+});
+
+// 조명 (3D 구슬의 입체감을 살림)
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const sun = new THREE.DirectionalLight(0xffffff, 1.2);
+sun.position.set(5, 10, 5);
+scene.add(sun);
+
+// ═══════════════════════════════════════════════════════
+//  텍스처 로드 및 3D 모델 세팅
+// ═══════════════════════════════════════════════════════
+const textureLoader = new THREE.TextureLoader();
+// 사용자가 올려준 이미지를 3D 구체(Sphere)에 감싸서 입체적인 캐릭터로 만듭니다.
+const texLumi = textureLoader.load('./img/lumi.png');
+const texMumu = textureLoader.load('./img/mumu_960.png');
+
+const D2R = v => v*Math.PI/180;
+
+// 루미 (발사체) 3D 모델
+function makeLumi3D(s) {
+  const geo = new THREE.SphereGeometry(s, 32, 32);
+  const mat = new THREE.MeshPhongMaterial({ map: texLumi, shininess: 100 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.y = Math.PI / 2; // 발사 시 이미지가 잘 보이도록 기본 회전
+  
+  // 빛나는 효과(아우라) 추가
+  const auraGeo = new THREE.SphereGeometry(s * 1.2, 16, 16);
+  const auraMat = new THREE.MeshBasicMaterial({ color: 0xffaaaa, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending });
+  const aura = new THREE.Mesh(auraGeo, auraMat);
+  mesh.add(aura);
+  
+  return mesh;
+}
+
+// 무무 (타겟) 3D 모델 - 티어별 크기와 점수 부여
+function makeMumu3D(tier) {
+  let s, pts;
+  if(tier === 1) { s = 0.5; pts = 100; }      // 대형 무무
+  else if(tier === 2) { s = 0.35; pts = 200; }// 중형 무무
+  else { s = 0.2; pts = 300; }                // 소형 무무 (맞추기 어렵고 점수 높음)
+
+  const geo = new THREE.SphereGeometry(s, 32, 32);
+  const mat = new THREE.MeshPhongMaterial({ map: texMumu, shininess: 80 });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.rotation.y = -Math.PI / 2; // 사용자를 바라보게 회전
+  
+  // 해무 이펙트 (파란 아우라)
+  const auraGeo = new THREE.SphereGeometry(s * 1.3, 16, 16);
+  const auraMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, transparent: true, opacity: 0.25, blending: THREE.AdditiveBlending });
+  const aura = new THREE.Mesh(auraGeo, auraMat);
+  mesh.add(aura);
+
+  return { mesh, s, pts };
+}
+
+// 새총 기본 구조 (투명화하여 보이지 않게 하되 좌표계는 활용)
+const slingshotGroup = new THREE.Group();
+const LEFT_TIP = new THREE.Vector3(-.48, .98, 0);
+const RIGHT_TIP = new THREE.Vector3(.48, .98, 0);
+
+// 고무줄 렌더링
+const bandMat = new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.5});
+const bandLMesh = new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,1,6), bandMat);
+const bandRMesh = new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,1,6), bandMat);
+slingshotGroup.add(bandLMesh); slingshotGroup.add(bandRMesh);
+
+const pouch = makeLumi3D(.14); 
+slingshotGroup.add(pouch);
+slingshotGroup.position.set(0, -1.8, -2.8);
+scene.add(slingshotGroup);
+
+function updateBands(pouchLocalPos) {
+  function updateBand(mesh, from, to) {
+    const mid = new THREE.Vector3().addVectors(from, to).multiplyScalar(.5); mesh.position.copy(mid);
+    const dir = new THREE.Vector3().subVectors(to, from); mesh.scale.set(1, dir.length(), 1);
+    mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
+  }
+  updateBand(bandLMesh, LEFT_TIP, pouchLocalPos); updateBand(bandRMesh, RIGHT_TIP, pouchLocalPos);
+}
+
+// ═══════════════════════════════════════════════════════
+//  GAME STATE & LOGIC
+// ═══════════════════════════════════════════════════════
+const G = {
+  score: 0, ammo: MAX_AMMO, timeLeft: MAX_TIME,
+  birds: [], projs: [], running: false, isGameOverCheck: false,
+  dragging: false, dragStart: {x:0, y:0}, dragCur: {x:0, y:0}, power: 0, clickX: 0, clickY: 0
+};
+const pouchOffset = new THREE.Vector3(0, .65, 0);
+
+const $sc = document.getElementById('sc');
+const $time = document.getElementById('time-val');
+const $ammo = document.getElementById('ammo-box');
+const $pfill = document.getElementById('power-fill');
+const $pw = document.getElementById('power-wrap');
+const $fhit = document.getElementById('fhit');
+const $fmiss = document.getElementById('fmiss');
+const $spop = document.getElementById('spop');
+const $ov = document.getElementById('overlay');
+const $ahint = document.getElementById('angle-hint');
+
+function startCamera() {
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => { console.warn("웹캠 권한 거부", err); });
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click', () => {
+  if(!masterGain) initAudio(); sfxClick();
+  restartGame();
+});
+
+function restartGame() {
+  $ov.classList.add('off');
+  startCamera();
+  startBGM();
+  
+  // 상태 완전 초기화
+  G.score = 0; 
+  G.ammo = MAX_AMMO; 
+  G.timeLeft = MAX_TIME;
+  G.isGameOverCheck = false;
+  
+  // 기존 투사체 및 타겟 클리어
+  G.projs.forEach(p => scene.remove(p.mesh));
+  G.projs = [];
+  
+  refreshHUD();
+  spawnMumus();
+  G.running = true;
+}
+
+function getEventXY(e){
+  if(e.touches && e.touches.length>0) return {x:e.touches[0].clientX, y:e.touches[0].clientY};
+  if(e.changedTouches && e.changedTouches.length>0) return {x:e.changedTouches[0].clientX, y:e.changedTouches[0].clientY};
+  return {x:e.clientX, y:e.clientY};
+}
+
+function screenToDir(sx, sy){
+  const ndc = new THREE.Vector2((sx/W())*2-1, -(sy/H())*2+1);
+  const ray = new THREE.Raycaster(); ray.setFromCamera(ndc, camera);
+  return ray.ray.direction.clone().normalize();
+}
+
+function onDragStart(e) {
+  if (!G.running || G.ammo <= 0) return;
+  const {x, y} = getEventXY(e);
+  G.dragging = true; G.clickX = x; G.clickY = y;
+  G.dragStart = {x, y}; G.dragCur = {x, y}; G.power = 0;
+  $pw.classList.add('show'); sfxPullStart();
+}
+
+function onDragMove(e) {
+  if (!G.running || !G.dragging) return;
+  const {x, y} = getEventXY(e);
+  G.dragCur = {x, y};
+  const dx = G.dragCur.x - G.dragStart.x;
+  const dy = G.dragCur.y - G.dragStart.y;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  const maxDrag = Math.min(W(), H()) * 0.30;
+  G.power = Math.min(1, dist/maxDrag);
+  sfxPullUpdate(G.power);
+  $pfill.style.width = (G.power * 100) + '%';
+  $ahint.textContent = '파워: ' + Math.round(G.power * 100) + '%';
+  pouchOffset.set(0, 0.65 - G.power * 0.3, G.power * 0.45);
+}
+
+function onDragEnd(e) {
+  if (!G.running || !G.dragging) return;
+  G.dragging = false; $pw.classList.remove('show'); $ahint.textContent = '';
+  sfxPullRelease();
+
+  if (G.power < 0.05) { pouchOffset.set(0, .65, 0); return; }
+
+  fireLumi(G.power, G.clickX, G.clickY);
+  G.ammo--; 
+  refreshHUD();
+  pouchOffset.set(0, .65, 0);
+}
+
+canvas.addEventListener('mousedown', onDragStart);
+canvas.addEventListener('mousemove', onDragMove);
+canvas.addEventListener('mouseup', onDragEnd);
+canvas.addEventListener('mouseleave', onDragEnd);
+canvas.addEventListener('touchstart', onDragStart, {passive:false});
+canvas.addEventListener('touchmove', onDragMove, {passive:false});
+canvas.addEventListener('touchend', onDragEnd, {passive:false});
+canvas.addEventListener('touchcancel', onDragEnd, {passive:false});
+
+function fireLumi(power, screenX, screenY) {
+  const dir = screenToDir(screenX, screenY);
+  dir.y += 0.15; // 약간의 상단 보정 (조준 편의성)
+  dir.normalize();
+
+  const spd = 6.0 + power * 16.0; 
+  const vx = dir.x * spd, vy = dir.y * spd, vz = dir.z * spd;
+
+  const startPos = new THREE.Vector3(slingshotGroup.position.x, slingshotGroup.position.y+0.65, slingshotGroup.position.z-0.3);
+  const lumi = makeLumi3D(0.3); // 발사되는 루미
+  lumi.position.copy(startPos); 
+  scene.add(lumi);
+
+  G.projs.push({mesh:lumi, x:startPos.x, y:startPos.y, z:startPos.z, vx, vy, vz, rx:0, ry:0, rz:0, alive:true, age:0});
+
+  sfxFire(); sfxFlight();
+  slingshotGroup.position.z = -2.4;
+  setTimeout(() => slingshotGroup.position.z = -2.8, 130);
+}
+
+function spawnMumus() {
+  G.birds.forEach(b => scene.remove(b.mesh)); G.birds = [];
+  const counts = [0, 4, 5, 5]; // 1티어 4마리, 2티어 5마리, 3티어 5마리 = 총 14마리
+  
+  for(let tier=1; tier<=3; tier++) {
+    for (let i = 0; i < counts[tier]; i++) {
+      const mumuData = makeMumu3D(tier);
+      const mesh = mumuData.mesh;
+      
+      const wx = (Math.random() - .5) * 14;
+      const wy = 0.5 + Math.random() * 4.0; 
+      const wz = -8 - Math.random() * 10;
+      mesh.position.set(wx, wy, wz); scene.add(mesh);
+
+      G.birds.push({
+        mesh, wx, wy, wz, vx: (Math.random()-.5)*.02, vz: (Math.random()-.5)*.01,
+        phase: Math.random()*Math.PI*2, fSpd: .5+Math.random()*.5, fAmp: .15+Math.random()*.15,
+        rotSpd: (Math.random()-.5)*2.0, rotY: 0, alive: true, dying: false,
+        dyingVx: 0, dyingVy: 0, dyingVz: 0, pts: mumuData.pts, r: mumuData.s * 1.5, curY: wy, dyAge: 0
+      });
+    }
+  }
+}
+
+// 화려한 슬라임 파편 이펙트
+function spawnMumuParticles(wx, wy, wz) {
+  for (let i=0; i<20; i++) {
+    const geo = new THREE.SphereGeometry(0.05 + Math.random()*0.05, 8, 8);
+    const mat = new THREE.MeshBasicMaterial({color: Math.random() > 0.5 ? 0x00ffff : 0xffffff, transparent:true, opacity:1});
+    const p = new THREE.Mesh(geo, mat);
+    p.position.set(wx, wy, wz);
+    
+    const vx = (Math.random()-.5)*.25, vy = .1+Math.random()*.2, vz = (Math.random()-.5)*.25;
+    scene.add(p); let age=0;
+    const id = setInterval(() => {
+      if(!G.running) return;
+      age += .04; p.position.x += vx; p.position.y += vy - 9.8*.003*age*age; p.position.z += vz; 
+      p.material.opacity = Math.max(0, 1-age*1.2);
+      if (age > 1.2) { clearInterval(id); scene.remove(p); }
+    }, 40);
+  }
+}
+
+function hitMumu(b, p) {
+  if (b.dying || !b.alive || !p.alive) return;
+  b.alive=false; p.alive=false; scene.remove(p.mesh);
+  G.score += b.pts; refreshHUD();
+  flash($fhit); sfxBirdHit(); sfxScore(); showPop('+' + b.pts);
+
+  b.dying = true; b.dyAge = 0; b.dyingVx = (Math.random()-.5)*.12; b.dyingVy = .15+Math.random()*.1; b.dyingVz = (Math.random()-.5)*.1;
+  spawnMumuParticles(b.wx, b.curY, b.wz);
+}
+
+// 게임 종료 판정 (승리 또는 패배)
+function triggerGameOver() {
+  if(G.isGameOverCheck) return;
+  G.isGameOverCheck = true;
+  G.running = false;
+  stopBGM();
+
+  setTimeout(() => {
+    if (G.score >= GOAL_SCORE) {
+      sfxLevelClear();
+      if (confirm(`🎉 목표 달성! (최종 점수: ${G.score}점)\n\n인증 맵으로 이동하시겠습니까?\n'취소'를 누르면 다시 플레이합니다.`)) {
+        window.location.href = AUTH_REDIRECT_URL;
+      } else {
+        restartGame();
+      }
+    } else {
+      sfxGameOver();
+      alert(`😢 실패! (최종 점수: ${G.score}점)\n시간 종료 또는 루미 파워를 모두 소진했습니다.\n다시 도전하세요!`);
+      restartGame();
+    }
+  }, 500);
+}
+
+function refreshHUD() { 
+  $sc.textContent = G.score; 
+  $time.textContent = Math.ceil(G.timeLeft);
+  
+  $ammo.innerHTML = '';
+  for (let i=0; i<MAX_AMMO; i++) {
+    const d = document.createElement('div');
+    d.className = 'aball' + (i >= G.ammo ? ' used' : ''); $ammo.appendChild(d);
+  }
+}
+
+function flash(el) { el.style.opacity = '1'; setTimeout(() => el.style.opacity = '0', 160); }
+function showPop(t) {
+  $spop.textContent = t; $spop.style.opacity = '1'; $spop.style.transform = 'translate(-50%,-50%) scale(1.2)';
+  setTimeout(() => { $spop.style.opacity = '0'; $spop.style.transform = 'translate(-50%,-75%) scale(.85)'; }, 900);
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN LOOP
+// ═══════════════════════════════════════════════════════
+let prev = performance.now();
+function animate(now) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((now - prev) / 1000, .05); prev = now;
+
+  if (!G.running) { renderer.render(scene, camera); return; }
+
+  // 타이머 로직
+  G.timeLeft -= dt;
+  if (G.timeLeft <= 0) {
+    G.timeLeft = 0;
+    refreshHUD();
+    triggerGameOver();
+  } else {
+    refreshHUD();
+  }
+
+  pouch.position.copy(pouchOffset); updateBands(pouchOffset);
+
+  // 무무(타겟) 애니메이션
+  G.birds.forEach(b => {
+    if (b.dying) {
+      b.dyAge += dt; b.dyingVy -= dt * 9.8 * .08; b.wx += b.dyingVx; b.curY += b.dyingVy; b.wz += b.dyingVz;
+      b.mesh.rotation.z += dt*8; b.mesh.rotation.x += dt*5; b.mesh.position.set(b.wx, b.curY, b.wz);
+      b.mesh.scale.setScalar(Math.max(0.01, 1 - b.dyAge)); // 작아지며 사라짐
+      if (b.dyAge > 1.0) { scene.remove(b.mesh); b.dying = false; } return;
+    }
+    if (!b.alive) return;
+    b.wx += b.vx; b.wz += b.vz; b.phase += dt * b.fSpd; b.curY = b.wy + Math.sin(b.phase) * b.fAmp; b.rotY += b.rotSpd * dt;
+    if (Math.abs(b.wx) > 12) b.vx *= -1; if (b.wz > -4 || b.wz < -18) b.vz *= -1;
+    b.mesh.position.set(b.wx, b.curY, b.wz); b.mesh.rotation.y = b.rotY;
+  });
+
+  // 루미(투사체) 애니메이션
+  let flyingCount = 0;
+  G.projs.forEach(p => {
+    if (!p.alive) return;
+    flyingCount++;
+    p.age += dt; p.vy -= 6.0 * dt; 
+    
+    p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+    p.rx += dt*10; p.ry += dt*15; p.rz += dt*8; // 루미가 빙글빙글 돌며 날아감
+    p.mesh.position.set(p.x, p.y, p.z); p.mesh.rotation.set(p.rx, p.ry, p.rz);
+    
+    // 루미 궤적 (반짝이 입자)
+    if(Math.random() > 0.5) {
+      const trail = new THREE.Mesh(new THREE.SphereGeometry(0.06), new THREE.MeshBasicMaterial({color:0xffaaaa}));
+      trail.position.copy(p.mesh.position); scene.add(trail);
+      setTimeout(()=>scene.remove(trail), 100);
+    }
+
+    if (p.y < -3.0) { scene.remove(p.mesh); p.alive = false; flash($fmiss); sfxMiss(); return; }
+    if (p.age > 8 || p.z < -28) { scene.remove(p.mesh); p.alive = false; return; }
+    
+    G.birds.forEach(b => {
+      if (!b.alive || !p.alive) return;
+      const dx=p.x-b.wx, dy=p.y-b.curY, dz=p.z-b.wz;
+      // 충돌 판정 확대 (맞추기 쉽게)
+      if (dx*dx + dy*dy + dz*dz < (b.r+.4)*(b.r+.4)) hitMumu(b, p);
+    });
+  });
+
+  // 기회 소진 & 투사체 비행 종료 확인 시 패배 판정
+  if (G.ammo <= 0 && flyingCount === 0 && !G.isGameOverCheck && G.timeLeft > 0) {
+    triggerGameOver();
+  }
+
+  // 타겟 전멸 시 리젠
+  if (G.birds.length > 0 && G.birds.every(b => !b.alive && !b.dying)) { spawnMumus(); }
+
+  renderer.render(scene, camera);
+}
+requestAnimationFrame(animate);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (G.running) { G.running = false; stopBGM(); if (AC && AC.state === 'running') AC.suspend(); video.pause(); }
+  } else {
+    if ($ov.classList.contains('off') && !G.isGameOverCheck) {
+      G.running = true; startBGM(); if (AC && AC.state === 'suspended') AC.resume(); video.play();
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+//  WEB AUDIO ENGINE
+// ═══════════════════════════════════════════════════════
+const AC = new (window.AudioContext || window.webkitAudioContext)();
+let masterGain, bgmGain, sfxGain, bgmNodes = [];
+
+function initAudio() {
+  if(AC.state === 'suspended') AC.resume();
+  masterGain = AC.createGain(); masterGain.gain.value = 1; masterGain.connect(AC.destination);
+  bgmGain = AC.createGain(); bgmGain.gain.value = 0.25; bgmGain.connect(masterGain);
+  sfxGain = AC.createGain(); sfxGain.gain.value = 0.85; sfxGain.connect(masterGain);
+}
+
+function startBGM() {
+  stopBGM();
+  if (AC.state === 'suspended') return;
+  const BPM = 120, beat = 60 / BPM;
+  const CHORDS = [[261.63, 329.63, 392.00, 523.25], [349.23, 440.00, 523.25, 698.46], [392.00, 493.88, 587.33, 783.99], [220.00, 277.18, 329.63, 440.00]];
+  const BASS = [130.81, 174.61, 196.00, 110.00];
+  let t = AC.currentTime + 0.05;
+  const loopLen = CHORDS.length * beat * 4;
+
+  function scheduleLoop() {
+    if (!G.running) return;
+    const loopStart = t;
+    CHORDS.forEach((chord, ci) => {
+      const cStart = loopStart + ci * beat * 4;
+      [0, 2].forEach(b => {
+        const o = AC.createOscillator(); const g = AC.createGain(); o.type = 'triangle'; o.frequency.value = BASS[ci];
+        g.gain.setValueAtTime(0, cStart + b * beat); g.gain.linearRampToValueAtTime(0.4, cStart + b * beat + 0.02); g.gain.exponentialRampToValueAtTime(0.001, cStart + b * beat + beat * 0.85);
+        o.connect(g); g.connect(bgmGain); o.start(cStart + b * beat); o.stop(cStart + b * beat + beat * 0.9); bgmNodes.push(o);
+      });
+      chord.forEach(freq => {
+        const o = AC.createOscillator(); const g = AC.createGain(); o.type = 'sine'; o.frequency.value = freq;
+        g.gain.setValueAtTime(0, cStart); g.gain.linearRampToValueAtTime(0.05, cStart + 0.08); g.gain.setValueAtTime(0.05, cStart + beat * 3.5); g.gain.linearRampToValueAtTime(0, cStart + beat * 4);
+        o.connect(g); g.connect(bgmGain); o.start(cStart); o.stop(cStart + beat * 4 + 0.1); bgmNodes.push(o);
+      });
+      const MELODY = [[523.25, 0], [587.33, 0.5], [659.26, 1], [587.33, 1.5], [523.25, 2], [493.88, 2.5], [440.00, 3], [493.88, 3.5]];
+      MELODY.forEach(([freq, offset]) => {
+        const o = AC.createOscillator(); const g = AC.createGain(); o.type = 'square'; o.frequency.value = freq * (ci % 2 === 0 ? 1 : 1.059);
+        const lfo = AC.createOscillator(); const lfoG = AC.createGain(); lfo.frequency.value = 5.5; lfoG.gain.value = 3; lfo.connect(lfoG); lfoG.connect(o.frequency); lfo.start(cStart + offset * beat); lfo.stop(cStart + offset * beat + beat * 0.45 + 0.05); bgmNodes.push(lfo);
+        g.gain.setValueAtTime(0, cStart + offset * beat); g.gain.linearRampToValueAtTime(0.06, cStart + offset * beat + 0.03); g.gain.exponentialRampToValueAtTime(0.001, cStart + offset * beat + beat * 0.45);
+        o.connect(g); g.connect(sfxGain); o.start(cStart + offset * beat); o.stop(cStart + offset * beat + beat * 0.5); bgmNodes.push(o);
+      });
+    });
+    t += loopLen; bgmNodes._timer = setTimeout(scheduleLoop, (loopLen - 0.5) * 1000);
+  }
+  scheduleLoop();
+}
+
+function stopBGM() { clearTimeout(bgmNodes._timer); bgmNodes.forEach(n => { try { n.stop(); } catch (e) { } }); bgmNodes = []; }
+
+function sfxFire() {
+  if (!sfxGain) return;
+  const snap = AC.createOscillator(), sg = AC.createGain(); snap.type = 'square'; snap.frequency.setValueAtTime(800, AC.currentTime); snap.frequency.exponentialRampToValueAtTime(80, AC.currentTime + 0.08); sg.gain.setValueAtTime(0.4, AC.currentTime); sg.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.1); snap.connect(sg); sg.connect(sfxGain); snap.start(); snap.stop(AC.currentTime + 0.12);
+}
+function sfxFlight() {
+  if (!sfxGain) return;
+  const buf = AC.createBuffer(1, AC.sampleRate * .4, AC.sampleRate); const d = buf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.3;
+  const ws = AC.createBufferSource(), wg = AC.createGain(); const wf = AC.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 400; wf.Q.value = 2; wg.gain.setValueAtTime(0, AC.currentTime); wg.gain.linearRampToValueAtTime(0.15, AC.currentTime + 0.05); wg.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.35); ws.buffer = buf; ws.connect(wf); wf.connect(wg); wg.connect(sfxGain); ws.start(); ws.stop(AC.currentTime + 0.4);
+}
+function sfxBirdHit() {
+  if (!sfxGain) return;
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.setValueAtTime(1200 + Math.random() * 400, AC.currentTime); o.frequency.exponentialRampToValueAtTime(150, AC.currentTime + 0.4); g.gain.setValueAtTime(0.4, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.45); o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime + 0.5);
+}
+function sfxMiss() {
+  if (!sfxGain) return;
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(160, AC.currentTime); o.frequency.exponentialRampToValueAtTime(40, AC.currentTime + 0.15); g.gain.setValueAtTime(0.5, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.2); o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime + 0.22);
+}
+function sfxGameOver() {
+  if (!sfxGain) return;
+  const notes = [523.25, 440.00, 349.23, 261.63]; notes.forEach((freq, i) => { const t = AC.currentTime + i * 0.22; const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth'; o.frequency.value = freq; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.22, t + 0.03); g.gain.setValueAtTime(0.22, t + 0.15); g.gain.exponentialRampToValueAtTime(0.001, t + 0.28); o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t + 0.32); });
+}
+function sfxLevelClear() {
+  if(!sfxGain) return;
+  const notes = [523.25, 659.26, 783.99, 1046.50]; notes.forEach((freq, i) => { const t = AC.currentTime + i * 0.15; const o = AC.createOscillator(), g = AC.createGain(); o.type = 'square'; o.frequency.value = freq; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.25, t + 0.02); g.gain.setValueAtTime(0.25, t + 0.08); g.gain.exponentialRampToValueAtTime(0.001, t + 0.22); o.connect(g); g.connect(sfxGain); o.start(t); o.stop(t + 0.25); });
+}
+function sfxClick() {
+  if (!sfxGain) return;
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(600, AC.currentTime); o.frequency.linearRampToValueAtTime(800, AC.currentTime + 0.05); g.gain.setValueAtTime(0.2, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.1); o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime+0.12);
+}
+let pullOsc = null, pullG = null;
+function sfxPullStart() {
+  if (!sfxGain) return; if (pullOsc) { try { pullOsc.stop(); } catch (e) { } }
+  pullOsc = AC.createOscillator(); pullG = AC.createGain(); pullOsc.type = 'sawtooth'; pullOsc.frequency.value = 150; pullG.gain.value = 0.06; pullOsc.connect(pullG); pullG.connect(sfxGain); pullOsc.start();
+}
+function sfxPullUpdate(power) { if (!pullOsc) return; pullOsc.frequency.value = 150 + power * 550; pullG.gain.value = 0.06 + power * 0.08; }
+function sfxPullRelease() { if (!pullOsc) return; try { pullOsc.stop(AC.currentTime + 0.05); } catch (e) { } pullOsc = null; pullG = null; }
+function sfxScore() {
+  if (!sfxGain) return;
+  const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(1047, AC.currentTime); o.frequency.linearRampToValueAtTime(1319, AC.currentTime + 0.08); g.gain.setValueAtTime(0.18, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.2); o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime + 0.22);
+}
+
+document.getElementById('audio-btn').addEventListener('click', () => {
+  if(masterGain) {
+    const isMuted = masterGain.gain.value === 0;
+    masterGain.gain.value = isMuted ? 1 : 0;
+    document.getElementById('audio-btn').textContent = isMuted ? '🔊' : '🔇';
+  }
+});
+</script>
+</body>
+</html>
