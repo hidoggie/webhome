@@ -182,8 +182,9 @@ function place(parent, mesh, x, y, z, rx=0, ry=0, rz=0, sx=1, sy=sx, sz=sx){
 
 // 루미 (발사체) - 크기 1.5배 확대 (2.5 -> 3.8)
 function makeLumi3D(s) {
-  const mat = new THREE.SpriteMaterial({ map: texLumi, color: 0xffffff, transparent: true });
+  const mat = new THREE.SpriteMaterial({ map: texLumi, color: 0xffffff, transparent: true, depthTest: false });
   const sprite = new THREE.Sprite(mat);
+  sprite.renderOrder = 10;
   sprite.scale.set(s * 3.8, s * 3.8, 1); // 🌟 1.5배 커진 루미
   return sprite;
 }
