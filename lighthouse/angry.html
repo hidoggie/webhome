@@ -118,9 +118,6 @@ canvas{display:block;width:100vw;height:100vh;}
 import * as THREE from 'three';
 import { ARButton } from 'three/addons/webxr/ARButton.js';
 
-// ═══════════════════════════════════════════════════════
-//  설정 변수 (목표 및 링크)
-// ═══════════════════════════════════════════════════════
 const GOAL_SCORE = 500;
 const AUTH_REDIRECT_URL = 'ncmap.html';
 
@@ -129,8 +126,6 @@ const W = () => window.innerWidth;
 const H = () => window.innerHeight;
 
 let renderer, scene, camera;
-
-// 원본 에셋 변수 정의
 let slingshotGroup, bandLMesh, bandRMesh, pouch;
 const LEFT_TIP = new THREE.Vector3(-.48, .98, 0);
 const RIGHT_TIP = new THREE.Vector3(.48, .98, 0);
@@ -150,9 +145,6 @@ function place(parent, mesh, x, y, z, rx = 0, ry = 0, rz = 0, sx = 1, sy = sx, s
 }
 const D2R = v => v * Math.PI / 180;
 
-// ═══════════════════════════════════════════════════════
-//  GAME STATE
-// ═══════════════════════════════════════════════════════
 const G = {
   score: 0, ammo: 8, maxAmmo: 8,
   birds: [], projs: [],
@@ -164,7 +156,6 @@ const G = {
 
 const pouchOffset = new THREE.Vector3(0, .65, 0);
 
-// DOM REFS
 const $sc = document.getElementById('sc');
 const $ammo = document.getElementById('ammo-box');
 const $pfill = document.getElementById('power-fill');
@@ -180,18 +171,20 @@ document.getElementById('goal-val').textContent = GOAL_SCORE;
 init();
 
 function init() {
-  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  renderer.setPixelRatio(window.devicePixelRatio);
+  // alpha 및 이펙트 설정 정비로 검은 화면 오류 차단
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(W(), H());
   renderer.xr.enabled = true;
 
   scene = new THREE.Scene();
+  
   camera = new THREE.PerspectiveCamera(70, W() / H(), 0.05, 300);
   camera.position.set(0, 0.5, 0);
 
-  // 🌟 핵심: AR 모드 진입 시 HTML UI가 가려지지 않도록 domOverlay 설정 연동
+  // dom-overlay 컴포넌트를 정확히 바인딩하여 UI 가림 완전 차단
   const arButton = ARButton.createButton(renderer, { 
-    optionalFeatures: ['dom-overlay'],
+    requiredFeatures: ['dom-overlay'],
     domOverlay: { root: $xrUi }
   });
   document.getElementById('ar-btn-container').appendChild(arButton);
@@ -200,10 +193,10 @@ function init() {
     if (!masterGain) initAudio();
     sfxClick();
     $ov.classList.add('off');
-    $xrUi.style.display = 'block'; // AR 전용 상단 UI 레이어 표시
+    $xrUi.style.display = 'block';
     startBGM();
     G.running = true;
-    spawnBirds(); // 바닥 인식 없이 즉시 소환
+    spawnBirds(); 
   });
 
   window.addEventListener('resize', () => {
@@ -212,13 +205,12 @@ function init() {
     camera.updateProjectionMatrix();
   });
 
-  // LIGHTS
-  scene.add(new THREE.AmbientLight(0xd0eeff, 0.8));
-  const sun = new THREE.DirectionalLight(0xfff5cc, 1.2);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.0);
   sun.position.set(8, 20, 5);
   scene.add(sun);
 
-  // WebXR 스크린 터치 드래그 입력 연동
+  // WebXR 전용 화면 터치 다운/업 이벤트 리스너 연동
   const controller = renderer.xr.getController(0);
   controller.addEventListener('selectstart', onDragStart);
   controller.addEventListener('selectend', onDragEnd);
@@ -227,12 +219,10 @@ function init() {
   buildSlingshot();
   refreshAmmo();
   
+  // WebXR 세션 환경에 최적화된 애니메이션 루프 가동
   renderer.setAnimationLoop(animate);
 }
 
-// ═══════════════════════════════════════════════════════
-//  3D ASSETS BUILDERS (원본 크기 완벽 복원)
-// ═══════════════════════════════════════════════════════
 function makePig(s) {
   const g = new THREE.Group();
   place(g, SPH(s, 0x6abf3a), 0, 0, 0);
@@ -281,7 +271,7 @@ function buildSlingshot() {
   pouch = makePig(.14);
   slingshotGroup.add(pouch);
   
-  slingshotGroup.position.set(0, -1.8, -2.8); // 원본 고정 좌표 복구
+  slingshotGroup.position.set(0, -1.8, -2.8); 
   scene.add(slingshotGroup);
 }
 
@@ -335,27 +325,21 @@ function spawnFeathers(wx, wy, wz, color) {
     const rx = Math.random() * Math.PI, rz = (Math.random() - .5) * .5;
     scene.add(f); let age = 0;
     const id = setInterval(() => {
-      if(!G.running) return; // 포커스 나갔을 땐 가속도 정지
+      if(!G.running) return;
       age += .04; f.position.x += vx; f.position.y += vy - 9.8 * .0025 * age * age; f.position.z += vz; f.rotation.x += .1; f.rotation.z += rz * .2; f.material.opacity = Math.max(0, .95 - age * 1.1);
       if (age > 1.2) { clearInterval(id); scene.remove(f); }
     }, 40);
   }
 }
 
-// ═══════════════════════════════════════════════════════
-//  GAME LOGIC
-// ═══════════════════════════════════════════════════════
 function spawnBirds() {
   G.birds.forEach(b => scene.remove(b.mesh));
   G.birds = [];
-
-  const count = 7; // 기본 난이도 고정 분산 배치
+  const count = 7;
   for (let i = 0; i < count; i++) {
     const ti = Math.floor(Math.random() * BTYPES.length);
     const type = BTYPES[ti];
     const mesh = makeBird3D(type);
-    
-    // 원래 게임 원본 범위 그대로 분산 (정방 시야 배치)
     const wx = (Math.random() - .5) * 12;
     const wy = 0.5 + Math.random() * 3.5;
     const wz = -7 - Math.random() * 12;
@@ -399,7 +383,6 @@ function onDragEnd() {
     return;
   }
 
-  // 화면 정중앙(크로스헤어 방향)을 목표로 투사
   firePig(G.power);
   G.ammo--;
   refreshAmmo();
@@ -409,9 +392,7 @@ function onDragEnd() {
 }
 
 function firePig(power) {
-  // 카메라 중앙 조준선 방향 벡터 계산
   const dir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
-  
   const spd = 3.0 + power * 12.0; 
   const vx = dir.x * spd;
   const vy = dir.y * spd;
@@ -485,9 +466,6 @@ function checkGO() {
   }
 }
 
-// ═══════════════════════════════════════════════════════
-//  UI HELPERS
-// ═══════════════════════════════════════════════════════
 function refreshAmmo() {
   $ammo.innerHTML = '';
   for (let i = 0; i < G.maxAmmo; i++) {
@@ -512,25 +490,51 @@ function animate(timestamp, frame) {
   const dt = Math.min((now - prev) / 1000, .05);
   prev = now;
 
+  // G.running 상태일 때만 내부 컨텐츠가 연산되도록 정비하여 백그라운드 멈춤 오류 완전 해결
   if (!G.running) {
     renderer.render(scene, camera);
     return;
   }
 
+  // 디바이스 자이로스코프 회전 좌표값을 렌더러에 직접 매핑하여 디바이스 방향 조준 싱크 확보
+  if (renderer.xr.isPresenting) {
+    const session = renderer.xr.getSession();
+    if (session) {
+      const viewerSpace = renderer.xr.getReferenceSpace();
+      const pose = frame.getViewerPose(viewerSpace);
+      if (pose) {
+        const view = pose.views[0];
+        camera.projectionMatrix.fromArray(view.projectionMatrix);
+        camera.matrixWorldInverse.fromArray(view.transform.inverse.matrix);
+        camera.matrixWorld.fromArray(view.transform.matrix);
+      }
+    }
+  }
+
   if (G.dragging) {
     const currentDur = (performance.now() - G.dragStartTime) / 1000;
-    G.power = Math.min(currentDur * 2.0, 1); // 0.5초 당기면 최대 파워
+    G.power = Math.min(currentDur * 2.0, 1); 
     sfxPullUpdate(G.power);
     $pfill.style.width = (G.power * 100) + '%';
     $ahint.textContent = '파워: ' + Math.round(G.power * 100) + '%';
     pouchOffset.set(0, 0.65 - G.power * 0.3, G.power * 0.45);
   }
 
-  // 새총 오프셋 업데이트
+  // 카메라 시야 고정 동기화 (새총이 항상 조준선을 따라 하단 중앙에 부착되도록 강제 보정)
+  const camDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+  const camUp = new THREE.Vector3(0, 1, 0).applyQuaternion(camera.quaternion);
+  const camRight = new THREE.Vector3(1, 0, 0).applyQuaternion(camera.quaternion);
+  
+  const basePos = camera.position.clone()
+    .add(camDir.clone().multiplyScalar(2.8))
+    .add(camUp.clone().multiplyScalar(-1.2));
+    
+  slingshotGroup.position.copy(basePos);
+  slingshotGroup.quaternion.copy(camera.quaternion);
+
   pouch.position.copy(pouchOffset);
   updateBands(pouchOffset);
 
-  // 새들의 비행 이동 애니메이션
   G.birds.forEach(b => {
     if (b.dying) {
       b.dyAge += dt; b.dyingVy -= dt * 9.8 * .08;
@@ -557,17 +561,16 @@ function animate(timestamp, frame) {
     b.mesh.rotation.y = b.rotY;
   });
 
-  // 투사체 궤적 연산
   G.projs.forEach(p => {
     if (!p.alive) return;
     p.age += dt;
-    p.vy -= 9.8 * dt; // 중력 적용
+    p.vy -= 9.8 * dt; 
     p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
     p.rx += dt * 7; p.ry += dt * 10; p.rz += dt * 4;
     p.mesh.position.set(p.x, p.y, p.z);
     p.mesh.rotation.set(p.rx, p.ry, p.rz);
 
-    if (p.y < -2.8) { scene.remove(p.mesh); p.alive = false; flash($fmiss); sfxMiss(); return; }
+    if (p.y < -5.0) { scene.remove(p.mesh); p.alive = false; flash($fmiss); sfxMiss(); return; }
     if (p.age > 12 || p.z < -28) { scene.remove(p.mesh); p.alive = false; return; }
 
     G.birds.forEach(b => {
@@ -578,26 +581,26 @@ function animate(timestamp, frame) {
   });
 
   if (G.birds.length > 0 && G.birds.every(b => !b.alive && !b.dying)) {
-    spawnBirds(); // 무한 루프 순환 재생성
+    spawnBirds(); 
   }
 
   renderer.render(scene, camera);
 }
 
 // ═══════════════════════════════════════════════════════
-//  🌟 포커스 아웃 / 백그라운드 전환 시 일시정지 로직
+//  포커스 아웃 / 백그라운드 전환 시 일시정지 완전 보장
 // ═══════════════════════════════════════════════════════
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
-    // 앱을 종료하거나 다른 탭으로 갈 때 정지
     if (G.running) {
       G.running = false;
+      stopBGM();
       if (AC && AC.state === 'running') AC.suspend();
     }
   } else {
-    // 다시 돌아왔을 때 복귀
     if ($ov.classList.contains('off') && G.score < GOAL_SCORE && G.ammo > 0) {
       G.running = true;
+      startBGM();
       if (AC && AC.state === 'suspended') AC.resume();
     }
   }
@@ -618,6 +621,7 @@ function initAudio() {
 
 function startBGM() {
   stopBGM();
+  if (AC.state === 'suspended') return;
   const BPM = 112, beat = 60 / BPM;
   const CHORDS = [[261.63, 329.63, 392.00, 523.25], [349.23, 440.00, 523.25, 698.46], [392.00, 493.88, 587.33, 783.99], [220.00, 277.18, 329.63, 440.00]];
   const BASS = [130.81, 174.61, 196.00, 110.00];
@@ -625,6 +629,7 @@ function startBGM() {
   const loopLen = CHORDS.length * beat * 4;
 
   function scheduleLoop() {
+    if (!G.running) return;
     const loopStart = t;
     CHORDS.forEach((chord, ci) => {
       const cStart = loopStart + ci * beat * 4;
@@ -690,7 +695,6 @@ function sfxScore() {
   const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(1047, AC.currentTime); o.frequency.linearRampToValueAtTime(1319, AC.currentTime + 0.08); g.gain.setValueAtTime(0.18, AC.currentTime); g.gain.exponentialRampToValueAtTime(0.001, AC.currentTime + 0.2); o.connect(g); g.connect(sfxGain); o.start(); o.stop(AC.currentTime + 0.22);
 }
 
-// 음소거 토글
 document.getElementById('audio-btn').addEventListener('click', () => {
   if(masterGain) {
     const isMuted = masterGain.gain.value === 0;
