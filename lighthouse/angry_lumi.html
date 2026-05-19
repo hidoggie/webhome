@@ -22,7 +22,7 @@ canvas{position:fixed;top:0;left:0;display:block;width:100vw;height:100vh;z-inde
 #goal-box{color:#fff;font-size:15px;font-weight:700;}
 #time-box{color:#ff5252;font-size:20px;font-weight:900;text-shadow:0 0 10px #ff0000;}
 
-/* 남은 기회 표시 (10개 수용을 위해 크기 약간 축소) */
+/* 남은 기회 표시 */
 #ammo-box{display:flex;gap:4px;align-items:center; position:absolute; top:55px; left:16px;}
 .aball{width:16px;height:16px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#ffcccb,#f44336);
@@ -132,8 +132,8 @@ canvas{position:fixed;top:0;left:0;display:block;width:100vw;height:100vh;z-inde
 //  게임 설정
 // ═══════════════════════════════════════════════════════
 const GOAL_SCORE = 1000;
-const MAX_TIME = 30; // 30초로 연장
-const MAX_AMMO = 10; // 10발로 연장
+const MAX_TIME = 30; 
+const MAX_AMMO = 10; 
 const AUTH_REDIRECT_URL = 'ncmap.html';
 
 const canvas = document.getElementById('c');
@@ -162,24 +162,33 @@ sun.position.set(5, 10, 5);
 scene.add(sun);
 
 // ═══════════════════════════════════════════════════════
-//  텍스처 로드 (PNG 스프라이트용)
+//  텍스처 로드 및 3D 모델 헬퍼 함수
 // ═══════════════════════════════════════════════════════
 const textureLoader = new THREE.TextureLoader();
-// 주의: 완벽한 사각 테두리 제거를 위해 배경이 투명한 PNG 파일을 넣어주세요.
 const texLumi = textureLoader.load('./img/lumi.png'); 
 const texMumu = textureLoader.load('./img/mumu.png');
 
 const D2R = v => v*Math.PI/180;
 
-// 루미 (발사체) - 3D Sphere 대신 2D Sprite 보드 적용
+// 🌟 오리지널 새총 복원을 위한 3D 에셋 헬퍼 함수
+const MAT = (color) => new THREE.MeshLambertMaterial({color});
+const SPH = (r, color, seg=12) => new THREE.Mesh(new THREE.SphereGeometry(r, seg, seg), MAT(color));
+const CYL = (rt, rb, h, color, seg=10) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), MAT(color));
+
+function place(parent, mesh, x, y, z, rx=0, ry=0, rz=0, sx=1, sy=sx, sz=sx){
+  mesh.position.set(x,y,z); mesh.rotation.set(rx,ry,rz); mesh.scale.set(sx,sy,sz);
+  parent.add(mesh); return mesh;
+}
+
+// 루미 (발사체) - 크기 1.5배 확대 (2.5 -> 3.8)
 function makeLumi3D(s) {
   const mat = new THREE.SpriteMaterial({ map: texLumi, color: 0xffffff, transparent: true });
   const sprite = new THREE.Sprite(mat);
-  sprite.scale.set(s * 2.5, s * 2.5, 1); // 스케일 조정
+  sprite.scale.set(s * 3.8, s * 3.8, 1); // 🌟 1.5배 커진 루미
   return sprite;
 }
 
-// 무무 (타겟) - Sprite 보드 적용
+// 무무 (타겟)
 function makeMumu3D(tier) {
   let s, pts;
   if(tier === 1) { s = 0.5; pts = 100; }      // 대형 무무
@@ -192,21 +201,39 @@ function makeMumu3D(tier) {
   return { mesh: sprite, s, pts };
 }
 
-// 새총 기본 구조 (보이지 않게 처리하여 좌표만 활용)
-const slingshotGroup = new THREE.Group();
+// 🌟 오리지널 새총 구조 및 고무줄 100% 복원
+let slingshotGroup = new THREE.Group();
+let bandLMesh, bandRMesh, pouch;
 const LEFT_TIP = new THREE.Vector3(-.48, .98, 0);
 const RIGHT_TIP = new THREE.Vector3(.48, .98, 0);
 
-// 고무줄 렌더링
-const bandMat = new THREE.MeshBasicMaterial({color: 0xffffff, transparent: true, opacity: 0.3});
-const bandLMesh = new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,1,6), bandMat);
-const bandRMesh = new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,1,6), bandMat);
-slingshotGroup.add(bandLMesh); slingshotGroup.add(bandRMesh);
+function buildSlingshot() {
+  const handle = CYL(.07, .09, 1.0, 0x6d4c41, 8);
+  place(slingshotGroup, handle, 0, -.3, 0);
+  [-.2, 0, .2].forEach(dy => { const r = CYL(.11, .11, .07, 0x5d4037, 8); r.position.set(0, -.3+dy, 0); slingshotGroup.add(r); });
+  
+  const leftArm = new THREE.Group(); const laShaft = CYL(.055, .065, 1.1, 0x8d6e63, 8); laShaft.position.y = .55; leftArm.add(laShaft);
+  leftArm.position.set(-.08, .15, 0); leftArm.rotation.z = D2R(28); leftArm.rotation.x = D2R(-5); slingshotGroup.add(leftArm);
+  
+  const rightArm = new THREE.Group(); const raShaft = CYL(.055, .065, 1.1, 0x8d6e63, 8); raShaft.position.y = .55; rightArm.add(raShaft);
+  rightArm.position.set(.08, .15, 0); rightArm.rotation.z = D2R(-28); rightArm.rotation.x = D2R(-5); slingshotGroup.add(rightArm);
+  
+  place(slingshotGroup, SPH(.08, 0x4e342e, 7), -.48, .98, 0);
+  place(slingshotGroup, SPH(.08, 0x4e342e, 7), .48, .98, 0);
 
-const pouch = makeLumi3D(.14); 
-slingshotGroup.add(pouch);
-slingshotGroup.position.set(0, -1.8, -2.8);
-scene.add(slingshotGroup);
+  // 탄력 넘치는 노란색 고무줄 복구
+  const bandMat = new THREE.MeshLambertMaterial({color: 0xffd600});
+  bandLMesh = new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1,6), bandMat);
+  bandRMesh = new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1,6), bandMat);
+  slingshotGroup.add(bandLMesh); slingshotGroup.add(bandRMesh);
+
+  pouch = makeLumi3D(.14); // 거대해진 장전용 루미
+  slingshotGroup.add(pouch);
+  
+  slingshotGroup.position.set(0, -1.8, -2.8);
+  scene.add(slingshotGroup);
+}
+buildSlingshot();
 
 function updateBands(pouchLocalPos) {
   function updateBand(mesh, from, to) {
@@ -223,7 +250,7 @@ function updateBands(pouchLocalPos) {
 const G = {
   score: 0, ammo: MAX_AMMO, timeLeft: MAX_TIME,
   birds: [], projs: [], running: false, isGameOverCheck: false,
-  hasStarted: false, // 🌟 첫 터치 시 타이머 시작을 위한 변수
+  hasStarted: false,
   dragging: false, dragStart: {x:0, y:0}, dragCur: {x:0, y:0}, power: 0, clickX: 0, clickY: 0
 };
 const pouchOffset = new THREE.Vector3(0, .65, 0);
@@ -255,18 +282,16 @@ document.getElementById('startBtn').addEventListener('click', () => {
 
 function restartGame() {
   $ov.classList.add('off');
-  $startHint.classList.remove('hide'); // 터치 유도 메시지 표시
+  $startHint.classList.remove('hide');
   startCamera();
   startBGM();
   
-  // 🌟 상태 완전 초기화 (타이머 리셋 및 정지 상태)
   G.score = 0; 
   G.ammo = MAX_AMMO; 
   G.timeLeft = MAX_TIME;
   G.isGameOverCheck = false;
   G.hasStarted = false; 
   
-  // 기존 투사체 및 타겟 클리어
   G.projs.forEach(p => scene.remove(p.mesh));
   G.projs = [];
   
@@ -290,10 +315,9 @@ function screenToDir(sx, sy){
 function onDragStart(e) {
   if (!G.running || G.ammo <= 0) return;
   
-  // 🌟 첫 조작 시 게임 카운트다운 본격 시작
   if (!G.hasStarted) {
     G.hasStarted = true;
-    $startHint.classList.add('hide'); // 터치 유도 텍스트 숨김
+    $startHint.classList.add('hide');
   }
 
   const {x, y} = getEventXY(e);
@@ -341,7 +365,7 @@ canvas.addEventListener('touchcancel', onDragEnd, {passive:false});
 
 function fireLumi(power, screenX, screenY) {
   const dir = screenToDir(screenX, screenY);
-  dir.y += 0.15; // 약간의 상단 보정
+  dir.y += 0.15; 
   dir.normalize();
 
   const spd = 6.0 + power * 16.0; 
@@ -361,7 +385,7 @@ function fireLumi(power, screenX, screenY) {
 
 function spawnMumus() {
   G.birds.forEach(b => scene.remove(b.mesh)); G.birds = [];
-  const counts = [0, 5, 5, 5]; // 총 15마리로 넉넉하게 배치
+  const counts = [0, 5, 5, 5]; 
   
   for(let tier=1; tier<=3; tier++) {
     for (let i = 0; i < counts[tier]; i++) {
@@ -411,7 +435,6 @@ function hitMumu(b, p) {
   spawnMumuParticles(b.wx, b.curY, b.wz);
 }
 
-// 게임 종료 판정 (승리 또는 패배)
 function triggerGameOver() {
   if(G.isGameOverCheck) return;
   G.isGameOverCheck = true;
@@ -461,7 +484,6 @@ function animate(now) {
 
   if (!G.running) { renderer.render(scene, camera); return; }
 
-  // 🌟 타이머 로직 (hasStarted 가 true 일 때만 차감)
   if (G.hasStarted && G.timeLeft > 0) {
     G.timeLeft -= dt;
     if (G.timeLeft <= 0) {
@@ -475,22 +497,20 @@ function animate(now) {
 
   pouch.position.copy(pouchOffset); updateBands(pouchOffset);
 
-  // 무무(타겟) 애니메이션
   G.birds.forEach(b => {
     if (b.dying) {
       b.dyAge += dt; b.dyingVy -= dt * 9.8 * .08; b.wx += b.dyingVx; b.curY += b.dyingVy; b.wz += b.dyingVz;
       b.mesh.position.set(b.wx, b.curY, b.wz);
-      b.mesh.scale.setScalar(Math.max(0.01, 1 - b.dyAge)); // 작아지며 사라짐
+      b.mesh.scale.setScalar(Math.max(0.01, 1 - b.dyAge)); 
       if (b.dyAge > 1.0) { scene.remove(b.mesh); b.dying = false; } return;
     }
     if (!b.alive) return;
     b.wx += b.vx; b.wz += b.vz; b.phase += dt * b.fSpd; b.curY = b.wy + Math.sin(b.phase) * b.fAmp; 
     if (Math.abs(b.wx) > 12) b.vx *= -1; if (b.wz > -4 || b.wz < -18) b.vz *= -1;
     b.mesh.position.set(b.wx, b.curY, b.wz); 
-    b.mesh.material.rotation = Math.sin(b.phase) * 0.15; // 스프라이트 귀엽게 까딱거림
+    b.mesh.material.rotation = Math.sin(b.phase) * 0.15; 
   });
 
-  // 루미(투사체) 애니메이션
   let flyingCount = 0;
   G.projs.forEach(p => {
     if (!p.alive) return;
@@ -499,7 +519,7 @@ function animate(now) {
     
     p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
     p.mesh.position.set(p.x, p.y, p.z); 
-    p.mesh.material.rotation += dt * 10; // 스프라이트 빙글빙글 회전
+    p.mesh.material.rotation += dt * 10; 
 
     if (p.y < -3.0) { scene.remove(p.mesh); p.alive = false; flash($fmiss); sfxMiss(); return; }
     if (p.age > 8 || p.z < -28) { scene.remove(p.mesh); p.alive = false; return; }
@@ -511,12 +531,10 @@ function animate(now) {
     });
   });
 
-  // 기회 소진 & 투사체 비행 종료 시 게임 오버 판정
   if (G.hasStarted && G.ammo <= 0 && flyingCount === 0 && !G.isGameOverCheck && G.timeLeft > 0) {
     triggerGameOver();
   }
 
-  // 타겟 전멸 시 리젠
   if (G.birds.length > 0 && G.birds.every(b => !b.alive && !b.dying)) { spawnMumus(); }
 
   renderer.render(scene, camera);
