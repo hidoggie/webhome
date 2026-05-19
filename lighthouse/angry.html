@@ -128,16 +128,13 @@ const video = document.getElementById('webcam');
 const W = () => window.innerWidth;
 const H = () => window.innerHeight;
 
-// 🌟 핵심: alpha를 true로 주어 캔버스 배경을 투명하게 만듦 (웹캠이 보이도록)
+// 🌟 alpha:true 로 캔버스 배경을 투명하게 (웹캠 표시)
 const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(W(), H());
-// 렌더러 배경색 투명도 0
 renderer.setClearColor(0x000000, 0);
 
 const scene = new THREE.Scene();
-// 원본의 하늘색 배경과 안개(Fog), 바닥을 모두 제거하여 완전한 AR 형태 구성
-
 const camera = new THREE.PerspectiveCamera(70, W()/H(), 0.05, 300);
 camera.position.set(0, 0.5, 0);
 
@@ -155,7 +152,7 @@ scene.add(sun);
 scene.add(new THREE.DirectionalLight(0xc8e8ff, 0.5).position.set(-5, 10, -5));
 
 // ═══════════════════════════════════════════════════════
-//  3D 모델 생성 (새, 돼지, 새총 등) - 원본 100% 유지
+//  3D 모델 생성
 // ═══════════════════════════════════════════════════════
 const MAT = (color) => new THREE.MeshLambertMaterial({color});
 const SPH = (r, color, seg=12) => new THREE.Mesh(new THREE.SphereGeometry(r, seg, seg), MAT(color));
@@ -255,7 +252,7 @@ function spawnFeathers(wx, wy, wz, color) {
 //  GAME STATE & LOGIC
 // ═══════════════════════════════════════════════════════
 const G = {
-  score: 0, ammo: 15, maxAmmo: 15, // 1단계에서 깰 수 있도록 기회 15발 지급
+  score: 0, ammo: 15, maxAmmo: 15, 
   birds: [], projs: [], running: false,
   dragging: false, dragStart: {x:0, y:0}, dragCur: {x:0, y:0}, power: 0, clickX: 0, clickY: 0
 };
@@ -271,16 +268,11 @@ const $spop = document.getElementById('spop');
 const $ov = document.getElementById('overlay');
 const $ahint = document.getElementById('angle-hint');
 
-// 웹캠 카메라 활성화 함수 (핵심 추가본)
 function startCamera() {
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-      .then(stream => {
-        video.srcObject = stream;
-      })
-      .catch(err => {
-        console.warn("웹캠 권한 거부 또는 장치 없음. 카메라 없이 까만 배경으로 대체 실행합니다.", err);
-      });
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => { console.warn("웹캠 권한 거부", err); });
   }
 }
 
@@ -295,7 +287,6 @@ document.getElementById('startBtn').addEventListener('click', () => {
   spawnBirds();
 });
 
-// 조준점 입력 변환 로직 (원본 동일 - 화면을 터치/클릭한 방향으로 발사)
 function getEventXY(e){
   if(e.touches && e.touches.length>0) return {x:e.touches[0].clientX, y:e.touches[0].clientY};
   if(e.changedTouches && e.changedTouches.length>0) return {x:e.changedTouches[0].clientX, y:e.changedTouches[0].clientY};
@@ -345,7 +336,6 @@ function onDragEnd(e) {
   if (G.ammo <= 0) setTimeout(checkGO, 2500);
 }
 
-// PC/모바일 이벤트 리스너 통합 등록
 canvas.addEventListener('mousedown', onDragStart);
 canvas.addEventListener('mousemove', onDragMove);
 canvas.addEventListener('mouseup', onDragEnd);
@@ -357,7 +347,13 @@ canvas.addEventListener('touchcancel', onDragEnd, {passive:false});
 
 function firePig(power, screenX, screenY) {
   const dir = screenToDir(screenX, screenY);
-  const spd = 3.0 + power * 12.0;
+  
+  // 🌟 조준 보정 (Aim Assist): 클릭한 곳보다 자동으로 조금 더 위를 향해 쏘도록 설정
+  dir.y += 0.2; 
+  dir.normalize();
+
+  // 🌟 스피드 대폭 향상: 답답함 없이 시원하게 날아갑니다
+  const spd = 5.0 + power * 15.0; 
   const vx = dir.x * spd, vy = dir.y * spd, vz = dir.z * spd;
 
   const startPos = new THREE.Vector3(slingshotGroup.position.x, slingshotGroup.position.y+0.65, slingshotGroup.position.z-0.3);
@@ -372,14 +368,15 @@ function firePig(power, screenX, screenY) {
 
 function spawnBirds() {
   G.birds.forEach(b => scene.remove(b.mesh)); G.birds = [];
-  const count = 10; // 목표 점수 달성을 위해 넉넉히 10마리 소환
+  const count = 10; 
   for (let i = 0; i < count; i++) {
     const ti = Math.floor(Math.random() * BTYPES.length);
     const type = BTYPES[ti];
     const mesh = makeBird3D(type);
     
+    // 🌟 타겟 높이 하향 조정: 너무 위에 배치되지 않고 화면 중앙 쪽으로 내려오게 설정
     const wx = (Math.random() - .5) * 12;
-    const wy = 0.5 + Math.random() * 3.5;
+    const wy = 0.0 + Math.random() * 2.5; 
     const wz = -7 - Math.random() * 12;
     mesh.position.set(wx, wy, wz); scene.add(mesh);
 
@@ -469,14 +466,21 @@ function animate(now) {
 
   G.projs.forEach(p => {
     if (!p.alive) return;
-    p.age += dt; p.vy -= 9.8 * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
+    
+    // 🌟 중력 완화 (가벼운 포물선): 투사체가 덜 떨어져서 위쪽을 맞추기 편해짐
+    p.age += dt; p.vy -= 6.0 * dt; 
+    
+    p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt;
     p.rx += dt*7; p.ry += dt*10; p.rz += dt*4; p.mesh.position.set(p.x, p.y, p.z); p.mesh.rotation.set(p.rx, p.ry, p.rz);
     if (p.y < -2.8) { scene.remove(p.mesh); p.alive = false; flash($fmiss); sfxMiss(); return; }
     if (p.age > 12 || p.z < -28) { scene.remove(p.mesh); p.alive = false; return; }
+    
     G.birds.forEach(b => {
       if (!b.alive || !p.alive) return;
       const dx=p.x-b.wx, dy=p.y-b.curY, dz=p.z-b.wz;
-      if (dx*dx + dy*dy + dz*dz < (b.r+.14)*(b.r+.14)) hitBird(b, p);
+      
+      // 🌟 피격 판정 범위(Hitbox) 2.5배 확대: 근처에만 가도 팡팡 터짐!
+      if (dx*dx + dy*dy + dz*dz < (b.r+.35)*(b.r+.35)) hitBird(b, p);
     });
   });
 
@@ -486,7 +490,6 @@ function animate(now) {
 }
 requestAnimationFrame(animate);
 
-// 🌟 백그라운드 전환 시 일시정지 완벽 연동
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     if (G.running) { G.running = false; stopBGM(); if (AC && AC.state === 'running') AC.suspend(); video.pause(); }
