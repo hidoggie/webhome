@@ -2,17 +2,17 @@
         // img 속성에 각 지역에 맞는 개별 아이콘 이미지 경로를 넣어주세요.
    
      var eventLocations = [
-            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png", stamp: "./img/stamp_sanji.png" },
-            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/somaemuldo_icon_240.png", stamp: "./img/stamp_somaemuldo.png" },
-            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/odongdo_icon_240.png", stamp: "./img/stamp_odongdo.png" },
-            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/palmido_icon_240.png", stamp: "./img/stamp_palmido.png" },
-            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/mukho_icon_240.png", stamp: "./img/stamp_mukho.png" },
-            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png", stamp: "./img/stamp_ulgi.png" },
-            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png", stamp: "./img/stamp_youngdo.png" },
-            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png", stamp: "./img/stamp_udo.png" },
-            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png", stamp: "./img/stamp_ganjeolgot.png" },
-            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp_sokcho.png" }
-   //         { title: "속초등대", lat: 38.2137, lng: 128.6000, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp_sokcho.png" }
+            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png", stamp: "./img/stamp-sanji.png" },
+            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/somaemuldo_icon_240.png", stamp: "./img/stamp-somaemuldo.png" },
+            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/odongdo_icon_240.png", stamp: "./img/stamp-odongdo.png" },
+            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/palmido_icon_240.png", stamp: "./img/stamp-palmido.png" },
+            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/mukho_icon_240.png", stamp: "./img/stamp-mukho.png" },
+            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png", stamp: "./img/stamp-ulgi.png" },
+            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png", stamp: "./img/stamp-youngdo.png" },
+            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png", stamp: "./img/stamp-udo.png" },
+            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png", stamp: "./img/stamp-ganjeolgot.png" },
+            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp-sokcho.png" }
+   //         { title: "속초등대", lat: 38.2137, lng: 128.6000, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp-sokcho.png" }
         ];
 
         // --- 2. 대한민국 영역 제한 설정 (북한 제외) ---
