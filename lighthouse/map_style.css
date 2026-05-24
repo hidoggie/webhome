@@ -64,7 +64,7 @@ body {
         /* 내 위치 확인 버튼 UI */
         .btn-my-location {
             position: absolute;
-            top: 20px;
+            top: 22%;
             right: 20px;
             z-index: 100;
             padding: 12px 20px;
