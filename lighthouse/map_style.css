@@ -114,45 +114,78 @@ body {
             100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
         }
 
-
-
-/* 3. 스탬프 인증 현황 (프로그레스 카드) */
+/* 3. 스탬프 인증 현황 (접이식 바 형태) */
 .progress-card {
-    position: absolute; bottom: 4.5rem; /* Footer 바로 위 */
+    position: absolute; 
+    bottom: 70px; /* 하단 네비게이션 바(70px) 바로 위에 밀착 */
     left: 0; right: 0;
-    background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 5px; padding: 20px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    background-color: rgba(255, 255, 255, 0.65); /* 투명도 약 60% */
+    backdrop-filter: blur(5px); /* 뒤쪽 지도가 예쁘게 서리가 낀 것처럼 비치는 유리 효과 */
+    border-radius: 15px 15px 0 0; 
+    padding: 15px 20px;
+    box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
     z-index: 30;
+    transition: all 0.3s ease;
 }
+
+/* 펼쳐졌을 때는 가독성을 위해 불투명하게 변경 */
+.progress-card.expanded {
+    background-color: rgba(255, 255, 255, 0.95);
+}
+
 .progress-header {
     display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 30px; padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
+    cursor: pointer; /* 클릭 영역 표시 */
+    margin-bottom: 0; border-bottom: none; padding-bottom: 0;
 }
+
+.progress-right { display: flex; align-items: center; gap: 10px; }
 .progress-title { font-weight: 700; color: #1a3350; display: flex; align-items: center; gap: 5px; }
-.progress-count .current { color: #1e826b; font-weight: 700; font-size: 18px; }
+.progress-count .current { color: #1e826b; font-weight: 700; font-size: 16px; }
 .progress-count .total { color: #888; font-size: 14px; }
 
-/* 프로그레스 바 */
-.progress-bar-container { position: relative; height: 30px; display: flex; align-items: center; }
-.progress-track {
-    width: 100%; height: 10px; background-color: #1a3350;
-    border-radius: 10px; position: relative;
+/* 우측 화살표 버튼 (열림/닫힘 애니메이션) */
+.expand-btn {
+    background: none; border: none; font-size: 14px; color: #1a3350;
+    transition: transform 0.3s ease; pointer-events: none;
 }
-.progress-fill {
-    height: 100%; background-color: #1a3350; /* 진행된 부분 색상 (디자인상 트랙과 동일해 보임) */
-    border-radius: 10px; width: 0%; /* JS로 제어 */
-    transition: width 0.5s ease-in-out;
+.progress-card.expanded .expand-btn {
+    transform: rotate(180deg); /* 펼쳐지면 화살표 뒤집기 */
 }
-.progress-thumb {
-    position: absolute; top: 50%; transform: translate(-50%, -50%);
-    width: 40px; height: 50px; /* 캐릭터 이미지 크기에 맞춰 조절 */
+
+/* 5개씩 2줄 나오는 스탬프 그리드 영역 */
+.stamp-grid-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 1줄에 5개 균등 분할 */
+    gap: 10px;
+    max-height: 0; /* 평소에는 높이를 0으로 숨김 */
+    overflow: hidden;
+    transition: max-height 0.3s ease, margin-top 0.3s ease;
+}
+
+/* 카드가 expanded 상태일 때 그리드 표시 */
+.progress-card.expanded .stamp-grid-container {
+    max-height: 200px; /* 그리드가 열릴 높이 */
+    margin-top: 15px; padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+/* 개별 스탬프 동그라미 디자인 */
+.stamp-slot {
+    aspect-ratio: 1 / 1; /* 완벽한 정사각형(원형) 비율 유지 */
+    border-radius: 50%;
+    background-color: rgba(0,0,0,0.05); /* 빈 슬롯 색상 */
+    border: 2px dashed #ccc;
     display: flex; justify-content: center; align-items: center;
-    font-size: 30px; transition: left 0.5s ease-in-out;
 }
-/* 실제 캐릭터 img 태그가 들어갈 때의 스타일 */
-.progress-thumb img { width: 100%; height: 100%; object-fit: contain; }
+
+/* 스탬프 획득 시 디자인 변경 */
+.stamp-slot.acquired {
+    border: 2px solid #1e826b;
+    background-color: #fff;
+}
+.stamp-slot img { width: 70%; height: 70%; object-fit: contain; }
+
 
 /* 4. 하단 네비게이션 (Footer) */
 .bottom-nav {
