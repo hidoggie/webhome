@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR 등대 스탬프투어</title>
+    <link rel="stylesheet" href="map_style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/Pretendard/dist/web/static/pretendard.css">
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
+
+</head>
+<body>
+    <div class="mobile-container">
+        <header class="header">
+            <div class="header-top">
+                <button class="back-btn"><img src="./img/back_white.png" width="30" height="30"></button>
+                <h1 class="title">AR 등대 스탬프투어</h1>
+                <div class="spacer"></div> </div>
+            <p class="subtitle">등대 위치 & 스탬프 인증 현황</p>
+            <!--div class="header-icon">🗼</div--> 
+        </header>
+        <main class="map-area">
+            <button id="btn-location" class="btn-my-location">🎯 내 위치 확인</button>
+            <div id="map">
+                <!--span class="map-placeholder-text">지도 API 로드 영역</span-->
+            </div>
+        </main>
+
+        <div class="progress-card">
+            <div class="progress-header">
+                <div class="progress-title">
+                    <span class="icon">👤</span> 스탬프 인증 현황
+                </div>
+                <div class="progress-count">
+                    <span id="current-stamps" class="current">1</span> / <span id="total-stamps" class="total">10</span>
+                </div>
+            </div>
+            
+            <div class="progress-bar-container">
+                <div class="progress-track">
+                    <div class="progress-fill" id="progress-fill"></div>
+                    
+                    <div class="progress-thumb" id="progress-thumb">
+                        🚨 </div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="bottom-nav">
+            <button class="nav-item">
+                <span class="icon"><img src="./img/home_white.png"></span>
+                <span class="label">홈</span>
+            </button>
+            <button class="nav-item active">
+                <span class="icon"><img src="./img/passport_white.png"></span>
+                <span class="label">스탬프 현황</span>
+            </button>
+            <button class="nav-item">
+                <span class="icon"><img src="./img/info_white.png"></span>
+                <span class="label">안내</span>
+            </button>
+        </nav>
+
+    </div>
+
+    <script src="draw_map.js"></script>
+    <script src="progress_bar.js"></script>
+</body>
+</html>
