@@ -102,12 +102,12 @@ body {
 
 /* 3. 스탬프 인증 현황 (프로그레스 카드) */
 .progress-card {
-    position: absolute; bottom: 85px; /* Footer 바로 위 */
-    left: 15px; right: 15px;
+    position: absolute; bottom: 4.5rem; /* Footer 바로 위 */
+    left: 0; right: 0;
     background-color: rgba(255, 255, 255, 0.95);
-    border-radius: 20px; padding: 20px;
+    border-radius: 5px; padding: 20px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    z-index: 20;
+    z-index: 30;
 }
 .progress-header {
     display: flex; justify-content: space-between; align-items: center;
@@ -140,6 +140,7 @@ body {
 
 /* 4. 하단 네비게이션 (Footer) */
 .bottom-nav {
+    border-radius: 5px;
     height: 70px; background-color: #1a3350;
     display: flex; justify-content: space-around; align-items: center;
     z-index: 30;

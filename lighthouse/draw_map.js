@@ -18,10 +18,11 @@
         // --- 2. 대한민국 영역 제한 설정 (북한 제외) ---
         // 남서쪽(마라도 부근)과 북동쪽(고성/울릉도 부근)의 좌표를 기준 상자로 설정합니다.
         var koreaBounds = new naver.maps.LatLngBounds(
-   //         new naver.maps.LatLng(32.5, 124.5), // 남서쪽 (South-West)
-   //         new naver.maps.LatLng(38.8, 131.5)  // 북동쪽 (North-East)
-            new naver.maps.LatLng(32.745225, 125.652393), // 남서쪽 (South-West)
+   //         new naver.maps.LatLng(32.745225, 125.652393), // 남서쪽 (South-West)
+   //         new naver.maps.LatLng(38.360059, 129.522699)  // 북동쪽 (North-East)
+            new naver.maps.LatLng(32.438743, 125.641579), // 남서쪽 (South-West)
             new naver.maps.LatLng(38.360059, 129.522699)  // 북동쪽 (North-East)
+
 
         );
 
