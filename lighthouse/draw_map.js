@@ -2,17 +2,17 @@
         // img 속성에 각 지역에 맞는 개별 아이콘 이미지 경로를 넣어주세요.
    
      var eventLocations = [
-            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png" },
-            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/somaemuldo_icon_240.png" },
-            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/odongdo_icon_240.png" },
-            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/palmido_icon_240.png" },
-            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/mukho_icon_240.png" },
-            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png" },
-            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png" },
-            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png" },
-            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png" },
-            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png" }
-   //         { title: "속초등대", lat: 38.2137, lng: 128.6000, img: "./img/sokcho_icon_240.png" }
+            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png", stamp: "./img/stamp_sanji.png" },
+            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/somaemuldo_icon_240.png", stamp: "./img/stamp_somaemuldo.png" },
+            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/odongdo_icon_240.png", stamp: "./img/stamp_odongdo.png" },
+            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/palmido_icon_240.png", stamp: "./img/stamp_palmido.png" },
+            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/mukho_icon_240.png", stamp: "./img/stamp_mukho.png" },
+            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png", stamp: "./img/stamp_ulgi.png" },
+            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png", stamp: "./img/stamp_youngdo.png" },
+            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png", stamp: "./img/stamp_udo.png" },
+            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png", stamp: "./img/stamp_ganjeolgot.png" },
+            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp_sokcho.png" }
+   //         { title: "속초등대", lat: 38.2137, lng: 128.6000, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp_sokcho.png" }
         ];
 
         // --- 2. 대한민국 영역 제한 설정 (북한 제외) ---
@@ -94,6 +94,8 @@
                     var lng = position.coords.longitude;
                     var newLatLng = new naver.maps.LatLng(lat, lng);
 
+                    renderLighthouseList(lat, lng);
+
                     // 마커가 없으면 처음 생성, 이미 있으면 위치만 갱신
                     if (!myLocationMarker) {
                         myLocationMarker = new naver.maps.Marker({
@@ -126,3 +128,102 @@
                 alert("현재 브라우저에서는 위치 서비스를 지원하지 않습니다.");
             }
         });
+
+// --- 6. 거리 계산 및 하단 리스트 동적 생성 로직 ---
+
+// 두 위도/경도 사이의 거리를 미터(m) 단위로 계산하는 함수 (하버사인 공식)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    var R = 6371e3; // 지구의 반지름 (미터)
+    var radLat1 = lat1 * Math.PI / 180;
+    var radLat2 = lat2 * Math.PI / 180;
+    var deltaLat = (lat2 - lat1) * Math.PI / 180;
+    var deltaLon = (lon2 - lon1) * Math.PI / 180;
+
+    var a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) +
+            Math.cos(radLat1) * Math.cos(radLat2) *
+            Math.sin(deltaLon/2) * Math.sin(deltaLon/2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    
+    return R * c; // 미터(m) 단위 거리 반환
+}
+
+// 하단 스탬프 리스트를 화면에 그리는 함수
+function renderLighthouseList(userLat, userLng) {
+    var listContainer = document.querySelector('.lighthouse-list');
+    if (!listContainer) return;
+    
+    listContainer.innerHTML = ''; 
+
+    var acquiredCount = 0; // ★ 현재까지 획득한 스탬프 개수를 저장할 변수
+
+    eventLocations.forEach(function(loc) {
+        // [테스트용] 나중에 서버 연동 시 이 부분을 실제 유저 데이터로 변경하세요.
+        var isAcquired = (loc.title === "팔미도등대"); 
+        
+        // ★ 획득한 등대라면 카운트 1 증가
+        if (isAcquired) {
+            acquiredCount++; 
+        }
+
+        var distanceText = "위치 확인 필요";
+        var rightSideHtml = "";
+
+        if (userLat && userLng) {
+            var distanceMeters = calculateDistance(userLat, userLng, loc.lat, loc.lng);
+            
+            if (distanceMeters <= 1000) {
+                distanceText = "여기에서 약 0km"; 
+                if (!isAcquired) {
+                    rightSideHtml = `<span class="stamp-zone-text">스탬프존 ${Math.round(distanceMeters)}m</span>`;
+                }
+            } else {
+                var distanceKm = Math.round(distanceMeters / 1000);
+                distanceText = `여기에서 약 ${distanceKm}km`;
+            }
+        }
+
+        if (isAcquired) {
+            rightSideHtml = `<span class="stamp-done-text">완료</span>`;
+        }
+
+        // ★ 회원님이 요청하신 개별 스탬프 이미지 적용 부분!
+        var stampImgSrc = isAcquired ? loc.stamp : './img/stamp_off.png';
+        var acquiredClass = isAcquired ? 'acquired' : '';
+
+        var li = document.createElement('li');
+        li.className = `lh-item ${acquiredClass}`;
+        li.innerHTML = `
+            <div class="lh-left">
+                <img src="${stampImgSrc}" alt="스탬프" class="lh-stamp-img">
+                <div class="lh-info">
+                    <div class="lh-name">${loc.title}</div>
+                    <div class="lh-dist">${distanceText}</div>
+                </div>
+            </div>
+            <div class="lh-right">
+                ${rightSideHtml}
+            </div>
+        `;
+        listContainer.appendChild(li);
+    });
+
+    // ★ 루프가 끝난 뒤 상단 프로그레스 바(게이지 및 숫자) 자동 업데이트
+    updateProgressBar(acquiredCount, eventLocations.length);
+}
+
+// 상단 프로그레스 바를 업데이트하는 전용 함수
+function updateProgressBar(current, total) {
+    document.getElementById('current-stamps').textContent = current;
+    document.getElementById('total-stamps').textContent = total;
+
+    var percentage = (current / total) * 100;
+    percentage = Math.max(0, Math.min(percentage, 100)); // 0~100 사이로 제한
+
+    document.getElementById('progress-fill').style.width = percentage + '%';
+    document.getElementById('progress-thumb').style.left = percentage + '%';
+}
+
+// 1. 페이지 로드 시 최초 1회 빈 리스트(거리 없음) 렌더링
+document.addEventListener("DOMContentLoaded", function() {
+    renderLighthouseList(null, null);
+});

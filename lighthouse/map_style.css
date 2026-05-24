@@ -114,78 +114,75 @@ body {
             100% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0); }
         }
 
-/* 3. 스탬프 인증 현황 (접이식 바 형태) */
+/* 3. 스탬프 인증 현황 카드 전체 틀 */
 .progress-card {
-    position: absolute; 
-    bottom: 70px; /* 하단 네비게이션 바(70px) 바로 위에 밀착 */
-    left: 0; right: 0;
-    background-color: rgba(255, 255, 255, 0.65); /* 투명도 약 60% */
-    backdrop-filter: blur(5px); /* 뒤쪽 지도가 예쁘게 서리가 낀 것처럼 비치는 유리 효과 */
-    border-radius: 15px 15px 0 0; 
-    padding: 15px 20px;
+    position: absolute; bottom: 70px; left: 0; right: 0;
+    background-color: rgba(255, 255, 255, 0.65);
+    backdrop-filter: blur(5px); 
+    border-radius: 15px 15px 0 0; padding: 15px 20px;
     box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
-    z-index: 30;
-    transition: all 0.3s ease;
+    z-index: 30; transition: all 0.3s ease;
 }
+.progress-card.expanded { background-color: rgba(255, 255, 255, 0.98); }
 
-/* 펼쳐졌을 때는 가독성을 위해 불투명하게 변경 */
-.progress-card.expanded {
-    background-color: rgba(255, 255, 255, 0.95);
-}
-
-.progress-header {
-    display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer; /* 클릭 영역 표시 */
-    margin-bottom: 0; border-bottom: none; padding-bottom: 0;
-}
-
+/* 헤더 부분 (클릭 영역) */
+.progress-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
 .progress-right { display: flex; align-items: center; gap: 10px; }
 .progress-title { font-weight: 700; color: #1a3350; display: flex; align-items: center; gap: 5px; }
 .progress-count .current { color: #1e826b; font-weight: 700; font-size: 16px; }
 .progress-count .total { color: #888; font-size: 14px; }
+.expand-btn { background: none; border: none; color: #1a3350; transition: transform 0.3s ease; pointer-events: none; }
+.progress-card.expanded .expand-btn { transform: rotate(180deg); }
 
-/* 우측 화살표 버튼 (열림/닫힘 애니메이션) */
-.expand-btn {
-    background: none; border: none; font-size: 14px; color: #1a3350;
-    transition: transform 0.3s ease; pointer-events: none;
+/* 🌟 펼쳐지는 영역 애니메이션 설정 */
+.expandable-area {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.4s ease, margin-top 0.4s ease;
 }
-.progress-card.expanded .expand-btn {
-    transform: rotate(180deg); /* 펼쳐지면 화살표 뒤집기 */
-}
-
-/* 5개씩 2줄 나오는 스탬프 그리드 영역 */
-.stamp-grid-container {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* 1줄에 5개 균등 분할 */
-    gap: 10px;
-    max-height: 0; /* 평소에는 높이를 0으로 숨김 */
-    overflow: hidden;
-    transition: max-height 0.3s ease, margin-top 0.3s ease;
+.progress-card.expanded .expandable-area {
+    max-height: 60vh; /* 화면 높이의 최대 60%까지만 확장 */
+    margin-top: 15px;
 }
 
-/* 카드가 expanded 상태일 때 그리드 표시 */
-.progress-card.expanded .stamp-grid-container {
-    max-height: 200px; /* 그리드가 열릴 높이 */
-    margin-top: 15px; padding-top: 15px;
-    border-top: 1px solid rgba(0,0,0,0.1);
+/* 부활한 프로그레스 바 스타일 */
+.progress-bar-container { position: relative; height: 30px; display: flex; align-items: center; margin-bottom: 10px; }
+.progress-track { width: 100%; height: 8px; background-color: #e0e0e0; border-radius: 10px; position: relative; }
+.progress-fill { height: 100%; background-color: #1a3350; border-radius: 10px; width: 10%; transition: width 0.5s; }
+.progress-thumb { position: absolute; top: 50%; transform: translate(-50%, -50%); font-size: 24px; left: 10%; transition: left 0.5s; }
+
+/* 🌟 스크롤 가능한 등대 리스트 영역 */
+.lighthouse-list {
+    list-style: none;
+    max-height: calc(60vh - 60px); /* 전체 60vh 중 프로그레스바 높이 제외 */
+    overflow-y: auto; /* 리스트가 길면 이 안에서만 스크롤됨 */
+    border-top: 1px solid #eee;
 }
 
-/* 개별 스탬프 동그라미 디자인 */
-.stamp-slot {
-    aspect-ratio: 1 / 1; /* 완벽한 정사각형(원형) 비율 유지 */
-    border-radius: 50%;
-    background-color: rgba(0,0,0,0.05); /* 빈 슬롯 색상 */
-    border: 2px dashed #ccc;
-    display: flex; justify-content: center; align-items: center;
+/* 리스트 아이템 (줄 단위) */
+.lh-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid #f5f5f5;
 }
+.lh-left { display: flex; align-items: center; gap: 12px; }
 
-/* 스탬프 획득 시 디자인 변경 */
-.stamp-slot.acquired {
-    border: 2px solid #1e826b;
-    background-color: #fff;
+/* 스탬프 이미지 테두리 처리 */
+.lh-stamp-img { 
+    width: 46px; height: 46px; border-radius: 50%; 
+    object-fit: contain; background: #f0f0f0; border: 2px solid #ddd; padding: 2px;
 }
-.stamp-slot img { width: 70%; height: 70%; object-fit: contain; }
+.lh-item.acquired .lh-stamp-img { border-color: #1e826b; background: white; }
 
+/* 텍스트 영역 */
+.lh-name { font-weight: 700; color: #333; font-size: 15px; margin-bottom: 3px; }
+.lh-dist { font-size: 12px; color: #888; }
+
+/* 우측 뱃지 (스탬프존 진입 등) */
+.stamp-zone-text {
+    font-size: 12px; font-weight: 700; color: #ff5722;
+    background: #ffeee8; padding: 5px 10px; border-radius: 20px;
+    box-shadow: 0 2px 4px rgba(255,87,34,0.2);
+}
+.stamp-done-text { font-size: 13px; font-weight: 700; color: #1e826b; padding-right: 5px; }
 
 /* 4. 하단 네비게이션 (Footer) */
 .bottom-nav {
