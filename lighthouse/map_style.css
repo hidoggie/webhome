@@ -15,7 +15,7 @@ body {
     width: 100%; 
     max-width: 400px; 
     height: 100dvh;
-/*    background-color: #99CAF2; *//* 지도 로드 전 임시 바다색 배경 */
+    background-color: #99CAF2; /* 지도 로드 전 임시 바다색 배경 */
     overflow: hidden; 
     display: flex; 
     flex-direction: column;
