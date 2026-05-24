@@ -44,6 +44,8 @@
             customStyleId: 'c27f8c73-7e51-4eac-bb6a-c9d223b4ba20' 
         });
 
+        map.fitBounds(koreaBounds);
+
         // --- 4. 배열을 돌면서 10개의 마커 생성 ---
         eventLocations.forEach(function(loc) {
             var marker = new naver.maps.Marker({
