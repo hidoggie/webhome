@@ -223,7 +223,18 @@ function updateProgressBar(current, total) {
     document.getElementById('progress-thumb').style.left = percentage + '%';
 }
 
-// 1. 페이지 로드 시 최초 1회 빈 리스트(거리 없음) 렌더링
+// 1. 페이지 로드 시 최초 1회 빈 리스트 렌더링 및 클릭 이벤트 등록
 document.addEventListener("DOMContentLoaded", function() {
+    // 리스트 초기화
     renderLighthouseList(null, null);
+
+    // ★ 스탬프 인증 현황 카드 펼치기/접기 동작 추가
+    var toggleHeader = document.getElementById('toggle-progress');
+    var progressCard = document.getElementById('progress-card');
+
+    if (toggleHeader && progressCard) {
+        toggleHeader.addEventListener('click', function() {
+            progressCard.classList.toggle('expanded');
+        });
+    }
 });
