@@ -44,10 +44,22 @@
             customStyleId: 'c27f8c73-7e51-4eac-bb6a-c9d223b4ba20' 
         });
 
- //       map.fitBounds(koreaBounds);
-
         // --- 4. 배열을 돌면서 10개의 마커 생성 ---
         eventLocations.forEach(function(loc) {
+            if(loc.title == "팔미도등대") {   // test용
+            var marker = new naver.maps.Marker({
+                position: new naver.maps.LatLng(loc.lat, loc.lng),
+                map: map,
+                icon: {
+                    // HTML 태그의 style에 배경 이미지를 동적으로 삽입합니다.
+                    content: `<div><img src="./img/stamp-complete-red.png" style="width:40px; height:40px;"></div>
+                                 <div class="stamp-pin" style="background-image: url('${loc.img}');"></div>`,
+                    size: new naver.maps.Size(60, 60),
+                    anchor: new naver.maps.Point(30, 60)
+                }
+            });
+
+            }  else {
             var marker = new naver.maps.Marker({
                 position: new naver.maps.LatLng(loc.lat, loc.lng),
                 map: map,
@@ -58,6 +70,9 @@
                     anchor: new naver.maps.Point(30, 60)
                 }
             });
+            }
+
+           
 
             // 각 마커의 클릭 이벤트
             naver.maps.Event.addListener(marker, 'click', function() {
