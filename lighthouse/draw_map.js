@@ -80,20 +80,34 @@
             });
         });
 
-        // --- 5. 내 위치 확인 기능 ---
+// --- 5. 내 위치 확인 기능 (토글 방식) ---
         var myLocationMarker = null; // 내 위치 핀을 저장할 변수
+        var isMapZoomedIn = false;   // ★ 지도가 내 위치로 확대되었는지 상태를 저장하는 변수
+        var initialCenter = new naver.maps.LatLng(36.484881, 127.949252); // ★ 초기 지도 중심 좌표
+        var initialZoom = 7;         // ★ 초기 줌 레벨
 
         document.getElementById('btn-location').addEventListener('click', function() {
-            // 브라우저가 GPS(Geolocation)를 지원하는지 확인
+            var btn = this; // 현재 클릭된 버튼
+
+            // 1. 이미 내 위치를 찾아서 지도가 확대된 상태라면 -> 초기 화면(전체 지도)으로 되돌리기
+            if (isMapZoomedIn) {
+                map.setCenter(initialCenter);
+                map.setZoom(initialZoom, true); // true: 부드러운 애니메이션 효과
+                btn.innerText = "🎯 내 위치 확인"; // 버튼 텍스트를 원래대로 복구
+                isMapZoomedIn = false; // 상태 초기화
+                return; // 아래의 위치 찾기 로직이 실행되지 않도록 여기서 함수 종료
+            }
+
+            // 2. 초기 상태라면 -> GPS로 내 위치 찾기 로직 실행
             if (navigator.geolocation) {
-                // 버튼 텍스트 변경으로 로딩 상태 표시
-                this.innerText = "⏳ 위치 찾는 중...";
+                btn.innerText = "⏳ 위치 찾는 중...";
 
                 navigator.geolocation.getCurrentPosition(function(position) {
                     var lat = position.coords.latitude;
                     var lng = position.coords.longitude;
                     var newLatLng = new naver.maps.LatLng(lat, lng);
 
+                    // 스탬프 리스트 거리 재계산
                     renderLighthouseList(lat, lng);
 
                     // 마커가 없으면 처음 생성, 이미 있으면 위치만 갱신
@@ -111,18 +125,20 @@
                         myLocationMarker.setPosition(newLatLng);
                     }
 
-                    // 내 위치로 지도를 부드럽게 이동하고 줌 레벨을 살짝 당김
+                    // 내 위치로 지도를 부드럽게 이동하고 줌 확대
                     map.setCenter(newLatLng);
-                    map.setZoom(8, true); // true를 주면 부드러운 애니메이션 효과 적용
+                    map.setZoom(8, true); 
                     
-                    document.getElementById('btn-location').innerText = "🎯 내 위치 확인";
+                    // ★ 내 위치를 찾고 나면 버튼 이름을 변경하고 상태를 '확대됨(true)'으로 업데이트
+                    btn.innerText = "🗺️ 전체 지도 보기"; 
+                    isMapZoomedIn = true;
 
                 }, function(error) {
                     alert("위치 정보를 가져올 수 없습니다. 스마트폰의 위치 서비스(GPS)가 켜져 있는지 확인해 주세요.");
-                    document.getElementById('btn-location').innerText = "🎯 내 위치 확인";
+                    btn.innerText = "🎯 내 위치 확인"; // 에러 시 버튼 원상복구
                 }, { 
-                    enableHighAccuracy: true, // 높은 정확도 (GPS) 사용
-                    timeout: 5000 // 5초 안에 못 찾으면 에러 처리
+                    enableHighAccuracy: true, 
+                    timeout: 5000 
                 });
             } else {
                 alert("현재 브라우저에서는 위치 서비스를 지원하지 않습니다.");
