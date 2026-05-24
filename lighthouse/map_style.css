@@ -59,12 +59,20 @@ body {
         .stamp-pin {
             width: 60px;
             height: 60px;
-            /* 배경 이미지는 JS에서 동적으로 주입되므로 여기서 삭제합니다. */
             background-size: cover;
             background-position: center;
             animation: floating 1.5s ease-in-out infinite alternate;
             cursor: pointer;
         }
+        .comp-pin {
+            width: 30px;
+            height: 30px;
+            background-size: cover;
+            background-position: left;
+            animation: floating 1.5s ease-in-out infinite alternate;
+            cursor: pointer;
+        }
+
         @keyframes floating {
             0% { transform: translateY(0); }
             100% { transform: translateY(-15px); }
