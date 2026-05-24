@@ -28,7 +28,7 @@
         // --- 3. 지도 초기화 ---
         var map = new naver.maps.Map('map', {
             center: new naver.maps.LatLng(36.804326, 127.934921),  // 36.850616, 127.946942
-            zoom: 6, 
+            zoom: 7, 
             minZoom: 6, 
             maxZoom: 7, 
             maxBounds: koreaBounds, // ★ 지도 이동 제한 (대한민국 영역)
