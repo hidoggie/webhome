@@ -11,7 +11,8 @@
             { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png" },
             { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png" },
             { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png" },
-            { title: "속초등대", lat: 38.2137, lng: 128.6000, img: "./img/sokcho_icon_240.png" }
+            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png" }
+   //         { title: "속초등대", lat: 38.2137, lng: 128.6000, img: "./img/sokcho_icon_240.png" }
         ];
 
         // --- 2. 대한민국 영역 제한 설정 (북한 제외) ---
@@ -19,17 +20,17 @@
         var koreaBounds = new naver.maps.LatLngBounds(
    //         new naver.maps.LatLng(32.5, 124.5), // 남서쪽 (South-West)
    //         new naver.maps.LatLng(38.8, 131.5)  // 북동쪽 (North-East)
-            new naver.maps.LatLng(32.5, 124.5), // 남서쪽 (South-West)
-            new naver.maps.LatLng(38.347689, 129.765179)  // 북동쪽 (North-East)
+            new naver.maps.LatLng(32.745225, 125.652393), // 남서쪽 (South-West)
+            new naver.maps.LatLng(38.360059, 129.522699)  // 북동쪽 (North-East)
 
         );
 
         // --- 3. 지도 초기화 ---
         var map = new naver.maps.Map('map', {
             center: new naver.maps.LatLng(36.804326, 127.934921),  // 36.850616, 127.946942
-            zoom: 7, 
+            zoom: 6, 
             minZoom: 6, 
-            maxZoom: 9, 
+            maxZoom: 7, 
             maxBounds: koreaBounds, // ★ 지도 이동 제한 (대한민국 영역)
             
             zoomControl: false, 
