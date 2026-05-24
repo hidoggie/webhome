@@ -38,3 +38,13 @@ document.querySelector('.mobile-container').addEventListener('click', function()
         updateStampProgress();
     }
 });
+
+document.addEventListener("DOMContentLoaded", function() {
+    const toggleHeader = document.getElementById('toggle-progress');
+    const progressCard = document.getElementById('progress-card');
+
+    // 한 줄 바를 클릭하면 expanded 클래스를 붙였다 뗐다 합니다.
+    toggleHeader.addEventListener('click', function() {
+        progressCard.classList.toggle('expanded');
+    });
+});

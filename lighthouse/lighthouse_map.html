@@ -26,25 +26,32 @@
             </div>
         </main>
 
-        <div class="progress-card">
-            <div class="progress-header">
-                <div class="progress-title">
-                    <span class="icon">👤</span> 스탬프 인증 현황
-                </div>
-                <div class="progress-count">
-                    <span id="current-stamps" class="current">1</span> / <span id="total-stamps" class="total">10</span>
-                </div>
-            </div>
-            
-            <div class="progress-bar-container">
-                <div class="progress-track">
-                    <div class="progress-fill" id="progress-fill"></div>
-                    
-                    <div class="progress-thumb" id="progress-thumb">
-                        🚨 </div>
-                </div>
-            </div>
+<div class="progress-card" id="progress-card">
+    <div class="progress-header" id="toggle-progress">
+        <div class="progress-title">
+            <span class="icon">👤</span> 스탬프 인증 현황
         </div>
+        <div class="progress-right">
+            <div class="progress-count">
+                <span id="current-stamps" class="current">1</span> / <span id="total-stamps" class="total">10</span>
+            </div>
+            <button class="expand-btn" id="expand-btn">▲</button>
+        </div>
+    </div>
+    
+    <div class="stamp-grid-container" id="stamp-grid">
+        <div class="stamp-slot acquired"><img src="./img/stamp_1.png" alt="스탬프"></div>
+        <div class="stamp-slot acquired"><img src="./img/stamp_2.png" alt="스탬프"></div>
+        <div class="stamp-slot"></div>
+        <div class="stamp-slot"></div>
+        <div class="stamp-slot"></div>
+        <div class="stamp-slot"></div>
+        <div class="stamp-slot"></div>
+        <div class="stamp-slot"></div>
+        <div class="stamp-slot"></div>
+        <div class="stamp-slot"></div>
+    </div>
+</div>
 
         <nav class="bottom-nav">
             <button class="nav-item">
