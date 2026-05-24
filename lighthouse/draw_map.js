@@ -20,7 +20,7 @@
         var koreaBounds = new naver.maps.LatLngBounds(
    //         new naver.maps.LatLng(32.745225, 125.652393), // 남서쪽 (South-West)
    //         new naver.maps.LatLng(38.360059, 129.522699)  // 북동쪽 (North-East)
-            new naver.maps.LatLng(32.438743, 125.641579), // 남서쪽 (South-West)
+            new naver.maps.LatLng(32.951863, 125.567672), // 남서쪽 (South-West)
             new naver.maps.LatLng(38.360059, 129.522699)  // 북동쪽 (North-East)
 
 
