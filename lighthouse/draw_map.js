@@ -83,7 +83,7 @@
                             position: newLatLng,
                             map: map,
                             icon: {
-                                content: '<div class="my-loc-pin"></div>',
+                                content: '<div class="my-loc-pin"><img src="./img/lh-man-map.png" style="width:40px;height:40px;"></div>',
                                 size: new naver.maps.Size(20, 20),
                                 anchor: new naver.maps.Point(10, 10) // 점의 정중앙을 좌표에 맞춤
                             }
