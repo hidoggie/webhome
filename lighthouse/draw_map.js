@@ -28,7 +28,7 @@
 
         // --- 3. 지도 초기화 ---
         var map = new naver.maps.Map('map', {
-            center: new naver.maps.LatLng(36.701623, 128.108043),  // 36.804326, 127.934921
+            center: new naver.maps.LatLng(36.484881, 127.949252),  // 36.804326, 127.934921
             zoom: 7, 
             minZoom: 6, 
             maxZoom: 7, 
