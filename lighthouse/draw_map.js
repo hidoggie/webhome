@@ -239,12 +239,31 @@ function updateProgressBar(current, total) {
     document.getElementById('progress-thumb').style.left = percentage + '%';
 }
 
-// 1. 페이지 로드 시 최초 1회 빈 리스트 렌더링 및 클릭 이벤트 등록
+// 1. 페이지 로드 시 최초 실행 및 클릭 이벤트 등록
 document.addEventListener("DOMContentLoaded", function() {
-    // 리스트 초기화
+    
+    // 1) 우선 위치 정보가 없는 상태의 뼈대를 빠르게 그립니다.
     renderLighthouseList(null, null);
 
-    // ★ 스탬프 인증 현황 카드 펼치기/접기 동작 추가
+    // ★ 2) 페이지가 열리자마자 사용자 위치를 즉시 요청하여 거리를 업데이트합니다.
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            var lat = position.coords.latitude;
+            var lng = position.coords.longitude;
+            
+            // 위치 권한이 허용되어 좌표를 가져오면, 리스트를 거리 계산된 버전으로 싹 바꿉니다!
+            renderLighthouseList(lat, lng);
+        }, function(error) {
+            // 사용자가 위치 권한을 거부했거나 오류가 발생한 경우 조용히 넘어갑니다.
+            // (이 경우엔 기존대로 '위치 확인 필요'가 유지됩니다)
+            console.log("초기 위치 권한 획득 실패 또는 거부됨");
+        }, { 
+            enableHighAccuracy: true, 
+            timeout: 5000 
+        });
+    }
+
+    // ★ 3) 스탬프 인증 현황 카드 펼치기/접기 동작 추가
     var toggleHeader = document.getElementById('toggle-progress');
     var progressCard = document.getElementById('progress-card');
 
