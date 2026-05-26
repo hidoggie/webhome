@@ -39,7 +39,7 @@
             z-index: 0;
             object-fit: cover; 
             object-position: center bottom; 
-            transition: opacity 1s ease-in-out; 
+            transition: opacity 0.5s ease-in-out; 
             opacity: 1; /* 기본 상태는 완전히 보임 */
         }
  
@@ -157,7 +157,7 @@
 
         video.addEventListener('timeupdate', () => {
             // 영상이 끝나기 0.5초 전이면 투명하게 만듦 (Fade-out)
-            if (video.duration - video.currentTime <= 1) {
+            if (video.duration - video.currentTime <= 0.5) {
                 video.classList.add('fade-hidden');
             } else {
                 // 영상이 처음으로 돌아가서 다시 시작되면 보이게 만듦 (Fade-in)
