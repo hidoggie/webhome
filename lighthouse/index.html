@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR 스탬프 투어</title>
+    <style>
+        /* 기본 여백 초기화 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* 폰트 설정 (웹 폰트 맑은고딕/애플산돌고딕 등 기본 폰트 사용) */
+        body, html {
+            height: 100%;
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            overflow: hidden; /* 스크롤바 방지 */
+        }
+
+        /* Hero 섹션 전체 화면 설정 */
+        .hero {
+            position: relative;
+            width: 100%;
+            height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 배경 동영상 설정 (화면 꽉 차게, 비율 유지) */
+        .hero video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            object-fit: cover; 
+            object-position: center bottom; 
+            transition: opacity 1s ease-in-out; 
+            opacity: 1; /* 기본 상태는 완전히 보임 */
+        }
+ 
+        .hero video.fade-hidden {
+            opacity: 0; 
+        }
+
+        /* 텍스트 가독성을 위한 어두운 오버레이 */
+        .overlay {
+            position: absolute;
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.3); /* 숫자를 조절해 어둡기 변경 가능 */
+            z-index: 1;
+    /*        transition: background-color 0.7s ease, backdrop-filter 0.7s ease;  */
+        }
+
+        /* 비디오가 끝날 때 적용할 클래스 */
+        .overlay.fade-out {
+            background-color: rgba(0, 0, 0, 0.6); /* 투명도를 1이 아닌 0.6 정도로 낮춤 */
+            backdrop-filter: blur(15px); /* 배경을 뿌옇게 만들어서 끊기는 장면을 뭉갬 */
+            -webkit-backdrop-filter: blur(15px); /* 사파리 브라우저 호환성 */        }
+
+        /* 텍스트 및 버튼 컨테이너 */
+        .title {
+            position: absolute;
+            top: 10%;
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px; /* 제목과 버튼 사이 간격 */
+        }
+        .btn {
+            position: absolute;
+            top: 70%;
+            z-index: 2;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 50px; /* 제목과 버튼 사이 간격 */
+        }
+
+
+        /* 제목 스타일 */
+        h1 {
+            color: #ffffff;
+            font-size: 4.5rem;
+            font-weight: 800;
+            text-shadow: 2px 4px 10px rgba(0, 0, 0, 0.6); /* 글씨에 그림자 효과 */
+            letter-spacing: 2px;
+            word-break: keep-all;
+        }
+
+        /* 시작하기 버튼 스타일 */
+        .btn-start {
+            display: inline-block;
+            padding: 16px 48px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #ffffff;
+            /* 푸른 바다와 대비되는 따뜻하고 예쁜 코랄빛 그라데이션 */
+            background: linear-gradient(135deg, #ff7e5f, #feb47b); 
+            border: none;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+
+        /* 버튼 마우스 오버(호버) 효과 */
+        .btn-start:hover {
+            transform: translateY(-5px) scale(1.05); /* 살짝 위로 떠오르며 커짐 */
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 모바일 화면 대응 (스마트폰 크기) */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 3rem;
+            }
+            .content {
+                gap: 30px;
+            }
+            .btn-start {
+                font-size: 1.3rem;
+                padding: 14px 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <video autoplay loop muted playsinline>
+            <source src="main-bg.mp4" type="video/mp4">
+            브라우저가 동영상을 지원하지 않습니다.
+        </video>
+        
+        <div class="overlay"></div>
+
+        <div class="title">
+            <h1>AR <p>스탬프 투어</h1>
+        </div>
+        <div class="btn">
+            <a href="lighthouse_map.html" class="btn-start">시작하기</a>
+        </div>
+    </div>
+    <script>
+        const video = document.querySelector('video');
+
+        video.addEventListener('timeupdate', () => {
+            // 영상이 끝나기 0.5초 전이면 투명하게 만듦 (Fade-out)
+            if (video.duration - video.currentTime <= 1) {
+                video.classList.add('fade-hidden');
+            } else {
+                // 영상이 처음으로 돌아가서 다시 시작되면 보이게 만듦 (Fade-in)
+                video.classList.remove('fade-hidden');
+            }
+        });
+    </script>
+</body>
+</html>
