@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>AR 등대여권</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Noto Sans KR',sans-serif;
+}
+
+body{
+
+background:#0a1831;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+overflow:hidden;
+
+}
+
+
+/* 모바일 화면 */
+
+.mobile{
+
+position:relative;
+
+width:390px;
+height:844px;
+
+overflow:hidden;
+border-radius:35px;
+
+box-shadow:
+0 20px 50px rgba(0,0,0,.4);
+
+}
+
+
+/* 배경 이미지 */
+
+.bg{
+  height: 91%;
+  position:absolute;
+  inset:0;
+  background-image:url("./img/bg-lighthouse-passport.png");
+/* 첫번째 첨부 이미지 */
+
+  background-size:cover;
+  background-position:center;
+}
+
+
+/* 안내 영역 */
+
+.swipe-guide{
+
+position:absolute;
+bottom:18%;
+left:50%;
+transform:translateX(-50%);
+display:flex;
+flex-direction:column;
+align-items:center;
+z-index:10;
+width:100%;
+}
+
+
+/* 아이콘 */
+
+.swipe-icon{
+
+width:95px;
+height:auto;
+
+filter:
+drop-shadow(0 5px 12px rgba(0,0,0,.35));
+
+animation:
+swipeMove 1.8s ease-in-out infinite;
+
+}
+
+
+/* 안내문구 */
+
+.guide-text{
+
+margin-top:22px;
+
+font-size:22px;
+font-weight:500;
+
+line-height:1.5;
+
+text-align:center;
+
+color:white;
+
+text-shadow:
+0 2px 8px rgba(0,0,0,.35);
+
+padding:0 40px;
+
+animation:
+fadeIn 1.2s ease;
+
+}
+
+
+/* 스와이프 애니메이션 */
+
+@keyframes swipeMove{
+
+0%{
+
+transform:
+translateX(-35px);
+
+}
+
+50%{
+
+transform:
+translateX(35px);
+
+}
+
+100%{
+
+transform:
+translateX(-35px);
+
+}
+
+}
+
+
+/* 등장 효과 */
+
+@keyframes fadeIn{
+
+from{
+
+opacity:0;
+transform:translateY(15px);
+
+}
+
+to{
+
+opacity:1;
+transform:translateY(0);
+
+}
+
+}
+
+/* 4. 하단 네비게이션 (Footer) */
+.bottom-nav {
+    position: absolute;  /* 추가 */
+    bottom: 0;           /* 추가 */
+    left: 0;             /* 추가 */
+    right: 0;            /* 추가 */
+    border-radius: 5px;
+    height: 9%; background-color: #1a3350;
+    display: flex; justify-content: space-around; align-items: center;
+    z-index: 30;
+}
+.nav-item {
+    background: none; border: none; color: #8fa6c1; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.nav-item.active { color: white; }
+.nav-item .icon { font-size: 24px;}
+.nav-item .label { font-size: 12px; font-weight: 500; }
+.nav-item img { width: 24px; height: 24px; } /* 커스텀 아이콘 사용 시 */
+
+</style>
+
+</head>
+
+
+<body>
+
+<div class="mobile">
+
+<div class="bg"></div>
+
+<div class="swipe-guide">
+
+<img
+class="swipe-icon"
+src="./img/swipe-white.png"
+alt="좌우 스와이프">
+
+<div class="guide-text">
+
+양쪽으로 넘기면서<br>
+스탬프북을 열람 할 수 있습니다.
+
+</div>
+
+</div>
+
+        <nav class="bottom-nav">
+              <a href="lighthouse_map.html" class="nav-item">
+                <span class="icon">
+                <img src="./img/home_white.png"></span>
+                <span class="label">스탬프홈</span>
+              </a>
+              <a href="lh-passport.html" class="nav-item active">
+                  <span class="icon">
+                  <img src="./img/passport_white.png"></span>
+                  <span class="label">스탬프북</span>
+              </a> 
+            <button class="nav-item">
+                <span class="icon"><img src="./img/info_white.png"></span>
+                <span class="label">안내</span>
+            </button>
+        </nav>
+
+
+</div>
+
+</body>
+</html>
