@@ -174,7 +174,7 @@ function renderLighthouseList(userLat, userLng) {
 
     eventLocations.forEach(function(loc) {
         // [테스트용] 나중에 서버 연동 시 이 부분을 실제 유저 데이터로 변경하세요.
-        var isAcquired = (loc.title === "팔미도등대"); 
+        var isAcquired = (loc.title === "간절곶등대"); 
         
         // ★ 획득한 등대라면 카운트 1 증가
         if (isAcquired) {
