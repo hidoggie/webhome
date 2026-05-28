@@ -32,7 +32,7 @@ body {
     text-align: center; 
     z-index: 10;
 }
-.header-top { display: flex; justify-content: space-between; align-items: center; }
+.header-top { justify-content: space-between; align-items: center; }
 .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
 .title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
 .spacer { width: 24px; } /* 타이틀 중앙 정렬용 */
