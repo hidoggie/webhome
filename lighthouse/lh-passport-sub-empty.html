@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AR 등대여권</title>
+    <style>
+        /* 기본 초기화 및 폰트 설정 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Pretendard', 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f0f0; /* 모바일 뷰어 바깥쪽 배경 */
+            display: flex;
+            justify-content: center;
+        }
+
+        /* 모바일 컨테이너 설정 */
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            min-height: 100vh;
+            background-color: #fbf9f4; /* 앱 전체 배경색 */
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+  /*          position: relative;
+            padding-bottom: 9%;  */
+        }
+
+        /* 1. 상단 여권 배경 및 스탬프 영역 */
+        .header-section {
+            height: 35vh;
+            position: relative;
+            width: 100%;
+            /* 배경 이미지 비율 유지를 위한 설정 */
+            display: flex;
+            flex-direction: column;
+        }
+        .header-bg-img {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .header-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* 상단 타이틀 영역 */
+        .title-area {
+            text-align: center;
+            padding-top: 2.5%;
+            color: #ffffff;
+        }
+        .title-area h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+        .title-area h2 {
+            font-size: 12px;
+            font-weight: 500;
+            color: #8ed6ba; /* 민트색 */
+            letter-spacing: 2px;
+        }
+
+        /* 티켓(스탬프) 영역 */
+        .ticket-area {
+            flex: 1;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-bottom: 5%;
+        }
+        .stamp-img {
+            width: 50%; /* 스탬프 이미지 크기 조절 */
+            max-width: 220px;
+            object-fit: contain;
+        }
+        .stamp-time {
+            position: absolute;
+            bottom: 7%;
+            right: 10%;
+            font-size: 11px;
+            color: #999;
+            font-family: 'Courier New', Courier, monospace;
+            letter-spacing: 1px;
+        }
+
+        /* 2. 중간 스탬프 기록 통계 영역 */
+        .record-section {
+   /*         position: absolute;
+            top: 35%;  */
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 24px 5px;
+        }
+        .record-title {
+            display: flex;
+            align-items: center;
+            font-size: 15px;
+            font-weight: 700;
+            color: #173357; /* 짙은 남색 */
+            gap: 6px;
+        }
+        .record-count {
+            font-size: 14px;
+            color: #888;
+            font-weight: 500;
+        }
+        .record-count .current {
+            color: #173357;
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-position: under;
+            font-size: 16px;
+        }
+
+        /* 3. 하단 인증샷 및 정보 카드 영역 */
+        .cards-section {
+            margin-top: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            padding: 0 15px;
+            flex: 1;
+        }
+
+        /* 좌측 인증샷 카드 */
+        .photo-card {
+            flex: 3;
+            background-color: #e8e8e8;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 0 30px 0;
+            color: #777;
+            overflow: hidden;
+        }
+        .photo-card img {
+           width: 100%;
+           height: 100%;
+           object-fit: contain;      /* ← cover 는 비율 유지하며 카드를 꽉 채움 (넘치는 부분은 잘림) */
+           border-radius: 12px;    /* ← photo-card의 border-radius와 동일하게 */
+           background-color: #333;
+           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+        .photo-card svg {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 10px;
+            fill: #999;
+        }
+        .photo-card p {
+            font-size: 12px;
+            line-height: 1.4;
+            font-weight: 500;
+        }
+
+        /* 우측 등대 정보 카드 */
+        .info-card {
+            flex: 2;
+            background-color: #ffffff;
+            border: 1px solid #eaeaea;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .info-card img {
+           width: 100%;
+           object-fit: contain;      /* ← cover 는 비율 유지하며 카드를 꽉 채움 (넘치는 부분은 잘림) */
+           border-radius: 12px;    /* ← photo-card의 border-radius와 동일하게 */
+           background-color: #333;
+           box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .info-badge {
+            display: inline-block;
+            border: 1px solid #173357;
+            color: #173357;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 11px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            width: fit-content;
+        }
+        .info-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #173357;
+            margin-bottom: 4px;
+        }
+        .info-subtitle {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 16px;
+        }
+        .info-divider {
+            height: 1px;
+            background-color: #f0f0f0;
+            border: none;
+            margin-bottom: 16px;
+        }
+        .review-space {
+            flex-grow: 1;
+            /* 후기가 들어갈 빈 공간 확보 */
+            min-height: 40px; 
+        }
+        .info-date {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: #999;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        .info-date svg {
+            width: 14px;
+            height: 14px;
+            fill: #173357;
+        }
+
+/* 4. 하단 네비게이션 (Footer) */
+.bottom-nav {
+    width: 100%; /* max-width 대신 100%로 설정하여 부모(app-container) 너비를 따름 */
+    height: 70px; /* % 대신 명확한 px 높이를 주어 찌그러짐 방지 */
+    flex-shrink: 0; /* 화면이 작아져도 네비게이션 높이가 줄어들지 않도록 고정 */
+    border-radius: 5px 5px 0 0; /* 하단에 붙으므로 둥근 모서리 조정 (선택사항) */
+    background-color: #1a3350;
+    display: flex; 
+    justify-content: space-around; 
+    align-items: center;
+    z-index: 30;
+}
+.nav-item {
+    background: none; border: none; color: #8fa6c1; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.nav-item.active { color: white; }
+.nav-item .icon { font-size: 24px;}
+.nav-item .label { font-size: 12px; font-weight: 500; }
+.nav-item img { width: 24px; height: 24px; } /* 커스텀 아이콘 사용 시 */
+
+/* 해시태그 스타일 */
+.tag {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-right: 8px;
+  margin-top: 6px;
+  border-radius: 12px;   /* 둥근 모서리 */
+  font-weight: bold;
+  color: #fff;           /* 글자색 흰색 */
+  font-size: 14px;
+}
+
+/* 색상별 클래스 */
+.tag.pink {
+  background-color: #ff6fae; /* 분홍색 */
+}
+
+.tag.blue {
+  background-color: #5bc0de; /* 하늘색 */
+}
+
+/* 아래 텍스트 */
+.subtitle {
+  margin-top: 12px;
+  margin-left: 3px;
+  margin-right: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #333;
+}
+
+/* 팝업(모달) 배경 딤(Dim) 처리 */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: none; /* 기본적으로 숨김 상태 */
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        /* 팝업 컨텐츠 박스 */
+        .modal-content {
+           /* background-color: #f7fcf9; */
+             background-image: url('./img/popup-bg-1.png'); 
+             background-size: cover; 
+
+            width: 85%;
+            max-width: 340px;
+            border-radius: 15px;
+            position: relative;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            border: 3px solid #3d6353; /* 어두운 녹색 테두리 */
+            overflow: hidden; /* 하단 배경이 둥근 모서리를 튀어나오지 않게 */
+        }
+
+        /* 우측 상단 X 버튼 */
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            background-color: #669c8a;
+            color: white;
+            border: none;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* 텍스트 정보 영역 */
+        .modal-body {
+            padding: 30px 20px 20px 20px;
+        }
+        .info-group {
+            margin-bottom: 12px;
+        }
+        .info-label {
+            font-size: 14px;
+            color: #111;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 16px;
+            color: #1c5e32; /* 올려주신 이미지의 진한 녹색 텍스트 */
+            font-weight: 500;
+            word-break: keep-all; /* 단어 단위로 줄바꿈 */
+        }
+
+        /* 하단 영역 (물결무늬 배경 대체 및 버튼) */
+        .modal-footer {
+            height: 90px;
+            /* 추후 하단 파도/등대 그림이 있다면 아래 속성에 배경 이미지 URL을 넣으시면 됩니다. */
+            /* background-image: url('./img/lh-info-popup.png'); 
+             background-size: cover; */
+            /* background-color: #79c3ab; *//* 임시 하단 배경색 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* OK 버튼 */
+        .btn-ok {
+            background: linear-gradient(to right, #9AD28B, #37BBA3);
+            color: white;
+            border: none;
+            padding: 10px 0;
+            border-radius: 20px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 60%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+        
+        <div class="header-section">
+            <img src="./img/passport-sub-bg1.png" alt="여권 배경" class="header-bg-img">
+            <div class="header-overlay">
+                <div class="title-area">
+                    <h1>AR 등대여권</h1>
+                    <!--h2>STAMP BOOK</h2-->
+                </div>
+                
+                <div class="ticket-area">
+                    <img src="./img/stamp-preview-2.png" alt="등대 스탬프" class="stamp-img">
+                    <!--img src="./img/stamp-ganjolgot.png" alt="등대 스탬프" class="stamp-img"-->
+                    <div class="stamp-time">2026.05.28 12:36</div> 
+                </div>
+            </div>
+        </div>
+        <div class="record-section">
+            <div class="record-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z" fill="#173357"/>
+                </svg>
+                나의 스탬프 기록
+            </div>
+            <div class="record-count">
+                <span class="current">01</span> / 10
+            </div>
+        </div>
+
+        <div class="cards-section">
+            
+            <div class="photo-card">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 8V19C4 19.55 4.45 20 5 20H19C19.55 20 20 19.55 20 19V8C20 7.45 19.55 7 19 7H16.83L15 5H9L7.17 7H5C4.45 7 4 7.45 4 8ZM12 18C9.79 18 8 16.21 8 14C8 11.79 9.79 10 12 10C14.21 10 16 11.79 16 14C16 16.21 14.21 18 12 18ZM12 11.5C10.62 11.5 9.5 12.62 9.5 14C9.5 15.38 10.62 16.5 12 16.5C13.38 16.5 14.5 15.38 14.5 14C14.5 12.62 13.38 11.5 12 11.5Z"/>
+                </svg>
+                <p>인증샷을<br>남겨보세요!</p>
+                <!--img src="./img/photo-demo.jpg"-->
+            </div>
+
+            <div class="info-card">
+                <img src="./img/photo-demo-3.jpg"  style="cursor: pointer;"  onclick="openModal()">
+                
+                <!--hr class="info-divider"-->
+                
+                <div class="review-space">
+                   <div class="hashtags">
+                       <span class="tag pink"># 등대스탬프투어</span>
+                       <span class="tag blue"># 영도등대</span>
+                   </div>
+                   <p class="subtitle"></p>
+                </div>
+                
+            </div>
+
+        </div>
+
+        <nav class="bottom-nav">
+              <a href="lighthouse_map.html" class="nav-item">
+                <span class="icon">
+                <img src="./img/home_white.png"></span>
+                <span class="label">홈</span>
+              </a>
+              <a href="lh-passport.html" class="nav-item active">
+                  <span class="icon">
+                  <img src="./img/passport_white.png"></span>
+                  <span class="label">스탬프북</span>
+              </a> 
+            <button class="nav-item">
+                <span class="icon"><img src="./img/info_white.png"></span>
+                <span class="label">안내</span>
+            </button>
+        </nav>
+
+    </div>
+
+<div id="infoModal" class="modal-overlay">
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeModal()">×</button>
+                
+                <div class="modal-body">
+                    <div class="info-group">
+                        <div class="info-label">불 밝힌날 :</div>
+                        <div class="info-value" id="val-date">1906.12.01.</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">등대 위치 :</div>
+                        <div class="info-value" id="val-location">부산광역시 영도구 전망로 181</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">등대 높이 :</div>
+                        <div class="info-value" id="val-height">34m</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">연락처 :</div>
+                        <div class="info-value" id="val-phone">051-405-1201 (영도항로표지관리소)</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">운영시간 :</div>
+                        <div class="info-value" id="val-time">- 3월~10월: 06:00~20:00<br>- 11월~2월: 07:00~18:00</div>
+                        <div class="info-value" id="val-dayoff">매주 월요일 및 설·추석 당일 휴관</div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn-ok" onclick="closeModal()">OK</button>
+                </div>
+            </div>
+        </div>
+
+<script>
+        // 모달 열기
+        function openModal() {
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+
+        // 모달 닫기
+        function closeModal() {
+            document.getElementById('infoModal').style.display = 'none';
+        }
+
+        // 팝업 외부 어두운 배경 클릭 시 닫히게 하려면 아래 코드 주석 해제
+        /*
+        window.onclick = function(event) {
+            let modal = document.getElementById('infoModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        */
+    </script>
+
+<script>
+    let touchstartX = 0;
+    let touchendX = 0;
+
+    const prevPage = 'lh-passport-sub.html'; 
+    const nextPage = null; 
+
+    function handleGesture() {
+        if (touchendX < touchstartX - 50 && nextPage) window.location.href = nextPage;
+        if (touchendX > touchstartX + 50 && prevPage) window.location.href = prevPage;
+    }
+
+    // [1] 모바일 터치 이벤트
+    document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        handleGesture();
+    });
+
+    // [2] PC 화면 좌/우 클릭 이벤트 (수정됨)
+    document.addEventListener('click', e => {
+        if (e.target.closest('a, button, [onclick]')) return;
+
+        const screenWidth = window.innerWidth;
+        const clickX = e.clientX;
+
+        if (clickX >= screenWidth / 2 && nextPage) {
+            window.location.href = nextPage;
+        } else if (clickX < screenWidth / 2 && prevPage) {
+            window.location.href = prevPage;
+        }
+    });
+</script>
+</body>
+</body>
+</html>

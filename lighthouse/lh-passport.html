@@ -234,6 +234,43 @@ alt="좌우 스와이프">
 
 
 </div>
+<script>
+    let touchstartX = 0;
+    let touchendX = 0;
 
+    const prevPage = null; 
+    const nextPage = 'lh-passport-sub.html';
+
+    function handleGesture() {
+        if (touchendX < touchstartX - 50 && nextPage) window.location.href = nextPage;
+        if (touchendX > touchstartX + 50 && prevPage) window.location.href = prevPage;
+    }
+
+    // [1] 모바일 터치 이벤트
+    document.addEventListener('touchstart', e => { touchstartX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        handleGesture();
+    });
+
+    // [2] PC 화면 좌/우 클릭 이벤트 (수정됨)
+    document.addEventListener('click', e => {
+        // 네비게이션이나 버튼 클릭 시 페이지 넘어감 방지
+        if (e.target.closest('a, button, [onclick]')) return;
+
+        const screenWidth = window.innerWidth;
+        const clickX = e.clientX;
+
+        // 화면 우측 클릭 시 다음 페이지로
+        if (clickX >= screenWidth / 2 && nextPage) {
+            window.location.href = nextPage;
+        } 
+        // 화면 좌측 클릭 시 이전 페이지로
+        else if (clickX < screenWidth / 2 && prevPage) {
+            window.location.href = prevPage;
+        }
+    });
+</script>
+</body>
 </body>
 </html>
