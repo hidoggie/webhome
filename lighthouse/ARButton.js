@@ -73,7 +73,7 @@ class ARButton {
 
 				await renderer.xr.setSession( session );
 
-				button.textContent = 'STOP AR';
+				button.textContent = '게임 중지';
 				sessionInit.domOverlay.root.style.display = '';
 
 				currentSession = session;
@@ -84,7 +84,7 @@ class ARButton {
 
 				currentSession.removeEventListener( 'end', onSessionEnded );
 
-				button.textContent = 'START AR';
+				button.textContent = '게임 시작';
 				sessionInit.domOverlay.root.style.display = 'none';
 
 				currentSession = null;
@@ -99,7 +99,7 @@ class ARButton {
 			button.style.left = 'calc(50% - 50px)';
 			button.style.width = '100px';
 
-			button.textContent = 'START AR';
+			button.textContent = '게임 시작';
 
 			button.onmouseenter = function () {
 
@@ -172,7 +172,7 @@ class ARButton {
 
 			disableButton();
 
-			button.textContent = 'AR NOT SUPPORTED';
+			button.textContent = 'AR 지원이 안되요';
 
 		}
 
@@ -182,7 +182,7 @@ class ARButton {
 
 			console.warn( 'Exception when trying to call xr.isSessionSupported', exception );
 
-			button.textContent = 'AR NOT ALLOWED';
+			button.textContent = 'AR 지원이 안되요';
 
 		}
 
