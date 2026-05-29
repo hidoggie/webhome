@@ -209,7 +209,7 @@ renderer.xr.enabled = true;
 document.body.appendChild(renderer.domElement);
 
 // AR Button (DOM Overlay 적용)
-const arBtn = THREE.ARButton.createButton(renderer, {
+const arBtn = ARButton.createButton(renderer, {
     requiredFeatures: ['hit-test'],
     optionalFeatures: ['dom-overlay'],
     domOverlay: { root: document.getElementById('ui-layer') }
