@@ -232,7 +232,7 @@ const maskGeo = new THREE.PlaneGeometry(100, 100);
 const maskMat = new THREE.MeshBasicMaterial({ colorWrite: false });
 const maskMesh = new THREE.Mesh(maskGeo, maskMat);
 maskMesh.rotation.x = -Math.PI / 2;
-maskMesh.position.y = -1.35;
+maskMesh.position.y = -0.05; // 지면 살짝 아래로 배치
 maskMesh.renderOrder = -1; // 제일 먼저 그려져서 마스크 역할을 함
 worldGroup.add(maskMesh);
 
@@ -271,9 +271,9 @@ worldGroup.add(sun);
 
 // ── Materials────────────────────────────────────────────────────────
 const MAT = {
-  dirt:       new THREE.MeshStandardMaterial({color: 0xc17335, roughness: 1}), // 언덕용 (밝은 흙)
-  holeWall:   new THREE.MeshStandardMaterial({color: 0xa35b29, roughness: 1, side: THREE.BackSide}), // 깊은 구멍 안쪽 벽 (어두운 흙 + 안쪽만 렌더링)
-  holeBottom: new THREE.MeshStandardMaterial({color: 0x8a4b20, roughness: 1})  // 구멍 바닥
+  dirt:       new THREE.MeshLambertMaterial({color: 0x6e3d23}), // 짙은 갈색 흙 (바깥쪽)
+  holeWall:   new THREE.MeshLambertMaterial({color: 0x4a2711, side: THREE.BackSide}), // 더 어두운 흙 (안쪽)
+  holeBottom: new THREE.MeshBasicMaterial({color: 0x1a0f08})  // 가장 어두운 흙 (바닥)
 };
 
 function add(parent,mesh,px,py,pz){
@@ -312,19 +312,21 @@ function makeCrab(){
 const grassGeo = new THREE.ConeGeometry(0.06, 0.7, 3);
 function makeHole(){
   const g = new THREE.Group();
-  // 부드러운 흙무지 형태
-  const mound = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 10, 0, Math.PI*2, 0, Math.PI/2), MAT.dirt);
-  mound.scale.y = 0.35;
+  
+  // 1. 위로 볼록하게 솟은 흙무더기 (높이 0.5)
+  const mound = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.85, 0.5, 24, 1, true), MAT.dirt);
+  mound.position.y = 0.25; // 높이의 절반을 올려서 바닥 위로 솟게 함
   g.add(mound);
   
-  // 구멍 내부 벽면 (게의 높이만큼 깊게! 깊이: 1.3)
-  // 뚜껑이 뚫린(open=true) 원기둥을 사용하여 자연스러운 동굴 느낌을 줍니다.
-  add(g, cyl(MAT.holeWall, 0.52, 0.45, 1.3, 24, true), 0, -0.65, 0);
+  // 2. 구멍 안쪽 벽면
+  const wall = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.85, 0.5, 24, 1, true), MAT.holeWall);
+  wall.position.y = 0.25;
+  g.add(wall);
 
-  // 깊은 구멍 바닥을 막아줌
-  const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.45, 24), MAT.holeBottom);
+  // 3. 구멍 바닥 꽉 막음
+  const bottom = new THREE.Mesh(new THREE.CircleGeometry(0.85, 24), MAT.holeBottom);
   bottom.rotation.x = -Math.PI / 2;
-  bottom.position.y = -1.3;
+  bottom.position.y = 0.02; // 지면 살짝 위
   g.add(bottom);
 
   return g;
@@ -355,7 +357,8 @@ malletRoot.position.y = MALLET_REST_Y;
 
 const COLS=[-4,0,4], ROWS=[-3,0,3];
 // ★ 크랩이 들어갈 때 완전히 마스크 밑으로 사라지도록 Y_DOWN 값을 더 낮춤
-const MOLE_Y_DOWN=-1.5, MOLE_Y_UP=0.1;
+const MOLE_Y_DOWN = -0.2; // 흙무더기 바닥으로 내려감
+const MOLE_Y_UP = 0.65;   // 흙무더기 위로 쏙 올라옴
 
 const slots=[];
 ROWS.forEach(z=>COLS.forEach(x=>{
@@ -785,9 +788,16 @@ function animate(timestamp, frame){
     }
   }
   
-  slots.forEach((s)=>{
+slots.forEach((s)=>{
     const dy=s.targetY-s.grp.position.y;
-    s.grp.position.y+=dy*Math.min(1,dt*14); // 마스크 밑에서 쏙 올라오도록 속도 살짝 상향
+    s.grp.position.y+=dy*Math.min(1,dt*14); 
+    
+    // ★ 확실하게 숨기기: 크랩이 구멍 밑으로 내려가면 아예 안 보이게 투명 처리
+    if(s.grp.position.y < MOLE_Y_DOWN + 0.1) {
+      s.moleObj.group.visible = false;
+    } else {
+      s.moleObj.group.visible = true;
+    }
   });
 
   if(swinging){
