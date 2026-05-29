@@ -11,14 +11,11 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;touch-action:none}
-/* AR 화면을 위해 body 배경을 투명하게 변경 */
 body{background:transparent;font-family:'Segoe UI',sans-serif;cursor:crosshair;user-select:none}
 canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
 
 /* ── HUD (UI 컨테이너) ── */
-#ui-layer {
-  position: fixed; inset: 0; z-index: 50; pointer-events: none;
-}
+#ui-layer { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
 #hud{
   position:absolute;top:0;left:0;right:0;
   display:flex;justify-content:space-between;align-items:center;
@@ -27,8 +24,7 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
   background:linear-gradient(180deg,rgba(0,0,0,0.6) 0%,transparent 100%);
 }
 .hud-box{
-  background:rgba(255,100,100,0.2);
-  border:2px solid rgba(255,100,100,0.6);
+  background:rgba(255,100,100,0.2); border:2px solid rgba(255,100,100,0.6);
   border-radius:12px;padding:6px 16px;text-align:center;
   backdrop-filter:blur(6px);min-width:72px;
 }
@@ -50,8 +46,7 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
   letter-spacing:2px;white-space:nowrap;
 }
 #hitpop{
-  position:absolute;top:50%;left:50%;
-  transform:translate(-50%,-50%);
+  position:absolute;top:50%;left:50%; transform:translate(-50%,-50%);
   font-size:clamp(36px,10vw,56px);font-weight:900;opacity:0;
   text-shadow:0 0 40px currentColor;transition:opacity .25s,transform .25s;
 }
@@ -61,8 +56,7 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
   position:absolute;inset:0;pointer-events:auto;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:radial-gradient(ellipse at center,rgba(10,30,50,.9),rgba(0,10,20,.98));
-  padding:20px;
-  padding-bottom:max(env(safe-area-inset-bottom,20px),20px);
+  padding:20px; padding-bottom:max(env(safe-area-inset-bottom,20px),20px);
 }
 .big-title{
   font-size:clamp(38px,10vw,68px);font-weight:900;color:#ff7777;letter-spacing:3px;
@@ -96,39 +90,36 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
 .res-detail span{text-align:center;display:flex;flex-direction:column;gap:2px}
 .res-detail b{font-size:clamp(18px,5vw,24px);color:#fff}
 
-/* ── Mobile tap ripple overlay (shows touch targets) ── */
-#tap-layer{
-  position:absolute;inset:0;pointer-events:auto;touch-action:none;
-}
+#tap-layer{ position:absolute;inset:0;pointer-events:auto;touch-action:none; }
 
-/* ── Tap feedback ring ── */
 .tap-ring{
-  position:absolute;
-  width:80px;height:80px;
-  border-radius:50%;
-  border:3px solid rgba(255,100,100,.8);
-  margin:-40px 0 0 -40px;
-  animation:tapRing .4s ease-out forwards;
-  pointer-events:none;
+  position:absolute; width:80px;height:80px; border-radius:50%;
+  border:3px solid rgba(255,100,100,.8); margin:-40px 0 0 -40px;
+  animation:tapRing .4s ease-out forwards; pointer-events:none;
 }
-@keyframes tapRing{
-  0%{transform:scale(0.3);opacity:1}
-  100%{transform:scale(1.8);opacity:0}
-}
+@keyframes tapRing{ 0%{transform:scale(0.3);opacity:1} 100%{transform:scale(1.8);opacity:0} }
 
-/* ── Pause button ── */
-#pause-btn{
-  position:absolute;top:max(env(safe-area-inset-top,10px),10px);
-  right:16px;z-index:55; pointer-events:auto;
+/* ── Top Buttons (Exit & Pause) ── */
+.top-btn {
+  position:absolute; top:max(env(safe-area-inset-top,10px),10px); z-index:55; pointer-events:auto;
   width:42px;height:42px;border-radius:50%;
-  background:rgba(0,0,0,0.4);border:2px solid rgba(255,255,255,0.4);
+  background:rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.5);
   color:#fff;font-size:18px;cursor:pointer;
   display:none;align-items:center;justify-content:center;
   backdrop-filter:blur(4px);-webkit-appearance:none;
 }
-#pause-btn.visible{display:flex}
+#exit-btn { left: 16px; }
+#pause-btn { right: 16px; }
+.top-btn.visible { display:flex; }
 
-/* ── Pause overlay ── */
+/* ── AR Instruction Overlay ── */
+#ar-instruction {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.7); color: #fff; padding: 15px 25px;
+  border-radius: 30px; font-weight: bold; text-align: center; pointer-events: none;
+  display: none; z-index: 100; white-space: nowrap; font-size: 16px;
+}
+
 #pause-overlay{
   position:absolute;inset:0;z-index:180;pointer-events:auto;
   background:rgba(0,0,0,0.85);backdrop-filter:blur(6px);
@@ -138,25 +129,24 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
 #pause-overlay .ptitle{font-size:clamp(32px,9vw,50px);font-weight:900;color:#fff;
   text-shadow:0 0 20px rgba(255,255,255,0.5)}
 
-/* Three.js AR Button Override */
 #ARButton {
-  position: static !important;
-  margin-top: 20px;
+  position: static !important; margin-top: 20px;
   padding: clamp(14px,4vw,18px) clamp(36px,10vw,62px) !important;
-  font-size: clamp(16px,4.5vw,21px) !important;
-  font-weight: 800 !important;
-  color: #fff !important;
-  background: linear-gradient(135deg,#0077ff,#0033cc) !important;
-  border: 2px solid #88bbff !important;
-  border-radius: 50px !important;
-  box-shadow: 0 8px 32px rgba(0,100,255,.5) !important;
-  opacity: 1 !important;
+  font-size: clamp(16px,4.5vw,21px) !important; font-weight: 800 !important;
+  color: #fff !important; background: linear-gradient(135deg,#0077ff,#0033cc) !important;
+  border: 2px solid #88bbff !important; border-radius: 50px !important;
+  box-shadow: 0 8px 32px rgba(0,100,255,.5) !important; opacity: 1 !important;
 }
 </style>
 </head>
 <body>
 
 <div id="ui-layer">
+  <div id="ar-instruction">바닥을 천천히 비춰주세요...</div>
+
+  <button id="exit-btn" class="top-btn" aria-label="나가기">❌</button>
+  <button id="pause-btn" class="top-btn" aria-label="일시정지">⏸</button>
+
   <div id="hud" style="display:none;">
     <div class="hud-box"><div class="hlabel">점수</div><div class="hval" id="sc">0</div></div>
     <div id="timer-wrap">
@@ -166,8 +156,6 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
     <div class="hud-box"><div class="hlabel">목표</div><div class="hval">100</div></div>
   </div>
 
-  <button id="pause-btn" aria-label="일시정지">⏸</button>
-
   <div id="combo">🔥 COMBO x<span id="cnum">2</span></div>
   <div id="hitpop"></div>
 
@@ -176,7 +164,7 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
   <div class="screen" id="start-screen">
     <div class="big-title">🦀 AR 크랩 잡기</div>
     <div class="sub">100점 달성하고 포토존으로 가자!<br>(카메라 접근을 허용해주세요)</div>
-    </div>
+  </div>
 
   <div class="screen" id="result-screen" style="display:none">
     <div class="big-title" id="res-title">🏆 게임 종료!</div>
@@ -198,36 +186,69 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
 
 <script>
 // ── Renderer & AR Setup ───────────────────────────────────────────────────────
-const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true}); // 배경 투명 처리
+const renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 renderer.setSize(innerWidth,innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-// AR 설정을 위해 투명색 적용
 renderer.setClearColor(0x000000, 0); 
 renderer.xr.enabled = true;
 document.body.appendChild(renderer.domElement);
 
-// AR Button (DOM Overlay 적용)
 const arBtn = ARButton.createButton(renderer, {
     requiredFeatures: ['hit-test'],
     optionalFeatures: ['dom-overlay'],
     domOverlay: { root: document.getElementById('ui-layer') }
 });
-// 버튼을 시작 화면 안으로 옮김
 document.getElementById('start-screen').appendChild(arBtn);
 
 const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(58,innerWidth/innerHeight,0.1,300);
+camera.position.set(0, 0, 0);
+scene.add(camera);
 
-// AR 환경에서 요소들을 배치할 메인 그룹 (카메라 앞/아래쪽으로 오프셋)
+// ── AR Hit Test (바닥 인식용 레티클) ───────────────────────────────────────────
+let hitTestSource = null;
+let hitTestSourceRequested = false;
+let boardPlaced = false;
+
+const reticle = new THREE.Mesh(
+    new THREE.RingGeometry(0.15, 0.2, 32).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+);
+reticle.matrixAutoUpdate = false;
+reticle.visible = false;
+scene.add(reticle);
+
 const worldGroup = new THREE.Group();
-worldGroup.position.set(0, -0.6, -2.5); // 카메라 기준 0.6m 아래, 2.5m 앞
-worldGroup.scale.set(0.6, 0.6, 0.6); // 사이즈를 AR 환경에 맞게 축소
+worldGroup.scale.set(0.6, 0.6, 0.6);
+worldGroup.visible = false; // 배치 전까지 숨김
 scene.add(worldGroup);
 
-const camera = new THREE.PerspectiveCamera(58,innerWidth/innerHeight,0.1,300);
-camera.position.set(0, 0, 0); // XR 카메라는 원점에서 시작
-scene.add(camera);
+// 터치 시 게임 배치 (WebXR Controller Event)
+const controller = renderer.xr.getController(0);
+controller.addEventListener('select', () => {
+    if (!boardPlaced && reticle.visible) {
+        boardPlaced = true;
+        // 레티클 위치로 게임판 이동
+        worldGroup.position.setFromMatrixPosition(reticle.matrix);
+        
+        // 게임판이 사용자 카메라를 바라보게 설정 (Y축 회전만)
+        const lookAtPos = camera.position.clone();
+        lookAtPos.y = worldGroup.position.y;
+        worldGroup.lookAt(lookAtPos);
+        
+        worldGroup.visible = true;
+        reticle.visible = false;
+        
+        // 안내창 숨기고 터치 레이어 활성화 및 게임 시작
+        document.getElementById('ar-instruction').style.display = 'none';
+        document.getElementById('tap-layer').style.display = 'block';
+        startGame();
+    }
+});
+scene.add(controller);
+
 
 // ── Lights ────────────────────────────────────────────────────────────────────
 scene.add(new THREE.AmbientLight(0xffffff, 1.2));
@@ -235,9 +256,9 @@ const sun = new THREE.DirectionalLight(0xffe8b0, 1.5);
 sun.position.set(6, 14, 8); 
 sun.castShadow = true;
 sun.shadow.mapSize.set(1024,1024);
-worldGroup.add(sun); // 광원도 worldGroup 기준으로
+worldGroup.add(sun);
 
-// ── Materials (해변/모래 테마) ────────────────────────────────────────────────
+// ── Materials ─────────────────────────────────────────────────────────────────
 const MAT = {
   sand:   new THREE.MeshStandardMaterial({color:0xe3d3ad, roughness:1}),
   hole:   new THREE.MeshStandardMaterial({color:0x876b43, roughness:1}),
@@ -250,48 +271,38 @@ function add(parent,mesh,px,py,pz){
 }
 function cyl(mat,rt,rb,h,seg=16){return new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),mat)}
 
-// ── Build Crab (Sprite) ───────────────────────────────────────────────────────
 const crabTex = new THREE.TextureLoader().load('./img/crab.png');
-
 function makeCrab(){
   const g = new THREE.Group();
-  
-  // 크랩을 2D Sprite로 띄웁니다. 항상 사용자를 바라보게 됩니다.
   const mat = new THREE.SpriteMaterial({map: crabTex, color: 0xffffff});
   const sprite = new THREE.Sprite(mat);
   sprite.scale.set(1.4, 1.4, 1);
-  sprite.position.y = 0.5; // 구멍 위로 올라오게 조절
+  sprite.position.y = 0.5; 
   g.add(sprite);
 
   function setFace(face){
     if(face === 'hit'){
-      mat.color.setHex(0xff5555); // 타격 시 붉은색
-      sprite.scale.set(1.7, 0.9, 1); // 납작하게 찌부러짐
+      mat.color.setHex(0xff5555);
+      sprite.scale.set(1.7, 0.9, 1);
     } else {
-      mat.color.setHex(0xffffff); // 정상
+      mat.color.setHex(0xffffff);
       sprite.scale.set(1.4, 1.4, 1);
     }
   }
-
   return {group: g, setFace};
 }
 
-// ── Build Sand Hole (모래 언덕) ───────────────────────────────────────────────
 function makeHole(){
   const g = new THREE.Group();
-  // 부드러운 모래 언덕 형태
   const mound = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 10, 0, Math.PI*2, 0, Math.PI/2), MAT.sand);
   mound.scale.y = 0.3;
   g.add(mound);
-  
-  // 실제 구멍
   add(g, cyl(MAT.hole, 0.52, 0.45, 0.15, 24), 0, -0.05, 0);
   return g;
 }
 
-// ── Build Mallet (망치) ───────────────────────────────────────────────────────
 const malletRoot = new THREE.Group();
-worldGroup.add(malletRoot); // 망치도 월드 그룹 안에 배치
+worldGroup.add(malletRoot);
 
 const malletPivot = new THREE.Group();
 malletRoot.add(malletPivot);
@@ -306,16 +317,13 @@ malletPivot.add(handleShaft);
 const headGroup = new THREE.Group();
 headGroup.position.z = -1.5;
 malletPivot.add(headGroup);
-
 const headCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 1.25, 28), MAT_HEAD);
 headGroup.add(headCyl);
 
-// 망치 기본 위치
 const MALLET_REST_Y  = 4.2; 
 const MALLET_STRIKE_Y = 0.7; 
 malletRoot.position.y = MALLET_REST_Y;
 
-// ── Hole/Crab Grid (3x3) ──────────────────────────────────────────────────────
 const COLS=[-4,0,4], ROWS=[-3,0,3];
 const MOLE_Y_DOWN=-1.0, MOLE_Y_UP=0.1;
 
@@ -341,18 +349,14 @@ ROWS.forEach(z=>COLS.forEach(x=>{
 }));
 
 let swinging=false, swingT=0, swingTargetIdx=-1, swingFired=false;
-let malletTargetX=0, malletTargetZ=0;
 
-// ── Pointer / Touch input ─────────────────────────────────────────────────────
 const raycaster=new THREE.Raycaster();
 const mouse=new THREE.Vector2();
 
-// 타겟을 찾는 공통 함수
 function findHitTarget(cx, cy) {
   mouse.x=(cx/innerWidth)*2-1;
   mouse.y=-(cy/innerHeight)*2+1;
   
-  // AR 환경에서도 카메라 프로젝션이 자동 반영됨
   raycaster.setFromCamera(mouse, camera);
   const meshes=slots.map(s=>s.hitMesh);
   const hits=raycaster.intersectObjects(meshes, false);
@@ -362,7 +366,6 @@ function findHitTarget(cx, cy) {
     if(slots[idx].up) return idx;
   }
   
-  // AR 환경 고려 (약간 어긋난 터치도 잡아주도록 보정)
   let bestIdx=-1, bestDist=Infinity;
   const W=innerWidth, H=innerHeight;
   slots.forEach((s,i)=>{
@@ -371,7 +374,7 @@ function findHitTarget(cx, cy) {
     s.grp.getWorldPosition(wp);
     wp.y += 0.5;
     const ndc=wp.clone().project(camera);
-    if(ndc.z > 1) return; // 등 뒤에 있는 경우 패스
+    if(ndc.z > 1) return;
     const sx=(ndc.x+1)/2*W;
     const sy=(1-ndc.y)/2*H;
     const d=Math.hypot(cx-sx,cy-sy);
@@ -393,7 +396,6 @@ function triggerSwingAt(cx, cy){
     malletRoot.position.z=s.grp.position.z;
   }
 
-  // 화면 터치 피드백
   const ring=document.createElement('div');
   ring.className='tap-ring';
   ring.style.left=cx+'px'; ring.style.top=cy+'px';
@@ -417,18 +419,48 @@ const GAME={
   timeLeft:30, duration:30, running:false, paused:false,
   combo:0, maxCombo:0, hits:0, lastHit:0,
   timers:[], comboTimer:null,
-  // 난이도를 하나로 고정
   cfg: {interval:1000, showTime:1800, maxActive:3, pts:15}
 };
 
-// AR 세션 관리
+// ── AR Session Management ─────────────────────────────────────────────────────
 renderer.xr.addEventListener('sessionstart', () => {
   document.getElementById('start-screen').style.display='none';
-  startGame();
+  document.getElementById('result-screen').style.display='none';
+  
+  // 게임 배치 대기 상태로 초기화
+  boardPlaced = false;
+  worldGroup.visible = false;
+  reticle.visible = false;
+  hitTestSourceRequested = false;
+  hitTestSource = null;
+  
+  document.getElementById('ar-instruction').style.display = 'block';
+  document.getElementById('ar-instruction').textContent = '바닥을 천천히 비춰주세요...';
+  
+  document.getElementById('exit-btn').classList.add('visible');
+  document.getElementById('pause-btn').classList.remove('visible');
 });
+
 renderer.xr.addEventListener('sessionend', () => {
-  endGame(true);
+  endGame(true); // 강제 종료
+  
+  // UI 요소 초기화
   document.getElementById('start-screen').style.display='flex';
+  document.getElementById('exit-btn').classList.remove('visible');
+  document.getElementById('pause-btn').classList.remove('visible');
+  document.getElementById('ar-instruction').style.display = 'none';
+  document.getElementById('tap-layer').style.display = 'none';
+  document.getElementById('hud').style.display = 'none';
+  
+  boardPlaced = false;
+  worldGroup.visible = false;
+  reticle.visible = false;
+});
+
+// 나가기(종료) 버튼 로직
+document.getElementById('exit-btn').addEventListener('click', () => {
+  const session = renderer.xr.getSession();
+  if(session) session.end();
 });
 
 function startGame(){
@@ -440,7 +472,6 @@ function startGame(){
   stopBGM(); startBGM();
   
   document.getElementById('hud').style.display = 'flex';
-  document.getElementById('tap-layer').style.display = 'block';
   document.getElementById('pause-btn').classList.add('visible');
   updateHUD(); tickTimer(); spawnLoop();
 }
@@ -486,7 +517,7 @@ function hitMole(idx){
   const pts=GAME.cfg.pts*Math.min(GAME.combo,5);
   GAME.score+=pts;
   
-  s.moleObj.setFace('hit'); // 찌부러짐 효과
+  s.moleObj.setFace('hit');
   clearTimeout(s.hitTimer);
   s.hitTimer=setTimeout(()=>s.moleObj.setFace('normal'),260);
   
@@ -507,7 +538,7 @@ function endGame(forced = false){
   document.getElementById('tap-layer').style.display = 'none';
   document.getElementById('pause-btn').classList.remove('visible');
   
-  if(forced) return; // AR 종료 버튼으로 강제 종료 시 결과창 생략
+  if(forced) return;
   
   setTimeout(playGameOver,200);
   if(GAME.score>GAME.best){
@@ -569,11 +600,8 @@ function showCombo(){
   GAME.comboTimer=setTimeout(()=>el.style.opacity='0',1100);
 }
 
-// ── 백그라운드 전환 시 일시정지 로직 ─────────────────────────────────────────
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && GAME.running && !GAME.paused) {
-    pauseGame();
-  }
+  if (document.hidden && GAME.running && !GAME.paused) pauseGame();
 });
 
 function pauseGame(){
@@ -596,7 +624,7 @@ document.getElementById('pause-btn').addEventListener('click', pauseGame);
 document.getElementById('resumeBtn').addEventListener('click', resumeGame);
 
 
-// ── Audio (기존 로직 유지, 볼륨/톤 해변 느낌으로 살짝 조절) ─────────────────
+// ── Audio ─────────────────────────────────────────────────────────────────────
 let actx, bgmPlaying=false, masterGain;
 function getCtx(){
   if(!actx) actx=new(window.AudioContext||window.webkitAudioContext)();
@@ -693,8 +721,39 @@ function scheduleBGM(){
 
 // ── Render Loop ───────────────────────────────────────────────────────────────
 const clock=new THREE.Clock();
-function animate(){
+
+function animate(timestamp, frame){
   const dt=Math.min(clock.getDelta(),0.05);
+  
+  // AR 바닥 인식 처리
+  if (frame && !boardPlaced) {
+    const session = renderer.xr.getSession();
+    if (!hitTestSourceRequested) {
+      session.requestReferenceSpace('viewer').then((refSpace) => {
+        session.requestHitTestSource({ space: refSpace }).then((source) => {
+          hitTestSource = source;
+        });
+      });
+      hitTestSourceRequested = true;
+    }
+
+    if (hitTestSource) {
+      const referenceSpace = renderer.xr.getReferenceSpace();
+      const hitTestResults = frame.getHitTestResults(hitTestSource);
+      
+      if (hitTestResults.length > 0) {
+        const hit = hitTestResults[0];
+        const pose = hit.getPose(referenceSpace);
+        
+        reticle.visible = true;
+        reticle.matrix.fromArray(pose.transform.matrix);
+        document.getElementById('ar-instruction').textContent = '화면을 터치하여 게임을 배치하세요!';
+      } else {
+        reticle.visible = false;
+        document.getElementById('ar-instruction').textContent = '바닥을 천천히 비춰주세요...';
+      }
+    }
+  }
   
   slots.forEach((s)=>{
     const dy=s.targetY-s.grp.position.y;
@@ -720,10 +779,8 @@ function animate(){
   renderer.render(scene,camera);
 }
 
-// AR에서는 requestAnimationFrame 대신 setAnimationLoop를 사용해야 합니다
 renderer.setAnimationLoop(animate);
 
-// Resize handler
 window.addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;
   camera.updateProjectionMatrix();
