@@ -225,6 +225,17 @@ worldGroup.scale.set(0.6, 0.6, 0.6);
 worldGroup.visible = false; // 배치 전까지 숨김
 scene.add(worldGroup);
 
+// ★ 마법의 가림막(Occlusion Mask) ★
+// 구멍 깊이(-0.13) 아래로 내려가는 3D 객체들을 화면에서 투명하게 잘라냅니다.
+const maskGeo = new THREE.PlaneGeometry(100, 100);
+// colorWrite: false 를 통해 색상은 그리지 않고, 깊이(Depth)만 채워서 뒤에 있는 크랩을 가림
+const maskMat = new THREE.MeshBasicMaterial({ colorWrite: false });
+const maskMesh = new THREE.Mesh(maskGeo, maskMat);
+maskMesh.rotation.x = -Math.PI / 2;
+maskMesh.position.y = -0.13; 
+maskMesh.renderOrder = -1; // 제일 먼저 그려져서 마스크 역할을 함
+worldGroup.add(maskMesh);
+
 // 터치 시 게임 배치 (WebXR Controller Event)
 const controller = renderer.xr.getController(0);
 controller.addEventListener('select', () => {
@@ -259,9 +270,11 @@ sun.shadow.mapSize.set(1024,1024);
 worldGroup.add(sun);
 
 // ── Materials ─────────────────────────────────────────────────────────────────
+// demo.png 처럼 진한 흙색과 풀잎 추가
 const MAT = {
-  sand:   new THREE.MeshStandardMaterial({color:0xe3d3ad, roughness:1}),
-  hole:   new THREE.MeshStandardMaterial({color:0x876b43, roughness:1}),
+  dirt:   new THREE.MeshStandardMaterial({color:0xa87542, roughness:1}),
+  hole:   new THREE.MeshStandardMaterial({color:0x3a2311, roughness:1}),
+  grass:  new THREE.MeshStandardMaterial({color:0x52a81e, roughness:0.8, side:THREE.DoubleSide})
 };
 
 function add(parent,mesh,px,py,pz){
@@ -292,12 +305,29 @@ function makeCrab(){
   return {group: g, setFace};
 }
 
+// ── Build Hole (흙더미 + 뒤쪽 풀잎) ──────────────────────────────────────────
+const grassGeo = new THREE.ConeGeometry(0.06, 0.7, 3);
 function makeHole(){
   const g = new THREE.Group();
-  const mound = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 10, 0, Math.PI*2, 0, Math.PI/2), MAT.sand);
-  mound.scale.y = 0.3;
+  // 부드러운 흙무지 형태
+  const mound = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 10, 0, Math.PI*2, 0, Math.PI/2), MAT.dirt);
+  mound.scale.y = 0.35;
   g.add(mound);
+  
+  // 구멍 내부
   add(g, cyl(MAT.hole, 0.52, 0.45, 0.15, 24), 0, -0.05, 0);
+
+  // 뒤쪽 풀잎 장식 (demo.png 느낌)
+  for(let i=0; i<5; i++) {
+    const grass = new THREE.Mesh(grassGeo, MAT.grass);
+    const ox = (Math.random()-0.5) * 0.7;
+    const oz = -0.4 - Math.random() * 0.3; // 흙더미 뒤쪽으로 배치
+    grass.position.set(ox, 0.3, oz);
+    grass.rotation.x = (Math.random()-0.5) * 0.3;
+    grass.rotation.z = (Math.random()-0.5) * 0.5;
+    g.add(grass);
+  }
+
   return g;
 }
 
@@ -325,7 +355,8 @@ const MALLET_STRIKE_Y = 0.7;
 malletRoot.position.y = MALLET_REST_Y;
 
 const COLS=[-4,0,4], ROWS=[-3,0,3];
-const MOLE_Y_DOWN=-1.0, MOLE_Y_UP=0.1;
+// ★ 크랩이 들어갈 때 완전히 마스크 밑으로 사라지도록 Y_DOWN 값을 더 낮춤
+const MOLE_Y_DOWN=-1.5, MOLE_Y_UP=0.1;
 
 const slots=[];
 ROWS.forEach(z=>COLS.forEach(x=>{
@@ -757,7 +788,7 @@ function animate(timestamp, frame){
   
   slots.forEach((s)=>{
     const dy=s.targetY-s.grp.position.y;
-    s.grp.position.y+=dy*Math.min(1,dt*12);
+    s.grp.position.y+=dy*Math.min(1,dt*14); // 마스크 밑에서 쏙 올라오도록 속도 살짝 상향
   });
 
   if(swinging){
