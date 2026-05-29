@@ -270,10 +270,17 @@ sun.shadow.mapSize.set(1024,1024);
 worldGroup.add(sun);
 
 // ── Materials────────────────────────────────────────────────────────
+const sandTex = new THREE.TextureLoader().load('./img/sand_texture.png');
+// 텍스처가 자연스럽게 입혀지도록 래핑(반복) 설정을 추가합니다.
+sandTex.wrapS = THREE.RepeatWrapping;
+sandTex.wrapT = THREE.RepeatWrapping;
+sandTex.repeat.set(1.5, 1);
+
 const MAT = {
-  dirt:       new THREE.MeshLambertMaterial({color: 0x6e3d23}), // 짙은 갈색 흙 (바깥쪽)
-  holeWall:   new THREE.MeshLambertMaterial({color: 0x4a2711, side: THREE.BackSide}), // 더 어두운 흙 (안쪽)
-  holeBottom: new THREE.MeshBasicMaterial({color: 0x1a0f08})  // 가장 어두운 흙 (바닥)
+  // map 속성에 이미지를 넣고, color를 0xffffff(흰색)로 설정해야 이미지 본래의 색이 나옵니다.
+  dirt:       new THREE.MeshLambertMaterial({map: sandTex, color: 0xffffff}), 
+  holeWall:   new THREE.MeshLambertMaterial({color: 0x4a2711, side: THREE.BackSide}), 
+  holeBottom: new THREE.MeshBasicMaterial({color: 0x1a0f08})  
 };
 
 function add(parent,mesh,px,py,pz){
@@ -569,8 +576,10 @@ function endGame(forced = false){
   
   document.getElementById('hud').style.display = 'none';
   document.getElementById('tap-layer').style.display = 'none';
-  document.getElementById('pause-btn').classList.remove('visible');
-  
+  document.getElementById('pause-btn').classList.remove('visible');  
+
+  document.getElementById('pause-overlay').classList.remove('show');
+
   if(forced) return;
   
   setTimeout(playGameOver,200);
@@ -634,7 +643,16 @@ function showCombo(){
 }
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && GAME.running && !GAME.paused) pauseGame();
+  if (document.hidden) {
+    // 앱이 백그라운드로 가면 억지로 일시정지 UI를 띄우지 않고 소리만 끕니다.
+    // (WebXR이 카메라를 강제 중지할 때 DOM 조작 충돌로 인한 화이트 스크린 방지)
+    stopBGM();
+  } else {
+    // 다시 화면으로 돌아왔을 때 게임이 진행 중이라면 소리를 다시 켭니다.
+    if (GAME.running && !GAME.paused) {
+      startBGM();
+    }
+  }
 });
 
 function pauseGame(){
