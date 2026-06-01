@@ -10,6 +10,16 @@ body {
     overscroll-behavior: none;
 }
 
+ /* 기본 링크 스타일 */
+a {
+   color: black;
+   text-decoration: none;
+}
+
+a:visited {
+   color: black;
+}
+
 .mobile-container {
     position: relative; 
     width: 100%; 

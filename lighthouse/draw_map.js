@@ -212,7 +212,7 @@ function renderLighthouseList(userLat, userLng) {
             <div class="lh-left">
                 <img src="${stampImgSrc}" alt="스탬프" class="lh-stamp-img">
                 <div class="lh-info">
-                    <div class="lh-name">${loc.title}</div>
+                    <div class="lh-name"><a href="game-process.html">${loc.title}</a></div>
                     <div class="lh-dist">${distanceText}</div>
                 </div>
             </div>

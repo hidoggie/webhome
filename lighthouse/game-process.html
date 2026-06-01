@@ -291,11 +291,20 @@
         }
 
         .review-image {
-            position: relative;
-            width: 100%;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 12px;
+           position: relative;
+           width: 100%;
+           aspect-ratio: 3 / 4; /* 스마트폰 기본 세로 사진 비율 (인스타 느낌을 원하시면 4 / 5) */
+           border-radius: 8px;
+           overflow: hidden;
+           margin-bottom: 12px;
+           background-color: #f0f0f0; /* 사진이 로딩되기 전 깔끔한 배경색 */
+        }
+
+        .review-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover; /* 비율이 약간 달라도 찌그러지지 않고 영역을 꽉 채움 */
+          display: block;
         }
 
         .image-count {
@@ -380,11 +389,11 @@
         <main id="tab-review" class="tab-content review-list">
             <div class="review-card">
                 <div class="review-header">
-                    <div class="user-profile"></div> <span class="user-info">MK_10 · 2025.10.18 오후 2:33</span>
+                    <div class="user-profile"></div> <span class="user-info">MK109643 · 2025.10.18 오후 2:33</span>
                 </div>
                 <div class="review-image">
-                    <div style="height: 250px; background: #ddd; display: flex; align-items: center; justify-content: center;">사진 영역 1</div>
-                    <span class="image-count">1/1</span>
+                    <div style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;"><img src="./img/photo-demo.jpg" alt="인증사진"></div>
+                    <!--span class="image-count">1/1</span-->
                 </div>
                 <div class="review-tags">
                     <span class="tag pink"># 등대스탬프투어</span>
@@ -396,18 +405,33 @@
             <div class="review-card">
                 <div class="review-header">
                     <div class="user-profile"></div>
-                    <span class="user-info">푸른바다 · 2025.11.09 오전 7:18</span>
+                    <span class="user-info">JK305946 · 2025.11.09 오전 7:18</span>
                 </div>
                 <div class="review-image">
-                    <div style="height: 250px; background: #ddd; display: flex; align-items: center; justify-content: center;">사진 영역 2</div>
-                    <span class="image-count">1/1</span>
+                    <div style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;"><img src="./img/photo-demo2.jpg" alt="인증사진"></div>
                 </div>
                 <div class="review-tags">
                     <span class="tag pink"># 등대스탬프투어</span>
-                    <span class="tag blue"># 산지등대</span>
+                    <span class="tag blue"># 간절곶등대</span>
                 </div>
                 <p class="review-text">바다와 함께 AR 캐릭터 인증 완료!</p>
             </div>
+
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="user-profile"></div>
+                    <span class="user-info">OW386946 · 2025.10.19 오후 1:18</span>
+                </div>
+                <div class="review-image">
+                    <div style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;"><img src="./img/photo-demo3.jpg" alt="인증사진"></div>
+                </div>
+                <div class="review-tags">
+                    <span class="tag pink"># 등대스탬프투어</span>
+                    <span class="tag blue"># 간절곶등대</span>
+                </div>
+                <p class="review-text">예쁜 AR 캐릭터들과 함께 찰칵~~</p>
+            </div>
+
         </main>
 
         <nav class="bottom-nav">
