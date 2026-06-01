@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>등대 스탬프 게임 미션</title>
+    
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
+
+    <style>
+        /* 기본 초기화 및 폰트 설정 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+        }
+
+        body{
+            background:#edf2f7;
+            display:flex;
+            justify-content:center;
+        }
+
+        /* 기본 링크 스타일 */
+        a {
+            color: black;
+            text-decoration: none;
+        }
+
+        a:visited {
+            color: black;
+        }
+
+        /* 모바일 컨테이너 */
+        .mobile-container{
+            display: flex;
+            flex-direction: column;
+            width:100%;
+            max-width:480px;
+            height:100vh;
+            overflow: hidden;
+            position:relative;
+            background-image:url('./img/lighthouse-path-bg.png');
+            background-size:cover;
+            background-position:center center;
+            background-repeat:no-repeat;
+            isolation:isolate;
+        }
+
+        .mobile-container::before{
+            content:'';
+            position:absolute;
+            inset:0;
+            background: linear-gradient(rgba(255,255,255,.15), rgba(255,255,255,.25));
+            z-index:0;
+        }
+
+        .mobile-container>*{
+            position:relative;
+            z-index:1;
+        }
+
+        /* 미션 경로 */
+        .mission-path {
+            flex: 1;
+            overflow: hidden;
+            padding: 10px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-evenly;
+        }
+
+        /* 지그재그 */
+        .step-container {
+            width: 100%;
+            display: flex;
+            margin-bottom: 0;
+        }
+
+        .step-container:nth-child(odd){
+            padding-left:15%;
+            justify-content:flex-start;
+        }
+
+        .step-container:nth-child(even){
+            padding-right:15%;
+            justify-content:flex-end;
+        }
+
+        .round-btn {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            border: none;
+            background-color: transparent;
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.2s;
+        }
+
+        .round-btn:active {
+            transform: scale(0.95);
+        }
+
+        .round-btn img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            box-shadow: 0 5px 15px rgba(255, 115, 139, 0.4);
+        }
+
+        /* 현재 미션 파동효과 애니메이션 */
+        @keyframes wave {
+            0%{ transform:scale(1); opacity:.8; }
+            100%{ transform:scale(1.7); opacity:0; }
+        }
+
+        .step-container.active .round-btn::before,
+        .step-container.active .round-btn::after{
+            content:'';
+            position:absolute;
+            inset:0;
+            border-radius:50%;
+            border:3px solid #7fd2ff;
+            animation:wave 2s infinite;
+        }
+
+        .step-container.active .round-btn::after{
+            animation-delay:1s;
+        }
+
+        /* 팝업 모달창 디자인 */
+        .modal-overlay {
+           position: fixed;
+           top: 0;
+           left: 50%;
+           transform: translateX(-50%);
+           width: 100%;
+           max-width: 480px;
+           height: 100vh;
+           background: rgba(0,0,0,0.5);
+           display: none;
+           justify-content: center;
+           align-items: center;
+           z-index: 100; 
+        }
+
+        .modal-content {
+            background: white;
+            width: 80%;
+            border-radius: 20px;
+            padding: 30px 20px;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 25px;
+        }
+
+        .action-btn {
+            background-color: #ff738b;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(255, 115, 139, 0.3);
+        }
+
+        /* 상단 네비게이션 */
+        .top-nav {
+            height: 100px; 
+            background-color: #FAF9F3;
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
+            z-index: 30;
+            flex-shrink: 0;
+        }
+        .top-item {
+            background: none; border: none; color: #8fa6c1; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; padding-top: 4px; height: 100%; justify-content: center;
+        }
+        .top-item.active { color: black; }
+        .top-item .label { font-size: 12px; font-weight: 500; line-height: 1; color: black; margin-top: 2px;}
+        .top-item img { width: 54px; height: 54px; }
+
+        /* 하단 네비게이션 */
+        .bottom-nav {
+            height: 9%; 
+            background-color: #1a3350;
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center;
+            z-index: 30;
+            flex-shrink: 0;
+        }
+        .nav-item {
+            background: none; border: none; color: #8fa6c1; cursor: pointer;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .nav-item.active { color: white; }
+        .nav-item .label { font-size: 12px; font-weight: 500; color: white;}
+        .nav-item img { width: 24px; height: 24px; }
+
+        /* --- 탭 공통 스타일 --- */
+        .tab-content {
+            display: none;
+            flex: 1;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .tab-content.active {
+            display: flex; 
+        }
+
+        #tab-mission {
+            flex-direction: column;
+        }
+
+        /* --- 지도 스타일 수정 --- */
+        #tab-map {
+            background-color: #fff;
+            position: relative;
+        }
+        #map {
+            width: 100%; 
+            height: 100%; /* 화면 스크롤이 생기지 않도록 100%로 최적화 */
+        }
+
+        /* --- 사진 후기 UI 스타일 --- */
+        .review-list {
+            flex-direction: column;
+            background-color: #f2f2f5;
+            padding: 15px 10px;
+            gap: 15px;
+        }
+
+        .review-card {
+            background-color: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .review-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 8px;
+        }
+
+        .user-profile {
+            width: 24px;
+            height: 24px;
+            background-color: #c4c4c4;
+            border-radius: 50%;
+        }
+
+        .user-info {
+            font-size: 13px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .review-image {
+            position: relative;
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .image-count {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 12px;
+        }
+
+        .review-tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .tag.pink { background-color: #fce4ec; color: #ad1457; }
+        .tag.blue { background-color: #e3f2fd; color: #1565c0; }
+
+        .review-text {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <nav class="top-nav">
+            <button class="top-item" onclick="switchTab('map', this)">
+                <span class="icon"><img src="./img/location-ico.png"></span>
+                <span class="label">등대 위치</span>
+            </button>
+            <button class="top-item active" onclick="switchTab('mission', this)">
+                <span class="icon"><img src="./img/mission-ico.png"></span>
+                <span class="label">미션 안내</span>
+            </button> 
+            <button class="top-item" onclick="switchTab('review', this)">
+                <span class="icon"><img src="./img/photo-place-ico.png"></span>
+                <span class="label">사진 후기</span>
+            </button>
+        </nav>
+
+        <main id="tab-map" class="tab-content">
+            <div id="map"></div>
+        </main>
+
+        <main id="tab-mission" class="tab-content active mission-path">
+            <div class="step-container">
+                <button class="round-btn" onclick="openModal('스탬프 획득 완료')">
+                    <img src="./img/star-button.png" alt="스탬프 버튼">
+                </button>
+            </div>
+            <div class="step-container">
+                <button class="round-btn" onclick="openModal('AR 인증샷 업로드')">
+                    <img src="./img/camera-button.png" alt="인증샷 버튼">
+                </button>
+            </div>
+            <div class="step-container active">
+                <button class="round-btn" onclick="openModal('보물찾기 미션 수행')">
+                    <img src="./img/treasure-button.png" alt="보물찾기 버튼">
+                </button>
+            </div>
+            <div class="step-container">
+                <button class="round-btn" onclick="openModal('루미 캐릭터 AR 길안내')">
+                    <img src="./img/map-button.png" alt="길안내 버튼">
+                </button>
+            </div>
+        </main>
+
+        <main id="tab-review" class="tab-content review-list">
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="user-profile"></div> <span class="user-info">MK_10 · 2025.10.18 오후 2:33</span>
+                </div>
+                <div class="review-image">
+                    <div style="height: 250px; background: #ddd; display: flex; align-items: center; justify-content: center;">사진 영역 1</div>
+                    <span class="image-count">1/1</span>
+                </div>
+                <div class="review-tags">
+                    <span class="tag pink"># 등대스탬프투어</span>
+                    <span class="tag blue"># 오동도등대</span>
+                </div>
+                <p class="review-text">오동도등대 스탬프투어 첫번째 시작 기념</p>
+            </div>
+
+            <div class="review-card">
+                <div class="review-header">
+                    <div class="user-profile"></div>
+                    <span class="user-info">푸른바다 · 2025.11.09 오전 7:18</span>
+                </div>
+                <div class="review-image">
+                    <div style="height: 250px; background: #ddd; display: flex; align-items: center; justify-content: center;">사진 영역 2</div>
+                    <span class="image-count">1/1</span>
+                </div>
+                <div class="review-tags">
+                    <span class="tag pink"># 등대스탬프투어</span>
+                    <span class="tag blue"># 산지등대</span>
+                </div>
+                <p class="review-text">바다와 함께 AR 캐릭터 인증 완료!</p>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+              <a href="lighthouse_map.html" class="nav-item">
+                <span class="icon"><img src="./img/home_white.png"></span>
+                <span class="label">홈</span>
+              </a>
+              <a href="lh-passport.html" class="nav-item active">
+                  <span class="icon"><img src="./img/passport_white.png"></span>
+                  <span class="label">스탬프북</span>
+              </a> 
+            <button class="nav-item">
+                <span class="icon"><img src="./img/info_white.png"></span>
+                <span class="label">안내</span>
+            </button>
+        </nav>
+    </div>
+
+    <div class="modal-overlay" id="missionModal">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">X</button>
+            <h2 class="modal-title" id="modalTitle">미션 제목</h2>
+            <button class="action-btn">미션 바로가기</button>
+        </div>
+    </div>
+
+    <script>
+        // 모달창 제어 스크립트
+        const modal = document.getElementById('missionModal');
+        const modalTitle = document.getElementById('modalTitle');
+
+        function openModal(title) {
+            modalTitle.innerText = title;
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        // --- [네이버 지도용 전역 변수 설정] ---
+        let map = null;
+        // 예시용 목표 등대 좌표 (현재 오동도등대 기준 위경도 설정, 추후 DB 연동 시 변경 가능)
+        const lighthouseCoords = { lat: 34.7443, lng: 127.7694 }; 
+
+        // 탭 전환 및 지도 호출 연동
+        function switchTab(tabName, clickedBtn) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabContents.forEach(tab => tab.classList.remove('active'));
+
+            const navItems = document.querySelectorAll('.top-item');
+            navItems.forEach(item => item.classList.remove('active'));
+
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            clickedBtn.classList.add('active');
+
+            // 등대 위치 탭 클릭 시 지도 초기화 및 위치 가져오기
+            if (tabName === 'map') {
+                initNaverMap();
+            }
+        }
+
+        // 네이버 지도 초기화 및 현위치-등대 매핑 함수
+        function initNaverMap() {
+            // 지도가 이미 생성된 경우, 리사이즈 이슈 방지를 위해 크기 재조정 처리만 진행
+            if (map) {
+                map.autoResize();
+                return;
+            }
+
+            const lighthouseLatLng = new naver.maps.LatLng(lighthouseCoords.lat, lighthouseCoords.lng);
+
+            // HTML5 Geolocation을 이용해 사용자 실시간 위치 가져오기
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    const userLatLng = new naver.maps.LatLng(userLat, userLng);
+
+                    // 1. 지도 생성 (등대를 중심으로 두고 1km 반경이 한눈에 보이는 줌 레벨 15 설정 및 위성모드)
+                    map = new naver.maps.Map('map', {
+                        center: lighthouseLatLng,
+                        zoom: 15, // 약 1km 반경 표시 최적화 줌
+                        mapTypeId: naver.maps.MapTypeId.HYBRID // 위성(하이브리드) 모드 설정
+                    });
+
+                    // 2. 현재 사용자 위치 마커 생성
+                    new naver.maps.Marker({
+                        position: userLatLng,
+                        map: map,
+                        icon: {
+                            content: '<div style="width:14px;height:14px;background:#007BFF;border:2px solid #fff;border-radius:50%;box-shadow:0 0 5px rgba(0,0,0,0.5);"></div>',
+                            anchor: new naver.maps.Point(7, 7)
+                        },
+                        title: '현재 나의 위치'
+                    });
+
+                    // 3. 목표 등대 위치 마커 생성
+                    new naver.maps.Marker({
+                        position: lighthouseLatLng,
+                        map: map,
+                        title: '목표 등대 위치'
+                    });
+
+                    // 4. 현재 위치에서 등대까지 찾아가는 길 (붉은 실선) 표시
+                    new naver.maps.Polyline({
+                        map: map,
+                        path: [userLatLng, lighthouseLatLng],
+                        strokeColor: '#FF0000', // 붉은 색상
+                        strokeWeight: 4,        // 선 굵기
+                        strokeOpacity: 0.8      // 투명도
+                    });
+
+                }, function(error) {
+                    console.error("위치 획득 실패, 기본 등대 위치 위주로 표시합니다.", error);
+                    loadDefaultLighthouseMap(lighthouseLatLng);
+                });
+            } else {
+                loadDefaultLighthouseMap(lighthouseLatLng);
+            }
+        }
+
+        // 위치 정보를 허용하지 않았을 때의 예외 처리 지도 로드
+        function loadDefaultLighthouseMap(lighthouseLatLng) {
+            map = new naver.maps.Map('map', {
+                center: lighthouseLatLng,
+                zoom: 15,
+                mapTypeId: naver.maps.MapTypeId.HYBRID
+            });
+            new naver.maps.Marker({
+                position: lighthouseLatLng,
+                map: map,
+                title: '목표 등대 위치'
+            });
+        }
+    </script>
+</body>
+</html>
