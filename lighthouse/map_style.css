@@ -12,12 +12,12 @@ body {
 
  /* 기본 링크 스타일 */
 a {
-   color: black;
+   color: white;
    text-decoration: none;
 }
 
 a:visited {
-   color: black;
+   color: white;
 }
 
 .mobile-container {
