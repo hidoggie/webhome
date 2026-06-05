@@ -267,8 +267,21 @@ a:visited {
 /* 이미지 및 텍스트 */
 .circle-image-wrap { position: relative; width: 65%; aspect-ratio: 1; margin: 8px auto 0; }
 .circle-image-wrap::before { content: ''; position: absolute; inset: -7px; border-radius: 50%; background: linear-gradient(135deg, #5bbfdf 0%, #88d4ef 50%, #3a9fc5 100%); z-index: 0; box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 8px 28px rgba(30,100,160,0.25); }
+.circle-image-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.25) 35%,
+    transparent 60%
+  );
+  z-index: 1;  /* circle-image(z:1) 위, label(z:2) 아래 */
+}
 .circle-image { position: relative; z-index: 1; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; border: 4px solid rgba(255,255,255,0.7); }
-.circle-image-label { position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%); z-index: 2; font-family: 'Black Han Sans', sans-serif; font-size: 22px; color: #fff; text-shadow: 0 2px 8px rgba(0,0,0,0.6), 2px 2px 0 rgba(0,0,0,0.3); white-space: nowrap; }
+.circle-image-label { position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%); z-index: 2; font-family: 'Black Han Sans', sans-serif; font-size: 20px; color: #fff; text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5); white-space: nowrap; }
 .card-desc { padding: 20px 24px 10px; text-align: center; font-family: 'Black Han Sans', sans-serif; font-size: 16px; color: #1a3a5c; line-height: 1.5; }
 .divider { margin: 12px 20px; height: 1px; background: linear-gradient(90deg, transparent, rgba(91,191,223,0.5), transparent); }
 
