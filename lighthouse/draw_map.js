@@ -2,17 +2,16 @@
         // img 속성에 각 지역에 맞는 개별 아이콘 이미지 경로를 넣어주세요.
    
      var eventLocations = [
-            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png", stamp: "./img/stamp-ganjeolgot.png" },
-            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png", stamp: "./img/stamp-youngdo.png" },
-            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png", stamp: "./img/stamp-sanji.png" },
-            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/somaemuldo_icon_240.png", stamp: "./img/stamp-somaemuldo.png" },
-            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/odongdo_icon_240.png", stamp: "./img/stamp-odongdo.png" },
-            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/palmido_icon_240.png", stamp: "./img/stamp-palmido.png" },
-            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/mukho_icon_240.png", stamp: "./img/stamp-mukho.png" },
-            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png", stamp: "./img/stamp-ulgi.png" },
-            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png", stamp: "./img/stamp-udo.png" },
-            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp-sokcho.png" }
-   //         { title: "속초등대", lat: 38.2137, lng: 128.6000, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp-sokcho.png" }
+            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png", stamp: "./img/stamp-ganjeolgot.png", desc: "한반도의 첫 해가 떠오르는 곳", audio: "./audio/ganjeolgot.m4a", pimg: "./img/tt.png", addr: "울산광역시 울주군 서생면 간절곶1길 39-2" },
+            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png", stamp: "./img/stamp-youngdo.png", desc: "바다를 디자인하다, 명승지 안의 명소", audio: "./audio/youngdo.m4a", pimg: "./img/tt.png", addr: "부산광역시 영도구 전망로 181"  },
+            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png", stamp: "./img/stamp-sanji.png", desc: "해넘이 명소이자 제주항의 이정표", audio: "./audio/sanji.m4a", pimg: "./img/tt.png", addr: "제주특별자치도 제주시 건입동 340-2"  },
+            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/somaemuldo_icon_240.png", stamp: "./img/stamp-somaemuldo.png", desc: "닿기 힘들어 더 어여쁜 등대섬", audio: "./audio/somaemuldo.m4a", pimg: "./img/tt.png", addr: "경상남도 통영시 한산면 소매물도길 246"  },
+            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/odongdo_icon_240.png", stamp: "./img/stamp-odongdo.png", desc: "여수의 상징, 오동도 정상에 자리잡은 등대", audio: "./audio/odongdo.m4a", pimg: "./img/tt.png", addr: "전라남도 여수시 오동도로 238-32"  },
+            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/palmido_icon_240.png", stamp: "./img/stamp-palmido.png", desc: "고단한 세월의 풍파를 견뎌온 최초의 등대", audio: "./audio/palmido.m4a", pimg: "./img/tt.png", addr: "인천광역시 중구 팔미로 28"  },
+            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/mukho_icon_240.png", stamp: "./img/stamp-mukho.png", desc: "고즈넉한 등대오름길과 동해의 풍광을 담은 곳", audio: "./audio/mukho.m4a", pimg: "./img/tt.png", addr: "강원특별자치도 동해시 해맞이길 289"  },
+            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png", stamp: "./img/stamp-ulgi.png", desc: "동해안의 첫 등대", audio: "./audio/ulgi.m4a", pimg: "./img/tt.png", addr: "울산광역시 동구 등대로 155"  },
+            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png", stamp: "./img/stamp-udo.png", desc: "대한민국 최초의 등대테마공원", audio: "./audio/udo.m4a", pimg: "./img/tt.png", addr: "제주특별자치도 제주시 우도봉길 105"  },
+            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp-sokcho.png", desc: "등대 전망대에서 속초를 들여다보다", audio: "./audio/sokcho.m4a", pimg: "./img/tt.png", addr: "강원도 속초시 영금정로5길 8-28"  }
         ];
 
         // --- 2. 대한민국 영역 제한 설정 (북한 제외) ---
@@ -76,7 +75,8 @@
 
             // 각 마커의 클릭 이벤트
             naver.maps.Event.addListener(marker, 'click', function() {
-                alert(loc.title + " 구역입니다! 가까이 다가가면 AR 길찾기 모드가 켜집니다.");
+//                alert(loc.title + " 구역입니다! 가까이 다가가면 AR 길찾기 모드가 켜집니다.");
+                openPopup(loc); // 팝업 열기 함수 호출
             });
         });
 
@@ -273,3 +273,89 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
+
+// --- 7. 팝업 및 오디오, 길찾기 모달 제어 로직 ---
+let currentSelectedLoc = null; // 현재 선택된 등대 정보 저장
+let isPlaying = false;
+
+const audio = document.getElementById('audioPlayer');
+const audioSource = document.getElementById('audioSource');
+const audioBtn = document.getElementById('audioBtn');
+const popupOverlay = document.getElementById('popupOverlay');
+
+// 마커 클릭 시 팝업 열기
+function openPopup(loc) {
+    currentSelectedLoc = loc;
+    
+    // 팝업 내용 업데이트
+    document.getElementById('lighthouseName').textContent = loc.title;
+    document.getElementById('lighthouseDesc').textContent = loc.desc;
+    document.getElementById('lighthouseImg').src = loc.pimg; // 상세 팝업용 이미지 사용
+    document.getElementById('lighthouseImg').alt = loc.title;
+    document.getElementById('lighthouseAddr').textContent = loc.addr; // 주소 업데이트
+
+    // 외부 길찾기 앱 좌표 업데이트
+    document.getElementById('kakaoBtn').href = `https://map.kakao.com/link/to/${loc.title},${loc.lat},${loc.lng}`;
+    document.getElementById('naverBtn').href = `https://map.naver.com/v5/directions/-/-/-/transit?c=${loc.lat},${loc.lng},15,0,0,0,dh`;
+    document.getElementById('googleBtn').href = `http://googleusercontent.com/maps.google.com/maps?daddr=${loc.lat},${loc.lng}`;
+    document.getElementById('tmapBtn').href = `tmap://route?goalx=${loc.lng}&goaly=${loc.lat}&goalname=${loc.title}`;
+
+    // 팝업 보이기 및 애니메이션 실행
+    popupOverlay.style.display = 'flex';
+    const card = document.getElementById('popupCard');
+    card.style.animation = 'none';
+    void card.offsetWidth; // reflow 트리거
+    card.style.animation = 'cardIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both';
+}
+
+// 팝업 바깥 영역 클릭 시 닫기
+function closePopupOutside(e) {
+    if (e.target === popupOverlay) {
+        popupOverlay.style.display = 'none';
+        if (isPlaying) toggleAudio(); // 팝업 닫을 때 오디오 정지
+    }
+}
+
+// 오디오 재생/정지 토글
+function toggleAudio() {
+    if (!currentSelectedLoc || !currentSelectedLoc.audio) {
+        alert('음성 파일이 준비 중입니다.');
+        return;
+    }
+
+    if (!isPlaying) {
+        audioSource.src = currentSelectedLoc.audio;
+        audio.load();
+        audio.play().then(() => {
+            isPlaying = true;
+            audioBtn.classList.add('playing');
+        }).catch((err) => {
+            console.log(err);
+            alert('오디오를 재생할 수 없습니다.');
+        });
+    } else {
+        audio.pause();
+        audio.currentTime = 0;
+        isPlaying = false;
+        audioBtn.classList.remove('playing');
+    }
+}
+
+// 오디오가 끝났을 때 상태 초기화
+audio.addEventListener('ended', () => {
+    isPlaying = false;
+    audioBtn.classList.remove('playing');
+});
+
+// 외부 앱 연결 모달 제어
+function openAppModal() {
+    document.getElementById('appModal').classList.add('open');
+}
+
+function closeModal() {
+    document.getElementById('appModal').classList.remove('open');
+}
+
+function closeModalOutside(e) {
+    if (e.target === document.getElementById('appModal')) closeModal();
+}

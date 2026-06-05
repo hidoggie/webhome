@@ -15,7 +15,7 @@
             <div class="header-top">
                 <!--button class="back-btn"><img src="./img/back_white.png" width="30" height="30"></button-->
                 <h1 class="title">AR 등대 스탬프투어</h1>
-                <div class="spacer"></div> </div>
+                <!--div class="spacer"></div--> </div>
             <p class="subtitle">등대 위치 & 스탬프 인증 현황</p>
             <!--div class="header-icon">🗼</div--> 
         </header>
@@ -25,6 +25,79 @@
                 <!--span class="map-placeholder-text">지도 API 로드 영역</span-->
             </div>
         </main>
+
+<audio id="audioPlayer" preload="none">
+    <source id="audioSource" src="" type="audio/mpeg">
+</audio>
+
+<div class="popup-overlay" id="popupOverlay" onclick="closePopupOutside(event)">
+    <div class="popup-card" id="popupCard">
+        <div class="card-header">
+            <p class="card-title">등대 정보</p>
+        </div>
+
+        <div class="top-actions">
+            <button class="action-btn" id="audioBtn" aria-label="음성 안내 재생" onclick="toggleAudio()">
+                <svg class="sound-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                </svg>
+                <div class="wave-bars">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+            </button>
+
+            <button class="action-btn" id="locationBtn" aria-label="지도 앱으로 위치 확인" onclick="openAppModal()">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="circle-image-wrap">
+            <img class="circle-image" id="lighthouseImg" src="" alt="등대 이미지">
+            <span class="circle-image-label" id="lighthouseName">등대이름</span>
+        </div>
+
+        <p class="card-desc" id="lighthouseDesc">등대 설명</p>
+
+        <div class="divider"></div>
+
+        <div class="card-address">
+            📍 <span id="lighthouseAddr">주소 정보</span>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="appModal" onclick="closeModalOutside(event)">
+    <div class="modal-box">
+        <p class="modal-title">📍 길찾기</p>
+        <p class="modal-sub">사용할 앱을 선택하세요</p>
+        <div class="app-list">
+            <a class="app-item" id="kakaoBtn" href="#" target="_blank" rel="noopener" onclick="closeModal()">
+                <div class="app-icon" style="background:#FEE500;">🗺️</div>
+                <div class="app-info"><div class="app-name">카카오맵</div><div class="app-desc">카카오맵으로 길찾기</div></div><span class="app-arrow">›</span>
+            </a>
+            <a class="app-item" id="naverBtn" href="#" target="_blank" rel="noopener" onclick="closeModal()">
+                <div class="app-icon" style="background:#03C75A;">🧭</div>
+                <div class="app-info"><div class="app-name">네이버 지도</div><div class="app-desc">네이버 지도로 길찾기</div></div><span class="app-arrow">›</span>
+            </a>
+            <a class="app-item" id="googleBtn" href="#" target="_blank" rel="noopener" onclick="closeModal()">
+                <div class="app-icon" style="background:#fff; border:1px solid #eee;">🌍</div>
+                <div class="app-info"><div class="app-name">Google 지도</div><div class="app-desc">Google Maps로 보기</div></div><span class="app-arrow">›</span>
+            </a>
+            <a class="app-item" id="tmapBtn" href="#" target="_blank" rel="noopener" onclick="closeModal()">
+                <div class="app-icon" style="background:#0066FF;">📱</div>
+                <div class="app-info"><div class="app-name">T맵</div><div class="app-desc">T맵으로 내비게이션</div></div><span class="app-arrow">›</span>
+            </a>
+        </div>
+        <button class="modal-close" onclick="closeModal()">닫기</button>
+    </div>
+</div>
+
 
 <div class="progress-card" id="progress-card">
     <div class="progress-header" id="toggle-progress">
@@ -74,7 +147,6 @@
     </div>
 
     <script src="draw_map.js"></script>
-    <!--script src="progress_bar.js"></script-->
 
 </body>
 </html>
