@@ -2,16 +2,16 @@
         // img 속성에 각 지역에 맞는 개별 아이콘 이미지 경로를 넣어주세요.
    
      var eventLocations = [
-            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png", stamp: "./img/stamp-ganjeolgot.png", desc: "한반도의 첫 해가 떠오르는 곳", audio: "./audio/ganjeolgot.m4a", pimg: "./img/p-ganjeolgot.png", addr: "울산광역시 울주군 서생면 간절곶1길 39-2" },
-            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png", stamp: "./img/stamp-youngdo.png", desc: "바다를 디자인하다, 명승지 안의 명소", audio: "./audio/youngdo.m4a", pimg: "./img/p-youngdo.png", addr: "부산광역시 영도구 전망로 181"  },
-            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png", stamp: "./img/stamp-sanji.png", desc: "해넘이 명소이자 제주항의 이정표", audio: "./audio/sanji.m4a", pimg: "./img/p-sanji.png", addr: "제주특별자치도 제주시 건입동 340-2"  },
-            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/somaemuldo_icon_240.png", stamp: "./img/stamp-somaemuldo.png", desc: "닿기 힘들어 더 어여쁜 등대섬", audio: "./audio/somaemuldo.m4a", pimg: "./img/p-somaemuldo.png", addr: "경상남도 통영시 한산면 소매물도길 246"  },
-            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/odongdo_icon_240.png", stamp: "./img/stamp-odongdo.png", desc: "여수의 상징, 오동도 정상에 자리잡은 등대", audio: "./audio/odongdo.m4a", pimg: "./img/p-odongdo.png", addr: "전라남도 여수시 오동도로 238-32"  },
-            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/palmido_icon_240.png", stamp: "./img/stamp-palmido.png", desc: "고단한 세월의 풍파를 견뎌온 최초의 등대", audio: "./audio/palmido.m4a", pimg: "./img/p-palmido.png", addr: "인천광역시 중구 팔미로 28"  },
-            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/mukho_icon_240.png", stamp: "./img/stamp-mukho.png", desc: "고즈넉한 등대오름길과 동해의 풍광을 담은 곳", audio: "./audio/mukho.m4a", pimg: "./img/p-mukho.png", addr: "강원특별자치도 동해시 해맞이길 289"  },
-            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png", stamp: "./img/stamp-ulgi.png", desc: "동해안의 첫 등대", audio: "./audio/ulgi.m4a", pimg: "./img/p-ulgi.png", addr: "울산광역시 동구 등대로 155"  },
-            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png", stamp: "./img/stamp-udo.png", desc: "대한민국 최초의 등대테마공원", audio: "./audio/udo.m4a", pimg: "./img/p-udo.png", addr: "제주특별자치도 제주시 우도봉길 105"  },
-            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp-sokcho.png", desc: "등대 전망대에서 속초를 들여다보다", audio: "./audio/sokcho.m4a", pimg: "./img/p-sokcho.png", addr: "강원도 속초시 영금정로5길 8-28"  }
+            { title: "간절곶등대", lat: 35.3590, lng: 129.3606, img: "./img/ganjeolgot_icon_240.png", stamp: "./img/stamp-ganjeolgot.png", desc: "한반도의 첫 해가 떠오르는 곳", audio: "./audio/ganjeolgot.mp3", pimg: "./img/p-ganjeolgot.png", addr: "울산광역시 울주군 서생면 간절곶1길 39-2" },
+            { title: "영도등대", lat: 35.0523, lng: 129.0921, img: "./img/youngdo_icon_240.png", stamp: "./img/stamp-youngdo.png", desc: "바다를 디자인하다, 명승지 안의 명소", audio: "./audio/youngdo.mp3", pimg: "./img/p-youngdo.png", addr: "부산광역시 영도구 전망로 181"  },
+            { title: "산지등대", lat: 33.5214, lng: 126.5456, img: "./img/sanji_icon_240.png", stamp: "./img/stamp-sanji.png", desc: "해넘이 명소이자 제주항의 이정표", audio: "./audio/sanji.mp3", pimg: "./img/p-sanji.png", addr: "제주특별자치도 제주시 건입동 340-2"  },
+            { title: "소매물도등대", lat: 34.6196, lng: 128.5479, img: "./img/somaemuldo_icon_240.png", stamp: "./img/stamp-somaemuldo.png", desc: "닿기 힘들어 더 어여쁜 등대섬", audio: "./audio/somaemuldo.mp3", pimg: "./img/p-somaemuldo.png", addr: "경상남도 통영시 한산면 소매물도길 246"  },
+            { title: "오동도등대", lat: 34.7442, lng: 127.7677, img: "./img/odongdo_icon_240.png", stamp: "./img/stamp-odongdo.png", desc: "여수의 상징, 오동도 정상에 자리잡은 등대", audio: "./audio/odongdo.mp3", pimg: "./img/p-odongdo.png", addr: "전라남도 여수시 오동도로 238-32"  },
+            { title: "팔미도등대", lat: 37.3583, lng: 126.5106, img: "./img/palmido_icon_240.png", stamp: "./img/stamp-palmido.png", desc: "고단한 세월의 풍파를 견뎌온 최초의 등대", audio: "./audio/palmido.mp3", pimg: "./img/p-palmido.png", addr: "인천광역시 중구 팔미로 28"  },
+            { title: "묵호등대", lat: 37.554472, lng: 129.118555, img: "./img/mukho_icon_240.png", stamp: "./img/stamp-mukho.png", desc: "고즈넉한 등대오름길과 동해의 풍광을 담은 곳", audio: "./audio/mukho.mp3", pimg: "./img/p-mukho.png", addr: "강원특별자치도 동해시 해맞이길 289"  },
+            { title: "울기등대", lat: 35.4928, lng: 129.4430, img: "./img/ulgi_icon_240.png", stamp: "./img/stamp-ulgi.png", desc: "동해안의 첫 등대", audio: "./audio/ulgi.mp3", pimg: "./img/p-ulgi.png", addr: "울산광역시 동구 등대로 155"  },
+            { title: "우도등대", lat: 33.4927, lng: 126.9658, img: "./img/udo_icon_240.png", stamp: "./img/stamp-udo.png", desc: "대한민국 최초의 등대테마공원", audio: "./audio/udo.mp3", pimg: "./img/p-udo.png", addr: "제주특별자치도 제주시 우도봉길 105"  },
+            { title: "속초등대", lat: 38.071536, lng: 128.615561, img: "./img/sokcho_icon_240.png", stamp: "./img/stamp-sokcho.png", desc: "등대 전망대에서 속초를 들여다보다", audio: "./audio/sokcho.mp3", pimg: "./img/p-sokcho.png", addr: "강원도 속초시 영금정로5길 8-28"  }
         ];
 
         // --- 2. 대한민국 영역 제한 설정 (북한 제외) ---
