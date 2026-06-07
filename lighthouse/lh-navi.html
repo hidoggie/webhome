@@ -46,13 +46,13 @@
         body, html { margin: 0; overflow: hidden; width: 100vw; height: 100vh; font-family: sans-serif; }
         
         /* 시작 화면 오버레이 */
-        #start_area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #start_area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(120, 120, 120, 0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
         #start_btn { padding: 15px 30px; font-size: 18px; font-weight: bold; background: #066265; color: white; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer; }
         
         /* 우측 상단 네이버 미니맵 (원형) */
         #minimap-wrapper {
-            position: absolute; top: 20px; right: 20px;
-            width: 130px; height: 130px; border-radius: 50%;
+            position: absolute; top: 5%; right: 8%;
+            width: 35%; height: 20%; border-radius: 10%;
             border: 4px solid #066265; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
             overflow: hidden; z-index: 1000; display: none;
         }
@@ -72,7 +72,7 @@
 <body>
 
     <div id="start_area">     
-        <img src="./image/navi-intro-icon-1.png" alt="아이콘" width="100">
+        <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
         <h2>등대 AR 길안내</h2>
         <p style="color:red; font-weight:bold;">증강현실(AR) 사용시,<br>주변 사물과 부딪치지 않도록 주의하세요.</p> 
         <button id="start_btn" onclick="startNavigation()">안내 시작</button>
@@ -83,7 +83,7 @@
     </div>
 
     <div class="info-panel" id="info-panel">
-        <p class="distance-text" id="distance-info">거리 측정 중...</p>
+        <p class="distance-text" id="distance-info">가까운 등대 찾는 중...</p>
     </div>
 
     <div class="modal" id="alert-modal">
@@ -103,7 +103,7 @@
 
         <a-camera id="camera" look-controls-enabled="false" arjs-look-controls="smoothingFactor: 0.1" gps-projected-camera="maxDistance: 700"> 
             
-            <a-entity id="m0" position="0 -1.5 -2" scale="0.02 0.02 0.02" gltf-model="url(./models/lumi-light.glb)"></a-entity> 
+            <a-entity id="m0" position="0 -1.5 -2" scale="2 2 2" gltf-model="url(./models/lumi-light.glb)"></a-entity> 
             
             <a-entity id="cylinderGroup" position="0 -1.5 -2"></a-entity>
         </a-camera>
@@ -142,7 +142,7 @@
         function initMap() {
             map = new naver.maps.Map('minimap', {
                 center: new naver.maps.LatLng(37.5666, 126.9784),
-                zoom: 18, // 최대 줌인
+                zoom: 17, // 최대 줌인
                 disableKinematicPan: true, mapDataControl: false, scaleControl: false, logoControl: false, zoomControl: false, draggable: false
             });
         }
