@@ -196,8 +196,8 @@
             const themeMeta = document.getElementById("theme-color-meta");
             if (themeMeta) {
                const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-               const browserDefaultColor = isDarkMode ? "#202124" : "#ffffff"; 
-               themeMeta.setAttribute("content", browserDefaultColor);
+               const originalColor = isDarkMode ? "#000000" : "#f1f3f4";
+               themeMeta.setAttribute("content", originalColor);
             }
             // 3. 버튼을 누른 직후에 AR 씬(카메라+GPS)을 동적으로 삽입 (권한 요청 팝업 발생 지점)
             const arContainer = document.getElementById("ar-container");
