@@ -71,30 +71,17 @@
             display: flex; flex-direction: column;
         }
 
-        /* ★ 3. AR 카메라 화면을 400px 틀 안에 가두는 핵심 CSS */
-        #app-wrapper video {
-            width: 100% !important;
-            height: 100% !important;
-            object-fit: cover !important; 
-            margin: 0 !important;
-            top: 0 !important;
-            left: 0 !important;
-            position: absolute !important;
-            z-index: 0 !important;
-        }
-
-        /* 2. 3D 모델이 그려지는 캔버스(canvas)는 강제 왜곡 속성(object-fit)을 제거합니다. */
+        #app-wrapper video,
         #app-wrapper canvas.a-canvas {
-            width: 100% !important;
-            height: 100% !important;
-            /* object-fit 속성 삭제됨 */
-            margin: 0 !important;
-            top: 0 !important;
-            left: 0 !important;
             position: absolute !important;
-            z-index: 1 !important;
+            margin: 0 !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important;
         }
-
+        
+        #app-wrapper video { z-index: 0 !important; }
+        #app-wrapper canvas.a-canvas { z-index: 1 !important; }
 
         #app-wrapper video { z-index: 0 !important; } /* 카메라는 가장 밑바닥 */
         #app-wrapper canvas.a-canvas { z-index: 1 !important; } /* 3D 모델은 그 위 */
@@ -246,8 +233,8 @@
                     <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
                     <a-entity id="m1" scale="1 1 1" visible="false" gltf-model="url(./models/lighthouse.glb)" animation-mixer="loop: true"></a-entity>      
                     <a-camera id="camera" look-controls-enabled="false" arjs-look-controls="smoothingFactor: 0.1" gps-projected-camera="maxDistance: 700"> 
-                        <a-entity id="m0" position="0 -1 -1.5" scale="0.3 0.3 0.3" gltf-model="url(./models/lumi-light-ani.glb)" animation-mixer="loop: true"></a-entity> 
-                        <a-entity id="cylinderGroup" position="0 -1.2 -2.5"></a-entity>
+                        <a-entity id="m0" position="0 -0.7 -1.5" scale="0.3 0.3 0.3" gltf-model="url(./models/lumi-light-ani.glb)" animation-mixer="loop: true"></a-entity> 
+                        <a-entity id="cylinderGroup" position="0 -1 -2.5"></a-entity>
                     </a-camera>
                     <a-entity run></a-entity>
                 </a-scene>
