@@ -61,30 +61,12 @@
         /* 2. 모바일 화면 틀 (Max-width 400px 적용 및 중앙 정렬) */
         #app-wrapper {
             width: 100%; 
-            max-width: 400px; 
             height: 100%;
-            margin: 0 auto; /* 화면 중앙 정렬 */
             position: relative;
             background-color: #ffffff;
             overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.2);
             display: flex; flex-direction: column;
         }
-
-        #app-wrapper video,
-        #app-wrapper canvas.a-canvas {
-            position: absolute !important;
-            margin: 0 !important;
-            top: 50% !important;
-            left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-        }
-        
-        #app-wrapper video { z-index: 0 !important; }
-        #app-wrapper canvas.a-canvas { z-index: 1 !important; }
-
-        #app-wrapper video { z-index: 0 !important; } /* 카메라는 가장 밑바닥 */
-        #app-wrapper canvas.a-canvas { z-index: 1 !important; } /* 3D 모델은 그 위 */
 
         /* 시작 화면 오버레이 */
         #start_area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
@@ -239,15 +221,6 @@
                     <a-entity run></a-entity>
                 </a-scene>
             `;
-
-            // ★ AR.js가 body에 생성하는 카메라 영상을 400px 틀(app-wrapper) 안으로 이동시키는 핵심 로직
-            let checkVideo = setInterval(() => {
-                let video = document.querySelector('video');
-                if(video) {
-                    clearInterval(checkVideo);
-                    document.getElementById('app-wrapper').appendChild(video);
-                }
-            }, 100);
 
             initMap();
             startTracking();
