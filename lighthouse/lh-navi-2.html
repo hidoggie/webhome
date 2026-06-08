@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AR 등대 라인 길안내</title>
+
+    <meta name="theme-color" content="#ffffff" id="theme-color-meta">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
+
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+
+    <script>
+    AFRAME.registerComponent("run", {
+        init: function() {
+            this.m0 = document.querySelector("#m0");
+            this.m1 = document.querySelector("#m1");
+            this.p0 = new THREE.Vector3();
+            this.p1 = new THREE.Vector3();
+            
+            // 선(실린더) 생성
+            var geometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 12);
+            geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
+            geometry.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(90)));
+            var material = new THREE.MeshLambertMaterial({ color: 0x066265, opacity: 0.6, transparent: true });
+
+            this.cylinder = new THREE.Mesh(geometry, material);
+            this.cylinderGroup = document.querySelector("#cylinderGroup").object3D;
+            this.cylinderGroup.add(this.cylinder);
+        },
+        tick: function() {
+            if (!this.m0 || !this.m1) return;
+            this.m0.object3D.getWorldPosition(this.p0);
+            this.m1.object3D.getWorldPosition(this.p1);
+
+            let distance = this.p0.distanceTo(this.p1);
+            this.cylinderGroup.lookAt(this.p1);
+            this.cylinder.scale.set(1, 1, distance);
+            this.cylinder.visible = true;
+        }
+    });
+    </script>
+
+    <style>
+    /* 1. html과 body 공통 설정 (화면 꽉 채우기 및 스크롤 방지) */
+    html, body { 
+        margin: 0; 
+        padding: 0; 
+        overflow: hidden; 
+        width: 100%; 
+        height: 100%; 
+        font-family: sans-serif; 
+        background-color: #ffffff;
+    }
+
+    /* 2. body에만 Flex 레이아웃 적용 (세로 분할) 
+    body {
+        display: flex; 
+        flex-direction: column;
+    }      
+*/  
+        /* 시작 화면 오버레이 */
+        #start_area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        #start_btn { padding: 15px 30px; font-size: 18px; font-weight: bold; background: #066265; color: white; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer; }
+        
+        /* 우측 상단 네이버 미니맵 (원형) */
+        #minimap-wrapper {
+            border-bottom-left-radius: 50%;
+            border-bottom-right-radius: 50%;
+            position: absolute; 
+            top: 0; 
+            left: 0;
+            width: 100%; 
+            height: 20%; 
+            border: 4px solid #066265; box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            overflow: hidden; z-index: 1000; display: none;
+        }
+        #minimap { width: 100%; height: 100%; }
+
+        /* 하단 거리 안내 UI */
+        .info-panel { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 80%; background-color: rgba(6, 98, 101, 0.5); border-radius: 15px; padding: 5px; color: white; text-align: center; z-index: 1000; display: none; }
+        .distance-text { font-size: 16px; font-weight: bold; margin: 0; }
+
+        /* 팝업 모달 */
+        .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 99999; display: none; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; text-align: center; width: 70%; }
+        .modal-content p { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 20px; }
+        .btn-confirm { background: #066265; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; }
+        
+        /*  AR 영역  */
+        .ar-overlay { position: relative; width: 100%; height: 91%; }
+
+/* 4. 하단 네비게이션 (Footer) */
+.bottom-nav {
+    border-radius: 5px;
+    height: 9%; 
+    background-color: #1a3350;
+    display: flex; justify-content: space-around; align-items: center;
+    z-index: 30;
+    width: 100%;
+}
+
+.nav-item {
+    background: none; border: none; color: #8fa6c1; cursor: pointer;
+    display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.nav-item.active { color: white; }
+.nav-item .icon { font-size: 24px;}
+.nav-item .label { font-size: 12px; font-weight: 500; }
+.nav-item img { width: 24px; height: 24px; } /* 커스텀 아이콘 사용 시 */
+
+    </style>
+</head>
+<body>
+
+    <div id="start_area">     
+        <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
+        <img src="./img/ar-navi-text.png" alt="AR 등대 길찾기" width="200">
+        <p style="color: #066265; font-weight:bold;">증강현실(AR) 사용시,<br>주변 사물과 부딪치지 않도록 주의하세요.</p> 
+        <button id="start_btn" onclick="startNavigation()">안내 시작</button>
+    </div>
+
+    <div id="minimap-wrapper">
+        <div id="minimap"></div>
+    </div>
+
+    <div class="info-panel" id="info-panel">
+        <p class="distance-text" id="distance-info">가까운 등대 찾는 중...</p>
+    </div>
+
+    <div class="modal" id="alert-modal">
+        <div class="modal-content">
+            <p id="alert-msg"></p>
+            <button class="btn-confirm" onclick="closeModal()">확인</button>
+        </div>
+    </div>
+
+    <div class="ar-overlay" id="ar-container">
+    <!--a-scene embedded id="ar-scene" vr-mode-ui="enabled: false" arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;" renderer="antialias: true; alpha: true">
+        
+        <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+
+        <a-entity id="m1" scale="1 1 1" visible="false"
+                  gltf-model="url(./models/lighthouse.glb)" animation-mixer="loop: true">
+        </a-entity>      
+
+        <a-camera id="camera" look-controls-enabled="false" arjs-look-controls="smoothingFactor: 0.1" gps-projected-camera="maxDistance: 700"> 
+            
+            <a-entity id="m0" position="0 -1.3 -1.5" scale="0.3 0.3 0.3" gltf-model="url(./models/lumi-light-ani.glb)" animation-mixer="loop: true"></a-entity> 
+            
+            <a-entity id="cylinderGroup" position="0 -1.7 -2.5"></a-entity>
+        </a-camera>
+
+        <a-entity run></a-entity>
+    </a-scene-->
+    </div>
+
+        <nav class="bottom-nav">
+              <a href="lighthouse_map.html" class="nav-item active">
+                <span class="icon">
+                <img src="./img/home_white.png"></span>
+                <span class="label">홈</span>
+              </a>
+              <a href="lh-passport.html" class="nav-item">
+                  <span class="icon">
+                  <img src="./img/passport_white.png"></span>
+                  <span class="label">스탬프북</span>
+              </a> 
+            <button class="nav-item">
+                <span class="icon"><img src="./img/info_white.png"></span>
+                <span class="label">안내</span>
+            </button>
+        </nav>
+
+
+    <script>
+        // 1. 등대 데이터 (기존 draw_map.js 참조)
+        const lighthouses = [
+            { title: "간절곶등대", lat: 35.3590, lng: 129.3606 },
+            { title: "영도등대", lat: 35.0523, lng: 129.0921 },
+            { title: "산지등대", lat: 33.5214, lng: 126.5456 },
+            { title: "소매물도등대", lat: 34.6196, lng: 128.5479 },
+            { title: "오동도등대", lat: 34.7442, lng: 127.7677 },
+            { title: "등대", lat: 37.4891, lng: 126.9569 }   //test용
+            // 필요에 따라 추가
+        ];
+
+        let targetLighthouse = null;
+        let map, myLocMarker, targetMarker, polyline;
+        let watchId;
+
+       // 시작 버튼 클릭 시 실행
+        async function startNavigation() {
+            // 1. [iOS 13+ 전용] 기기 방향(나침반/자이로스코프) 권한 명시적 요청
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission !== 'granted') {
+                        alert("AR 길안내를 위해 기기 방향 센서 권한이 필요합니다.");
+                        // 권한 거부 시에도 지도는 작동해야 하므로 계속 진행
+                    }
+                } catch (error) {
+                    console.error("방향 센서 권한 요청 에러:", error);
+                }
+            }
+
+            // 2. 시작 화면 숨기고 UI 표시
+            document.getElementById("start_area").style.display = "none";
+            document.getElementById("minimap-wrapper").style.display = "block";
+            document.getElementById("info-panel").style.display = "block";
+
+            const themeMeta = document.getElementById("theme-color-meta");
+            if(themeMeta) {
+                themeMeta.setAttribute("content", "#000000"); 
+            }
+
+            // 3. 버튼을 누른 직후에 AR 씬(카메라+GPS)을 동적으로 삽입 (권한 요청 팝업 발생 지점)
+            const arContainer = document.getElementById("ar-container");
+            arContainer.innerHTML = `
+                <a-scene embedded id="ar-scene" 
+                              vr-mode-ui="enabled: false" 
+                              device-orientation-permission-ui="enabled: false"
+                              arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;" 
+                              renderer="antialias: true; alpha: true">
+                    <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+                    <a-entity id="m1" scale="1 1 1" visible="false" gltf-model="url(./models/lighthouse.glb)" animation-mixer="loop: true"></a-entity>      
+                    <a-camera id="camera" look-controls-enabled="false" arjs-look-controls="smoothingFactor: 0.1" gps-projected-camera="maxDistance: 700"> 
+                        <a-entity id="m0" position="0 -1.3 -1.5" scale="0.3 0.3 0.3" gltf-model="url(./models/lumi-light-ani.glb)" animation-mixer="loop: true"></a-entity> 
+                        <a-entity id="cylinderGroup" position="0 -1.7 -2.5"></a-entity>
+                    </a-camera>
+                    <a-entity run></a-entity>
+                </a-scene>
+            `;
+
+            // 4. 미니맵 및 위치 추적 실행
+            initMap();
+            startTracking();
+        }
+
+        // 네이버 미니맵 초기화
+        function initMap() {
+            map = new naver.maps.Map('minimap', {
+                center: new naver.maps.LatLng(37.5666, 126.9784),
+                zoom: 17, // 최대 줌인
+                disableKinematicPan: true, mapDataControl: false, scaleControl: false, logoControl: false, zoomControl: false, draggable: false
+            });
+        }
+
+        // 실시간 위치 추적 및 로직 처리
+        function startTracking() {
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    position => processLocationUpdate(position.coords.latitude, position.coords.longitude),
+                    error => console.warn(error),
+                    { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+                );
+            } else {
+                alert("GPS를 지원하지 않습니다.");
+            }
+        }
+
+        function processLocationUpdate(lat, lng) {
+            const currentLatLng = new naver.maps.LatLng(lat, lng);
+            
+            // 미니맵 업데이트: 중심 이동 및 내 마커 표시
+            map.setCenter(currentLatLng);
+            if (!myLocMarker) {
+                myLocMarker = new naver.maps.Marker({
+                    position: currentLatLng, map: map,
+                    icon: { content: '<div style="width:16px;height:16px;background:red;border-radius:50%;border:2px solid white;"></div>' }
+                });
+            } else {
+                myLocMarker.setPosition(currentLatLng);
+            }
+
+            // 최초 1회, 가장 가까운 등대 타겟팅 및 AR 목적지 세팅
+            if (!targetLighthouse) {
+                targetLighthouse = findNearestLighthouse(lat, lng);
+                
+                // AR 타겟 (m1) 위치 부여
+                let m1 = document.getElementById('m1');
+                m1.setAttribute('gps-projected-entity-place', `latitude: ${targetLighthouse.lat}; longitude: ${targetLighthouse.lng};`);
+                m1.setAttribute('visible', 'true');
+            }
+
+            // 거리 계산 및 UI/선 업데이트
+            const targetLatLng = new naver.maps.LatLng(targetLighthouse.lat, targetLighthouse.lng);
+            const distance = Math.round(calculateDistance(lat, lng, targetLighthouse.lat, targetLighthouse.lng));
+
+            document.getElementById('distance-info').innerText = `${targetLighthouse.title}까지 ${distance}m`;
+
+            // 미니맵 목적지 핀 및 점선 그리기
+            if (!targetMarker) {
+                targetMarker = new naver.maps.Marker({
+                    position: targetLatLng, map: map,
+                    icon: { content: '<div style="font-size:20px;"><img src="./img/lighthouse-i.png" style="width:40px;height:40px;"></div>' }
+                });
+         //       polyline = new naver.maps.Polyline({
+         //           map: map, strokeColor: '#FF0000', strokeOpacity: 0.8, strokeWeight: 4, strokeStyle: 'dashed'
+          //      });
+            }
+        //    polyline.setPath([currentLatLng, targetLatLng]);
+
+            // 도착 및 범위 이탈 체크 (기존 코드 기준치 반영)
+            if (distance > 1000) {
+                showAlert("거리가 너무 멀어요!<br>등대 근처에서 다시 시도해 주세요.");
+                navigator.geolocation.clearWatch(watchId);
+            } else if (distance < 10) {
+                showAlert("축하합니다!<br>등대에 도착했습니다.");
+                navigator.geolocation.clearWatch(watchId);
+            }
+        }
+
+        // 거리 계산 (Haversine)
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371e3;
+            const radLat1 = lat1 * Math.PI / 180;
+            const radLat2 = lat2 * Math.PI / 180;
+            const deltaLat = (lat2 - lat1) * Math.PI / 180;
+            const deltaLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(deltaLat/2) * Math.sin(deltaLat/2) + Math.cos(radLat1) * Math.cos(radLat2) * Math.sin(deltaLon/2) * Math.sin(deltaLon/2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        // 가장 가까운 등대 찾기
+        function findNearestLighthouse(lat, lng) {
+            let minDistance = Infinity;
+            let nearest = lighthouses[0];
+            lighthouses.forEach(lh => {
+                let dist = calculateDistance(lat, lng, lh.lat, lh.lng);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearest = lh;
+                }
+            });
+            return nearest;
+        }
+
+        // 알림 모달
+        function showAlert(msg) {
+            document.getElementById('alert-msg').innerHTML = msg;
+            document.getElementById('alert-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('alert-modal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
