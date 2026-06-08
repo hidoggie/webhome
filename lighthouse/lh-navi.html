@@ -56,7 +56,7 @@
         width: 100%; 
         height: 100%; 
         font-family: sans-serif; 
-        background-color: #000000; 
+        background-color: #ffffff;
     }
 
     /* 2. body에만 Flex 레이아웃 적용 (세로 분할) 
@@ -223,7 +223,11 @@
             // 3. 버튼을 누른 직후에 AR 씬(카메라+GPS)을 동적으로 삽입 (권한 요청 팝업 발생 지점)
             const arContainer = document.getElementById("ar-container");
             arContainer.innerHTML = `
-                <a-scene embedded id="ar-scene" vr-mode-ui="enabled: false" arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;" renderer="antialias: true; alpha: true">
+                <a-scene embedded id="ar-scene" 
+                              vr-mode-ui="enabled: false" 
+                              device-orientation-permission-ui="enabled: false"
+                              arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;" 
+                              renderer="antialias: true; alpha: true">
                     <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
                     <a-entity id="m1" scale="1 1 1" visible="false" gltf-model="url(./models/lighthouse.glb)" animation-mixer="loop: true"></a-entity>      
                     <a-camera id="camera" look-controls-enabled="false" arjs-look-controls="smoothingFactor: 0.1" gps-projected-camera="maxDistance: 700"> 
