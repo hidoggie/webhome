@@ -215,13 +215,13 @@
             document.getElementById("minimap-wrapper").style.display = "block";
             document.getElementById("info-panel").style.display = "block";
 
-setTimeout(() => {
-    const themeMeta = document.getElementById("theme-color-meta");
-    if (themeMeta) {
-        themeMeta.setAttribute("content", "#1a3350");
-    }
-}, 300);
-   //         }
+            document.body.style.backgroundColor = "#1a3350"; 
+            document.getElementById("app-wrapper").style.backgroundColor = "#000000";
+            
+            const themeMeta = document.getElementById("theme-color-meta");
+            if (themeMeta) {
+               themeMeta.setAttribute("content", "#1a3350");
+            }
 
             // 3. 버튼을 누른 직후에 AR 씬(카메라+GPS)을 동적으로 삽입 (권한 요청 팝업 발생 지점)
             const arContainer = document.getElementById("ar-container");
