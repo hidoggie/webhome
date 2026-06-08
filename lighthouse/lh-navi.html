@@ -72,16 +72,30 @@
         }
 
         /* ★ 3. AR 카메라 화면을 400px 틀 안에 가두는 핵심 CSS */
-        #app-wrapper video,
-        #app-wrapper canvas.a-canvas {
+        #app-wrapper video {
             width: 100% !important;
             height: 100% !important;
-            object-fit: cover !important;
+            object-fit: cover !important; 
             margin: 0 !important;
             top: 0 !important;
             left: 0 !important;
             position: absolute !important;
+            z-index: 0 !important;
         }
+
+        /* 2. 3D 모델이 그려지는 캔버스(canvas)는 강제 왜곡 속성(object-fit)을 제거합니다. */
+        #app-wrapper canvas.a-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            /* object-fit 속성 삭제됨 */
+            margin: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
+            position: absolute !important;
+            z-index: 1 !important;
+        }
+
+
         #app-wrapper video { z-index: 0 !important; } /* 카메라는 가장 밑바닥 */
         #app-wrapper canvas.a-canvas { z-index: 1 !important; } /* 3D 모델은 그 위 */
 
