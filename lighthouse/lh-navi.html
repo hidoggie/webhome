@@ -47,25 +47,26 @@
     </script>
 
     <style>
-        /* 1. PC 기본 배경 (Flex 속성 제거하여 좌우 분할 문제 해결) */
+        /* ★ 1. 카메라가 보이도록 배경을 완전히 투명하게(transparent) 유지합니다. */
         html, body { 
-            margin: 0 !important; 
-            padding: 0 !important; 
-            width: 100% !important; 
-            height: 100% !important; 
-            background-color: #f0f0f0; 
+            margin: 0 !important; padding: 0 !important; 
+            width: 100% !important; height: 100% !important; 
+            background-color: transparent !important; 
             font-family: sans-serif;
-            overflow: hidden !important; /* ★ 스크롤바가 생기는 것을 원천 차단 */
+            overflow: hidden !important; 
         }
 
-        /* 2. 모바일 화면 틀 (Max-width 400px 적용 및 중앙 정렬) */
+        /* 전체 틀: 처음에만 흰색 바탕 */
         #app-wrapper {
-            width: 100%; 
-            height: 100%;
-            position: relative;
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
             background-color: #ffffff;
             overflow: hidden;
-            display: flex; flex-direction: column;
+        }
+
+        /* UI 영역 클릭 활성화 */
+        #start_area, #minimap-wrapper, .info-panel, .bottom-nav, .modal {
+            pointer-events: auto;
         }
 
         /* 시작 화면 오버레이 */
@@ -89,27 +90,20 @@
         .modal-content p { font-size: 18px; font-weight: bold; color: #333; margin-bottom: 20px; }
         .btn-confirm { background: #066265; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; }
         
-        /* AR 영역 및 하단 메뉴 (app-wrapper 내부 91:9 분할) 
-        .ar-overlay { position: relative; width: 100%; height: 91%; }  */      
-        .ar-overlay { 
-            flex: 1; /* 네비게이션을 제외한 나머지 공간을 꽉 채움 */
-            position: relative; 
-            width: 100%; 
+        /* ★ 2. AR 영역: 화면 100%를 무조건 꽉 채우도록 설정 (왜곡 방지) */
+        #ar-container { 
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 1; 
         }
-    /*    
+        
+        /* ★ 3. 하단 네비게이션: AR 화면 위를 덮고(z-index: 30) 바닥에 고정(absolute) */
         .bottom-nav {
             position: absolute; bottom: 0; left: 0;
-            border-radius: 5px; height: 9%; background-color: #1a3350;
-            display: flex; justify-content: space-around; align-items: center;
-            z-index: 30; width: 100%;
-        }
-*/
-        .bottom-nav {
-            flex-shrink: 0; /* 화면이 작아져도 네비게이션 바 높이 유지 */
-            height: 70px; /* 퍼센트(9%) 대신 고정 픽셀을 주어 안정성 확보 */
+            width: 100%; height: 70px; 
             background-color: #1a3350;
             display: flex; justify-content: space-around; align-items: center;
-            z-index: 30; width: 100%;
+            z-index: 30;
         }
         .nav-item {
             background: none; border: none; color: #8fa6c1; cursor: pointer; text-decoration: none;
@@ -124,7 +118,6 @@
 <body>
 
     <div id="app-wrapper">
-
         <div id="start_area">     
             <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
             <img src="./img/ar-navi-text.png" alt="AR 등대 길찾기" width="200">
@@ -147,7 +140,7 @@
             </div>
         </div>
 
-        <div class="ar-overlay" id="ar-container"></div>
+        <div id="ar-container"></div>
 
         <nav class="bottom-nav">
             <a href="lighthouse_map.html" class="nav-item active">
@@ -163,8 +156,9 @@
                 <span class="label">안내</span>
             </button>
         </nav>
+    </div>
 
-    </div> <script>
+    <script>
         const lighthouses = [
             { title: "간절곶등대", lat: 35.3590, lng: 129.3606 },
             { title: "영도등대", lat: 35.0523, lng: 129.0921 },
@@ -179,30 +173,22 @@
         let watchId;
 
         async function startNavigation() {
-            // 권한 압축 처리 (방향, 카메라, GPS 사전 확인)
-            try {
-                if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    await DeviceOrientationEvent.requestPermission();
-                }
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                stream.getTracks().forEach(track => track.stop()); 
-                await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true });
-                });
-            } catch (error) {
-                console.warn("사전 권한 확인 완료 (진행 가능):", error);
+            // iOS 13+ 나침반(방향) 센서 권한 요청
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try { await DeviceOrientationEvent.requestPermission(); } catch(e) {}
             }
 
-            // 시작 UI 숨기기 및 네비/미니맵 노출
+            // 시작 UI 숨기기
             document.getElementById("start_area").style.display = "none";
             document.getElementById("minimap-wrapper").style.display = "block";
             document.getElementById("info-panel").style.display = "block";
 
-            // ★ 아이폰 주소창 색상 완벽 동기화 (body 배경도 함께 변경)
-            document.body.style.backgroundColor = "#000000"; 
-            document.getElementById("app-wrapper").style.backgroundColor = "#ffffff"; 
+            // ★ 카메라 영상이 뚫려 보이도록 app-wrapper를 "투명"하게 만듭니다.
+            document.getElementById("app-wrapper").style.backgroundColor = "transparent"; 
+            
+            // 아이폰 주소창 색상 변경
             const themeMeta = document.getElementById("theme-color-meta");
-            if(themeMeta) themeMeta.setAttribute("content", "#000000"); 
+            if(themeMeta) themeMeta.setAttribute("content", "#1a3350"); 
 
             // AR 씬 삽입
             const arContainer = document.getElementById("ar-container");
@@ -215,8 +201,8 @@
                     <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
                     <a-entity id="m1" scale="1 1 1" visible="false" gltf-model="url(./models/lighthouse.glb)" animation-mixer="loop: true"></a-entity>      
                     <a-camera id="camera" look-controls-enabled="false" arjs-look-controls="smoothingFactor: 0.1" gps-projected-camera="maxDistance: 700"> 
-                        <a-entity id="m0" position="0 -0.7 -1.5" scale="0.3 0.3 0.3" gltf-model="url(./models/lumi-light-ani.glb)" animation-mixer="loop: true"></a-entity> 
-                        <a-entity id="cylinderGroup" position="0 -1 -2.5"></a-entity>
+                        <a-entity id="m0" position="0 -0.4 -1.5" scale="0.3 0.3 0.3" gltf-model="url(./models/lumi-light-ani.glb)" animation-mixer="loop: true"></a-entity> 
+                        <a-entity id="cylinderGroup" position="0 -0.8 -2.5"></a-entity>
                     </a-camera>
                     <a-entity run></a-entity>
                 </a-scene>
@@ -226,6 +212,7 @@
             startTracking();
         }
 
+        // ... 이하 미니맵 및 GPS 로직은 변동 없이 그대로 유지 ...
         function initMap() {
             map = new naver.maps.Map('minimap', {
                 center: new naver.maps.LatLng(37.5666, 126.9784),
