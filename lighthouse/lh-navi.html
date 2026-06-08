@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>AR 등대 라인 길안내</title>
 
     <meta name="theme-color" content="#ffffff" id="theme-color-meta">
@@ -55,6 +55,31 @@
             font-family: sans-serif;
             overflow: hidden !important; 
         }
+
+           @-webkit-keyframes load{
+     0%{
+       -ms-transform: rotate(7deg); /* IE 9 */
+       -webkit-transform: rotate(7deg); /* Chrome, Safari, Opera */
+       transform: rotate(7deg);
+     }
+     100%{
+       -ms-transform: rotate(360deg); /* IE 9 */
+       -webkit-transform: rotate(360deg); /* Chrome, Safari, Opera */
+       transform: rotate(360deg);
+     }
+   }
+   @keyframes load{
+     0%{
+       -ms-transform: rotate(7deg); /* IE 9 */
+       -webkit-transform: rotate(7deg); /* Chrome, Safari, Opera */
+       transform: rotate(7deg);
+     }
+     100%{
+       -ms-transform: rotate(360deg); /* IE 9 */
+       -webkit-transform: rotate(360deg); /* Chrome, Safari, Opera */
+       transform: rotate(360deg);
+     }
+   }
 
         /* 전체 틀: 처음에만 흰색 바탕 */
         #app-wrapper {
