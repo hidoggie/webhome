@@ -136,23 +136,7 @@
     </div>
 
     <div class="ar-overlay" id="ar-container">
-    <!--a-scene embedded id="ar-scene" vr-mode-ui="enabled: false" arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;" renderer="antialias: true; alpha: true">
-        
-        <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
 
-        <a-entity id="m1" scale="1 1 1" visible="false"
-                  gltf-model="url(./models/lighthouse.glb)" animation-mixer="loop: true">
-        </a-entity>      
-
-        <a-camera id="camera" look-controls-enabled="false" arjs-look-controls="smoothingFactor: 0.1" gps-projected-camera="maxDistance: 700"> 
-            
-            <a-entity id="m0" position="0 -1.3 -1.5" scale="0.3 0.3 0.3" gltf-model="url(./models/lumi-light-ani.glb)" animation-mixer="loop: true"></a-entity> 
-            
-            <a-entity id="cylinderGroup" position="0 -1.7 -2.5"></a-entity>
-        </a-camera>
-
-        <a-entity run></a-entity>
-    </a-scene-->
     </div>
 
         <nav class="bottom-nav">
@@ -211,9 +195,10 @@
 
             const themeMeta = document.getElementById("theme-color-meta");
             if (themeMeta) {
-               themeMeta.remove();
+               const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+               const browserDefaultColor = isDarkMode ? "#202124" : "#ffffff"; 
+               themeMeta.setAttribute("content", browserDefaultColor);
             }
-
             // 3. 버튼을 누른 직후에 AR 씬(카메라+GPS)을 동적으로 삽입 (권한 요청 팝업 발생 지점)
             const arContainer = document.getElementById("ar-container");
             arContainer.innerHTML = `
