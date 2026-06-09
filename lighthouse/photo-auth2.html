@@ -203,26 +203,18 @@ document.addEventListener('DOMContentLoaded', () => {
   let capturedDataUrl = null;
 
   // --- [1] 사진/영상 촬영 완료 이벤트 감지 ---
-  scene.addEventListener('xrextras-capture-photo', (e) => {
-  e.stopImmediatePropagation(); // ✅ 8th Wall 기본 미리보기 차단
+ window.addEventListener('mediarecorder-photocomplete', (e) => {
+  console.log('📸 photo 이벤트 발생!', e.detail);
   
-  const dataUrl = e.detail.dataUrl || e.detail.blob;
-  
-  if (dataUrl instanceof Blob) {
-    const reader = new FileReader();
-    reader.onload = (ev) => addTimestampToImage(ev.target.result, (composed) => {
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    addTimestampToImage(ev.target.result, (composed) => {
       capturedDataUrl = composed;
       showPreview(composed, 'photo');
     });
-    reader.readAsDataURL(dataUrl);
-  } else {
-    addTimestampToImage(dataUrl, (composed) => {
-      capturedDataUrl = composed;
-      showPreview(composed, 'photo');
-    });
-  }
-
-}, true); // ✅ 캡처 단계(true)에서 가로채야 8th Wall보다 먼저 실행됨
+  };
+  reader.readAsDataURL(e.detail.blob);
+});
 
 
   // ✅ 핵심 함수: Canvas로 시간 합성
