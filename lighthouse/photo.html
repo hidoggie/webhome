@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <title>인증샷 촬영</title>
+
+  <script src="./js/8frame-1.5.0.min.js"></script>
+  <script src="./js/xrextras.js"></script>
+  <script src="./js/landing-page.js"></script>  
+  
+  <script async src="./js/xr.js" data-preload-chunks="face"></script> 
+  <!--script type="module" src="./selection.js" defer></script-->
+  <style>
+    /* UI 전체를 덮는 투명 레이어 */
+#custom-ui-layer {
+  position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 999; pointer-events: auto;
+}
+.hidden { display: none !important; }
+
+/* 1. 미리보기 화면 */
+.screen {
+  position: relative; width: 100%; height: 100%; background: #000;
+  display: flex; flex-direction: column;
+}
+.media-container {
+  flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
+  overflow: hidden;
+}
+.media-content { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/* 등대 정보 오버레이 */
+.info-overlay {
+  position: absolute; bottom: 20px; left: 20px; color: white;
+  text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
+}
+.info-overlay h3 { margin: 0; font-size: 1.5rem; }
+.info-overlay p { margin: 5px 0 0 0; font-size: 1rem; opacity: 0.9; }
+
+/* 하단 버튼 영역 */
+.bottom-action {
+  padding: 20px; background: white; text-align: center;
+}
+.action-btn {
+  width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold;
+  background-color: #0056b3; color: white; border: none; border-radius: 8px;
+}
+
+/* 모달 공통 스타일 */
+.modal {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center;
+  z-index: 1000;
+}
+.modal-content {
+  background: white; width: 85%; border-radius: 12px; padding: 25px 20px;
+  text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+}
+.modal-content p { font-size: 1.1rem; line-height: 1.4; margin-bottom: 25px; color: #333; }
+.share-text { font-size: 0.95rem !important; word-break: keep-all; }
+
+.modal-buttons { display: flex; gap: 10px; }
+.modal-buttons button {
+  flex: 1; padding: 12px; font-size: 1rem; font-weight: bold;
+  border: none; border-radius: 6px; cursor: pointer;
+}
+.btn-cancel { background: #e0e0e0; color: #555; }
+.btn-primary { background: #0056b3; color: white; }
+.btn-secondary { background: #4caf50; color: white; }
+
+  </style>
+
+</head>
+
+<body>
+
+<a-scene 
+  landing-page
+  xrextras-loading
+  xrextras-runtime-error
+  xrextras-pause-on-hidden
+  renderer="maxCanvasWidth: 960; maxCanvasHeight: 960"
+  xrface="mirroredDisplay: true;  meshGeometry: eyes, face, mouth; cameraDirection: front; allowedDevices: any;">  
+ 
+  <xrextras-capture-button></xrextras-capture-button> 
+  
+</a-scene>
+
+<div id="custom-ui-layer" class="hidden">
+  
+  <div id="preview-screen" class="screen hidden">
+    <div class="media-container">
+      <img id="preview-image" class="media-content hidden" />
+      <video id="preview-video" class="media-content hidden" autoplay loop muted playsinline></video>
+      
+      <div class="info-overlay">
+        <h3 id="lighthouse-name">📍 호미곶 등대</h3>
+        <p id="capture-time"></p>
+      </div>
+    </div>
+    
+    <div class="bottom-action">
+      <button id="btn-save-stamp" class="action-btn">스탬프북 저장</button>
+    </div>
+  </div>
+
+  <div id="modal-confirm" class="modal hidden">
+    <div class="modal-content">
+      <p>현재 등대의 스탬프를 획득하고<br>사진을 저장하시겠습니까?</p>
+      <div class="modal-buttons">
+        <button id="btn-confirm-cancel" class="btn-cancel">취소</button>
+        <button id="btn-confirm-save" class="btn-primary">확인</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-share" class="modal hidden">
+    <div class="modal-content">
+      <p class="share-text">
+        사진을 등대 커뮤니티에만 게시하려면 좌측의 <strong>'사진후기 게시'</strong> 버튼을,<br>
+        게시 후 SNS 에 공유하려면 우측의 <strong>'게시 후 SNS 공유'</strong> 버튼을 눌러주세요.
+      </p>
+      <div class="modal-buttons flex-row">
+        <button id="btn-post-review" class="btn-secondary">사진후기 게시</button>
+        <button id="btn-post-share" class="btn-primary">게시 후 SNS 공유</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const scene = document.querySelector('a-scene');
+  const uiLayer = document.getElementById('custom-ui-layer');
+  
+  // 미리보기 요소
+  const previewScreen = document.getElementById('preview-screen');
+  const previewImg = document.getElementById('preview-image');
+  const previewVid = document.getElementById('preview-video');
+  const captureTimeText = document.getElementById('capture-time');
+  const btnSaveStamp = document.getElementById('btn-save-stamp');
+
+  // 모달 요소
+  const modalConfirm = document.getElementById('modal-confirm');
+  const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+  const btnConfirmSave = document.getElementById('btn-confirm-save');
+
+  const modalShare = document.getElementById('modal-share');
+  const btnPostReview = document.getElementById('btn-post-review');
+  const btnPostShare = document.getElementById('btn-post-share');
+
+  // 임시 저장용 데이터 변수
+  let capturedDataUrl = null;
+
+  // --- [1] 사진/영상 촬영 완료 이벤트 감지 ---
+  scene.addEventListener('mediarecorder-photoready', (e) => {
+    // 8th Wall은 e.detail.base64 형태로 이미지 데이터를 반환합니다.
+    capturedDataUrl = 'data:image/jpeg;base64,' + e.detail.base64;
+    showPreview(capturedDataUrl, 'photo');
+  });
+
+  scene.addEventListener('mediarecorder-videoready', (e) => {
+    // 영상의 경우 e.detail.videoUri 를 반환합니다.
+    capturedDataUrl = e.detail.videoUri;
+    showPreview(capturedDataUrl, 'video');
+  });
+
+  function showPreview(mediaUrl, type) {
+    uiLayer.classList.remove('hidden');
+    previewScreen.classList.remove('hidden');
+    
+    // 현재 시간 표시
+    const now = new Date();
+    captureTimeText.innerText = now.getFullYear() + "년 " + 
+                               (now.getMonth()+1) + "월 " + 
+                               now.getDate() + "일 " + 
+                               now.getHours() + ":" + 
+                               String(now.getMinutes()).padStart(2, '0');
+
+    if (type === 'photo') {
+      previewImg.src = mediaUrl;
+      previewImg.classList.remove('hidden');
+      previewVid.classList.add('hidden');
+    } else {
+      previewVid.src = mediaUrl;
+      previewVid.classList.remove('hidden');
+      previewImg.classList.add('hidden');
+      previewVid.play();
+    }
+  }
+
+  // --- [2] 스탬프북 저장 (확인 모달 띄우기) ---
+  btnSaveStamp.addEventListener('click', () => {
+    modalConfirm.classList.remove('hidden');
+  });
+
+  // 저장 취소
+  btnConfirmCancel.addEventListener('click', () => {
+    modalConfirm.classList.add('hidden');
+  });
+
+  // DB 임시 저장 및 공유 모달 띄우기
+  btnConfirmSave.addEventListener('click', () => {
+    // TODO: 서버 API 통신 로직 추가 (여권번호, 등대위치, 촬영시간, 사진 데이터 전송)
+    console.log("DB 저장 완료: 스탬프 획득 처리됨!");
+    
+    modalConfirm.classList.add('hidden');
+    modalShare.classList.remove('hidden'); // 3번 프로세스로 넘어감
+  });
+
+  // --- [4] 사진후기 게시 버튼 로직 ---
+  btnPostReview.addEventListener('click', () => {
+    // TODO: 사용자 DB 정보에서 게시 flag = true 처리 로직
+    console.log("게시 flag true 업데이트 완료 (game-process.html에 반영)");
+    alert("사진 후기가 성공적으로 게시되었습니다.");
+    resetUI();
+  });
+
+  // --- [5] 게시 후 SNS 공유 버튼 로직 ---
+  btnPostShare.addEventListener('click', () => {
+    // 1. 게시 flag 업데이트
+    console.log("게시 flag true 업데이트 완료");
+    
+    // 2. Web Share API를 활용한 기기 기본 공유 창 띄우기 (모바일 환경 지원)
+    if (navigator.share) {
+      navigator.share({
+        title: '등대 스탬프 투어',
+        text: '호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!',
+        // url: 'https://your-tour-url.com' // 공유할 링크가 있다면 추가
+      }).then(() => {
+        console.log('SNS 공유 성공');
+        resetUI();
+      }).catch((error) => {
+        console.log('공유 실패 또는 취소', error);
+        resetUI();
+      });
+    } else {
+      // Web Share API를 지원하지 않는 브라우저 대응
+      alert("해당 브라우저에서는 공유 기능을 지원하지 않습니다.\n(게시는 완료되었습니다)");
+      resetUI();
+    }
+  });
+
+  // UI 초기화 및 AR 화면 복귀
+  function resetUI() {
+    uiLayer.classList.add('hidden');
+    previewScreen.classList.add('hidden');
+    modalShare.classList.add('hidden');
+    previewImg.src = "";
+    previewVid.src = "";
+  }
+});
+
+</script>
+
+</body>
+</html>
+
+
+
+
+
+
