@@ -15,14 +15,14 @@
   <style>
     /* UI 전체를 덮는 투명 레이어 */
 #custom-ui-layer {
-  position: absolute; top: 0; left: 0; width: 100vw; height: 100vh;
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   z-index: 999; pointer-events: auto;
 }
 .hidden { display: none !important; }  
 
 /* 1. 미리보기 화면 */
 .screen {
-  position: relative; width: 100%; height: 100%; background: #000;
+  position: relative; width: 100%; height: 100%; background: #ffff;
   display: flex; flex-direction: column;
 }
 .media-container {
@@ -44,7 +44,7 @@
   padding: 20px; background: white; text-align: center;
 }
 .action-btn {
-  width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold;
+  width: 50%; padding: 15px; font-size: 1.2rem; font-weight: bold;
   background-color: #0056b3; color: white; border: none; border-radius: 8px;
 }
 
@@ -100,7 +100,7 @@
       
       <div class="info-overlay">
         <h3 id="lighthouse-name">📍 호미곶 등대</h3>
-        <p id="capture-time"></p>
+        <!--p id="capture-time"></p-->
       </div>
     </div>
     
@@ -201,8 +201,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 임시 저장용 데이터 변수
   let capturedDataUrl = null;
+  let capturedFile = null;
 
-  // --- [1] 사진/영상 촬영 완료 이벤트 감지 ---
+  // --- [1] 사진/영상 촬영 완료 이벤트 감지 ---  
  window.addEventListener('mediarecorder-photocomplete', (e) => {
   console.log('📸 photo 이벤트 발생!', e.detail);
   
@@ -210,6 +211,13 @@ document.addEventListener('DOMContentLoaded', () => {
   reader.onload = (ev) => {
     addTimestampToImage(ev.target.result, (composed) => {
       capturedDataUrl = composed;
+
+      fetch(composed)
+        .then(r => r.blob())
+        .then(blob => {
+          capturedFile = new File([blob], 'lighthouse-stamp.jpg', { type: 'image/jpeg' });
+        });
+
       showPreview(composed, 'photo');
     });
   };
@@ -226,30 +234,30 @@ function addTimestampToImage(dataUrl, callback) {
     canvas.height = img.height;
     const ctx = canvas.getContext('2d');
 
-    // 1. 원본 이미지 그리기
     ctx.drawImage(img, 0, 0);
 
-    // 2. 현재 시간 텍스트 준비
     const now = new Date();
-    const timeStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')}  `
+    const timeStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} `
                   + `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-    // 3. 텍스트 스타일 설정
-    const fontSize = Math.floor(canvas.width * 0.045); // 이미지 크기에 비례
-    ctx.font      = `bold ${fontSize}px Arial`;
-    ctx.textAlign = 'right';
+    // ✅ 등대 이름 읽기 (화면에 표시된 텍스트 그대로 사용)
+    const lighthouseName = document.getElementById('lighthouse-name').innerText;
 
-    // 4. 그림자 효과로 가독성 확보
+    const fontSize = Math.floor(canvas.width * 0.045);
+    ctx.font      = `bold ${fontSize}px Arial`;
     ctx.shadowColor   = 'rgba(0,0,0,0.8)';
     ctx.shadowBlur    = 8;
     ctx.shadowOffsetX = 2;
     ctx.shadowOffsetY = 2;
-
-    // 5. 하단 우측에 흰색 텍스트로 찍기
-    const x = canvas.width  - 30;
-    const y = canvas.height - 30;
     ctx.fillStyle = 'white';
-    ctx.fillText(timeStr, x, y);
+
+    // ✅ 좌측 하단 — 등대 이름
+    ctx.textAlign = 'left';
+    ctx.fillText(lighthouseName, 30, canvas.height - 30);
+
+    // ✅ 우측 하단 — 시간
+    ctx.textAlign = 'right';
+    ctx.fillText(timeStr, canvas.width - 30, canvas.height - 30);
 
     callback(canvas.toDataURL('image/jpeg', 0.92));
   };
@@ -309,37 +317,27 @@ function addTimestampToImage(dataUrl, callback) {
 
   // --- [5] 게시 후 SNS 공유 버튼 로직 ---
   btnPostShare.addEventListener('click', async () => {
-  console.log("게시 flag true 업데이트 완료");
+  if (!capturedFile) {
+    alert("사진 준비 중입니다. 잠시 후 다시 눌러주세요.");
+    return;
+  }
 
-  // base64 → Blob → File 변환
-  const res = await fetch(capturedDataUrl);
-  const blob = await res.blob();
-  const file = new File([blob], 'lighthouse-stamp.jpg', { type: 'image/jpeg' });
-
-  // Web Share API v2 (파일 공유 지원 여부 확인)
-  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  if (navigator.canShare && navigator.canShare({ files: [capturedFile] })) {
     navigator.share({
-      files: [file],
+      files: [capturedFile],
       title: '등대 스탬프 투어',
       text: '호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!',
-    }).then(() => {
-      console.log('SNS 공유 성공');
-      resetUI();
-    }).catch((error) => {
-      console.log('공유 실패 또는 취소', error);
-      resetUI();
-    });
+    }).then(() => { resetUI(); })
+     .catch((err) => { console.log('공유 취소 또는 실패', err); resetUI(); });
 
   } else if (navigator.share) {
-    // 파일 공유 미지원 브라우저 → 텍스트만 공유
     navigator.share({
       title: '등대 스탬프 투어',
       text: '호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!',
-    }).then(() => resetUI())
-     .catch(() => resetUI());
+    }).then(() => resetUI()).catch(() => resetUI());
 
   } else {
-    alert("해당 브라우저에서는 공유 기능을 지원하지 않습니다.\n(게시는 완료되었습니다)");
+    alert("해당 브라우저에서는 공유 기능을 지원하지 않습니다.");
     resetUI();
   }
 });
@@ -351,127 +349,13 @@ function addTimestampToImage(dataUrl, callback) {
     modalShare.classList.add('hidden');
     previewImg.src = "";
     previewVid.src = "";
+    capturedDataUrl = null;
+    capturedFile = null;  // ✅ 추가
   }
+  
 });
 
 </script>
 
-
-<!--script>
-  // ── AR 로직 ──────────────────────────────────────────────
-  const overlay = document.getElementById('scanning-overlay');
-  let activeTarget = null;
-
-  // ✅ targetOrder 선언 복구
-  const targetOrder = ['hero_target', 'hero_target1'];
-
-  const targetMap = {
-    'hero_target': {
-      video: document.getElementById('wine-label-video'),
-      modelId: 'model-hero',
-      overlayImg: './assets/Media/hero-illust-s.svg',
-      overlayOpacity: '0.5'
-    },
-    'hero_target1': {
-      video: document.getElementById('wine-label-video1'),
-      modelId: 'model-hero1',
-      overlayImg: './assets/Media/stone-illust-s.svg',
-      overlayOpacity: '0.5'
-    }
-  };
-
-  // ✅ 초기 투명도 적용
-  overlay.style.opacity = targetMap['hero_target'].overlayOpacity;
-
-  function fadeInModel(modelEntity) {
-    modelEntity.setAttribute('visible', true);
-    function startFade() {
-      const mesh = modelEntity.getObject3D('mesh');
-      if (!mesh) { setTimeout(startFade, 100); return; }
-      mesh.traverse((node) => {
-        if (node.material) {
-          const mats = Array.isArray(node.material) ? node.material : [node.material];
-          mats.forEach((mat) => { mat.transparent = true; mat.opacity = 0; });
-        }
-      });
-      function easeInOutQuad(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
-      const duration = 1500, start = performance.now();
-      function fade(now) {
-        const progress = Math.min((now - start) / duration, 1);
-        const eased = easeInOutQuad(progress);
-        mesh.traverse((node) => {
-          if (node.material) {
-            const mats = Array.isArray(node.material) ? node.material : [node.material];
-            mats.forEach((mat) => { mat.opacity = eased; });
-          }
-        });
-        if (progress < 1) requestAnimationFrame(fade);
-      }
-      requestAnimationFrame(fade);
-    }
-    startFade();
-  }
-
-  function bindVideoEnded(targetName) {
-    const { video, modelId } = targetMap[targetName];
-    if (video._boundTargets && video._boundTargets.includes(targetName)) return;
-    if (!video._boundTargets) video._boundTargets = [];
-    video._boundTargets.push(targetName);
-    video.addEventListener('ended', () => {
-      if (activeTarget !== targetName) return;
-      const modelEntity = document.getElementById(modelId);
-      if (modelEntity) fadeInModel(modelEntity);
-      video.loop = true;
-      video.play();
-    });
-  }
-
-  document.querySelector('a-scene').addEventListener('xrimagefound', (event) => {
-    const name = event.detail.name;
-    if (!targetMap[name]) return;
-    activeTarget = name;
-    if (overlay) {
-      const overlayImgEl = overlay.querySelector('img');
-      if (overlayImgEl) overlayImgEl.src = targetMap[name].overlayImg;
-      overlay.style.animation = 'fadeOut 0.5s forwards';
-      setTimeout(() => { overlay.style.display = 'none'; }, 500);
-    }
-    const { video, modelId } = targetMap[name];
-    const modelEntity = document.getElementById(modelId);
-    video.loop = false;
-    video.currentTime = 0;
-    video.play().catch(() => {
-      document.addEventListener('click',      () => video.play(), { once: true });
-      document.addEventListener('touchstart', () => video.play(), { once: true });
-    });
-    if (modelEntity) {
-      modelEntity.setAttribute('visible', false);
-      const mesh = modelEntity.getObject3D('mesh');
-      if (mesh) {
-        mesh.traverse((node) => {
-          if (node.material) {
-            const mats = Array.isArray(node.material) ? node.material : [node.material];
-            mats.forEach((mat) => { mat.transparent = true; mat.opacity = 0; });
-          }
-        });
-      }
-    }
-    bindVideoEnded(name);
-  });
-
-  document.querySelector('a-scene').addEventListener('xrimagelost', (event) => {
-    const name = event.detail.name;
-    if (!targetMap[name]) return;
-    if (overlay) {
-      const currentIndex = targetOrder.indexOf(name);
-      const nextTarget   = targetOrder[(currentIndex + 1) % targetOrder.length];
-      const overlayImgEl = overlay.querySelector('img');
-      if (overlayImgEl) overlayImgEl.src = targetMap[nextTarget].overlayImg;
-      overlay.style.display   = 'flex';
-      overlay.style.animation = 'none';
-      overlay.style.opacity   = targetMap[nextTarget].overlayOpacity || '1';
-    }
-  });
-</script-->
 </body>
 </html>
