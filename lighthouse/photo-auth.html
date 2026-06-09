@@ -100,14 +100,14 @@
 
 <body>
   <!-- 시작 화면 -->
-  <div id="start_area">
+  <!--div id="start_area">
     <img src="./assets/Media/lh-hunt-t.png" alt="AR 등대 탐험대" width="200">
     <img src="./assets/Media/hunt-spot.png" alt="AR 등대 보물 찾기" width="400">
     <p style="color: #066265; font-weight:bold;">
       등대 주변에서 <br>위의 2개 장면에 숨겨진,<br>항해에 도움이 되는 아이템을 찾으세요.
     </p>
     <button id="start_btn" onclick="startNavigation()">찾기 시작</button>
-  </div>
+  </div-->
 
   <!-- 스캔 오버레이 -->
   <!--div id="scanning-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none;">
@@ -215,7 +215,7 @@
 
 </div>
 
-<script>
+<!--script>
   // ✅ startNavigation: 시작 화면 제거 후 AR 씬 활성화
   async function startNavigation() {
     // iOS 13+ 기기 방향 센서 권한 요청
@@ -234,7 +234,7 @@
     // ✅ 시작 화면만 숨김 — ar-container/minimap 등 없는 요소 참조 제거
     document.getElementById('start_area').style.display = 'none';
   }
-</script>
+</script-->
 
 
 //사진 인증용 추가
