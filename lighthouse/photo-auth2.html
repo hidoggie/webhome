@@ -73,12 +73,6 @@
 </head>
 
 <body>
-    <div id="start_area">     
-        <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
-        <img src="./img/ar-navi-text.png" alt="AR 등대 길찾기" width="200">
-        <p style="color: #066265; font-weight:bold;">증강현실(AR) 사용시,<br>주변 사물과 부딪치지 않도록 주의하세요.</p> 
-        <button id="start_btn" onclick="startNavigation()">안내 시작</button>
-    </div>
 
   <a-scene
     landing-page
@@ -89,7 +83,7 @@
 
     <xrextras-capture-button capture-mode="photo"></xrextras-capture-button>
     <xrextras-capture-config file-name-prefix="my-photo-" request-mic="manual"></xrextras-capture-config>
-    <xrextras-capture-preview style="display:none"></xrextras-capture-preview>
+    <!--xrextras-capture-preview style="display:none"></xrextras-capture-preview-->
 
     <a-camera position="0 1 1" raycaster="objects: .cantap" cursor="fuse: false; rayOrigin: mouse;"></a-camera>
     <a-light type="directional" intensity="2.5" position="0 1 0"></a-light>
