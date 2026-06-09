@@ -177,6 +177,31 @@ document.addEventListener('DOMContentLoaded', () => {
       showPreview(composed, 'photo');
     });
   }
+
+const originalAddEventListener = EventTarget.prototype.addEventListener;
+EventTarget.prototype.addEventListener = function(type, listener, options) {
+  if (type.includes('capture') || type.includes('photo') || type.includes('record') || type.includes('media')) {
+    console.log('📡 이벤트 등록 감지:', type, this);
+  }
+  return originalAddEventListener.call(this, type, listener, options);
+};
+
+// scene과 document 양쪽에 와일드카드처럼 감지
+['capture', 'photo', 'video', 'record', 'media', 'xrextras', 'ready'].forEach(keyword => {
+  document.addEventListener(keyword, (e) => console.log('📸 document 이벤트:', e.type, e.detail), true);
+  scene.addEventListener(keyword, (e) => console.log('📸 scene 이벤트:', e.type, e.detail), true);
+});
+
+// xrextras가 등록하는 이벤트 전체 감지
+const origDispatch = EventTarget.prototype.dispatchEvent;
+EventTarget.prototype.dispatchEvent = function(event) {
+  if (event.type.includes('capture') || event.type.includes('photo') || 
+      event.type.includes('record') || event.type.includes('xrextras')) {
+    console.log('🔥 dispatchEvent 감지:', event.type, event.detail, this);
+  }
+  return origDispatch.call(this, event);
+};
+
 }, true); // ✅ 캡처 단계(true)에서 가로채야 8th Wall보다 먼저 실행됨
 
 
