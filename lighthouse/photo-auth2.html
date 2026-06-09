@@ -267,15 +267,9 @@ function addTimestampToImage(dataUrl, callback) {
   function showPreview(mediaUrl, type) {
     uiLayer.classList.remove('hidden');
     previewScreen.classList.remove('hidden');
-    
-    // 현재 시간 표시
-    const now = new Date();
-    captureTimeText.innerText = now.getFullYear() + "년 " + 
-                               (now.getMonth()+1) + "월 " + 
-                               now.getDate() + "일 " + 
-                               now.getHours() + ":" + 
-                               String(now.getMinutes()).padStart(2, '0');
 
+    document.querySelector('.info-overlay').classList.add('hidden');    
+    
     if (type === 'photo') {
       previewImg.src = mediaUrl;
       previewImg.classList.remove('hidden');
