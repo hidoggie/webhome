@@ -734,17 +734,7 @@ const initAR = () => {
   ]);
 
   const canvas = document.getElementById('camerafeed');
-  XR8.run({ canvas: document.getElementById('camerafeed') });
-  
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    canvas.width  = window.innerWidth * window.devicePixelRatio;
-    canvas.height = window.innerHeight * window.devicePixelRatio;
-
-    canvas.style.width  = "100vw";
-    canvas.style.height = "100vh";
-  
+  XR8.run({ canvas: document.getElementById('camerafeed') });       
 };
 
 // 시작 버튼 클릭 시 8th Wall 엔진 로드 및 실행
