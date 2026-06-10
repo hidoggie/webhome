@@ -1,6 +1,6 @@
-import {postprocessingComponent} from './js/postprocessing.js'
+import {postprocessingComponent} from './postprocessing.js'
 AFRAME.registerComponent('postprocessing', postprocessingComponent)
-import {changeColorComponent, absPinchScaleComponent, annotationComponent, proximityComponent, gltfMorphComponent, ignoreRaycast} from './js/components.js'
+import {changeColorComponent, absPinchScaleComponent, annotationComponent, proximityComponent, gltfMorphComponent, ignoreRaycast} from './components.js'
 //AFRAME.registerComponent('change-color', changeColorComponent)
 AFRAME.registerComponent('annotation', annotationComponent)
 AFRAME.registerComponent('absolute-pinch-scale', absPinchScaleComponent)
@@ -8,7 +8,7 @@ AFRAME.registerComponent('proximity', proximityComponent)
 AFRAME.registerComponent('gltf-morph', gltfMorphComponent)
 AFRAME.registerComponent('ignore-raycast', ignoreRaycast)
 
-import {responsiveImmersiveComponent} from './js/responsive-immersive.js'
+import {responsiveImmersiveComponent} from './responsive-immersive.js'
 AFRAME.registerComponent('responsive-immersive', responsiveImmersiveComponent)
 
 // bitmaps cause texture issues on iOS this workaround prevents black textures and crashes
