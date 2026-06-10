@@ -12,11 +12,14 @@
 
 <script async src="./js/xr.js" data-preload-chunks="slam"></script>
 
+<script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+<script>var vConsole = new window.VConsole();</script>
+
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;overflow:hidden;touch-action:none}
 body{background:transparent;font-family:'Segoe UI',sans-serif;cursor:crosshair;user-select:none}
-canvas{display:block;position:fixed;top:0;left:0;z-index:1;touch-action:none}
+canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:1;touch-action:none}
 
 /* ── HUD (UI 컨테이너) ── */
 #ui-layer { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
@@ -734,6 +737,10 @@ const initAR = () => {
 document.getElementById('start-ar-btn').addEventListener('click', () => {
   // 오디오 컨텍스트 락(Lock) 해제 (iOS 대응)
   getCtx(); 
+
+  document.getElementById('start-screen').style.display = 'none';
+  document.getElementById('ar-instruction').style.display = 'block';
+  document.getElementById('ar-instruction').textContent = 'AR 엔진 로딩 중...';
   
   const startEngine = () => {
     XR8.XrController.configure({
