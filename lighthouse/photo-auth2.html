@@ -121,7 +121,7 @@
         .preview-close {
             position: absolute;
             top: 15px; right: 15px;
-            background-color: tranparent;
+            background-color: transparent;
             color: white;
             border: none;
             width: 35px; height: 35px;
@@ -161,9 +161,7 @@
   
   <div id="preview-screen" class="screen hidden">
     <div class="media-container">
-      <button class="preview-close"
-        onclick="document.getElementById('preview-screen').classList.add('hidden')">×
-      </button>
+      <button class="preview-close" onclick="resetUI()">×</button>
       <img id="preview-image" class="media-content hidden" />
       <video id="preview-video" class="media-content hidden" autoplay loop muted playsinline></video>
       
@@ -471,12 +469,17 @@ function addTimestampToImage(dataUrl, callback) {
   function resetUI() {
     uiLayer.classList.add('hidden');
     previewScreen.classList.add('hidden');
+    modalConfirm.classList.add('hidden');
     modalShare.classList.add('hidden');
+
     previewImg.src = "";
     previewVid.src = "";
+
     capturedDataUrl = null;
-    capturedFile = null;  // ✅ 추가
-  }
+    capturedFile = null;
+}
+
+window.resetUI = resetUI;
 
 });
 
