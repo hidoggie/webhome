@@ -18,23 +18,16 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100vw; height:100vh;overflow:hidden;touch-action:none}
 body{background:transparent;font-family:'Segoe UI',sans-serif;cursor:crosshair;user-select:none}
-/*
-canvas {
+
+#camerafeed {
   display: block;
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 1;
-  touch-action: none;
-}v*/
-#camerafeed {
-  position: fixed;
-  top: 0;
-  left: 0;
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover; /* 화면 왜곡 없이 꽉 차게 채움 */
   z-index: 0;
-  /* ✅ width/height 지정 없음 — XR8이 카메라 해상도에 맞게 자동 설정 */
 }
 
 /* ── HUD (UI 컨테이너) ── */
@@ -725,6 +718,7 @@ const initAR = () => {
   };
 
   XR8.addCameraPipelineModules([
+    XRExtras.FullWindowCanvas.pipelineModule(), // 캐너스를 전체화면으로 강제 동기화하는 모듈 추가
     XR8.GlTextureRenderer.pipelineModule(),
     XR8.Threejs.pipelineModule(),
     XR8.XrController.pipelineModule(),
