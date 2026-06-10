@@ -26,10 +26,24 @@
   display: flex; flex-direction: column;
 }
 .media-container {
-  flex: 1; position: relative; display: flex; justify-content: center; align-items: center;
-  overflow: hidden;
+  flex: 1;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding-top: 30px;
+  padding-bottom: 20px;
 }
-.media-content { max-width: 100%; max-height: 100%; object-fit: contain; }
+.media-content {
+  width: 90%;
+  aspect-ratio: 4 / 5;
+
+  object-fit: cover;
+
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+}
 
 /* 등대 정보 오버레이 */
 .info-overlay {
@@ -83,17 +97,8 @@
   border: none; border-radius: 6px; cursor: pointer;
 }
 .btn-cancel { background: #e0e0e0; color: #555; }
-.btn-primary { background: #0056b3; color: white; }
-.btn-secondary { background: #4caf50; color: white; }
-.btn-post-review {
-  background:#F4F1E8;
-  color:#365246;
-}
-
-.btn-post-share {
-  background:#E68A3F;
-  color:white;
-}
+.btn-primary { background: #E68A3F; color: white; }
+.btn-secondary { background: #F4F1E8; color: #365246; }
 
         /* 우측 상단 X 버튼 */
         .modal-close {
@@ -103,6 +108,23 @@
             color: white;
             border: none;
             width: 28px; height: 28px;
+            border-radius: 50%;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .preview-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            background-color: tranparent;
+            color: white;
+            border: none;
+            width: 35px; height: 35px;
             border-radius: 50%;
             font-size: 18px;
             font-weight: bold;
@@ -139,6 +161,9 @@
   
   <div id="preview-screen" class="screen hidden">
     <div class="media-container">
+      <button class="preview-close"
+        onclick="document.getElementById('preview-screen').classList.add('hidden')">×
+      </button>
       <img id="preview-image" class="media-content hidden" />
       <video id="preview-video" class="media-content hidden" autoplay loop muted playsinline></video>
       
@@ -156,7 +181,7 @@
   <div id="modal-confirm" class="modal hidden">
     <div class="modal-content">
       <button class="modal-close"
-        onclick="document.getElementById('modal-confirm').classList.add('hidden')">
+        onclick="document.getElementById('modal-confirm').classList.add('hidden')">×
       </button>
       <p>현재 등대의 스탬프를 획득하고<br>사진을 저장하시겠습니까?</p>
       <div class="modal-buttons">
@@ -169,7 +194,7 @@
   <div id="modal-share" class="modal hidden">
     <div class="modal-content">
       <button class="modal-close"
-        onclick="document.getElementById('modal-share').classList.add('hidden')">
+        onclick="document.getElementById('modal-share').classList.add('hidden')">×
       </button>
       <p class="share-text">
         사진을 등대 커뮤니티에만 게시하려면 좌측의 <strong>'사진후기 게시'</strong> 버튼을,<br>
@@ -278,39 +303,95 @@ document.addEventListener('DOMContentLoaded', () => {
   // ✅ 핵심 함수: Canvas로 시간 합성
 function addTimestampToImage(dataUrl, callback) {
   const img = new Image();
+
   img.onload = () => {
+
+    // ===== 최종 출력 크기 =====
+    const targetWidth  = 1080;
+    const targetHeight = 1350;   // 4:5 비율
+
     const canvas = document.createElement('canvas');
-    canvas.width  = img.width;
-    canvas.height = img.height;
+    canvas.width  = targetWidth;
+    canvas.height = targetHeight;
+
     const ctx = canvas.getContext('2d');
 
-    ctx.drawImage(img, 0, 0);
+    // ===== 중앙 크롭 계산 =====
+    const targetRatio = targetWidth / targetHeight;
+    const imageRatio  = img.width / img.height;
 
+    let sx, sy, sw, sh;
+
+    if (imageRatio > targetRatio) {
+      // 사진이 더 넓음
+      sh = img.height;
+      sw = sh * targetRatio;
+
+      sx = (img.width - sw) / 2;
+      sy = 0;
+
+    } else {
+      // 사진이 더 길쭉함
+      sw = img.width;
+      sh = sw / targetRatio;
+
+      sx = 0;
+      sy = (img.height - sh) * 0.35;
+    }
+
+    // ===== 중앙 크롭 후 1080x1350으로 그림 =====
+    ctx.drawImage(
+      img,
+      sx, sy,
+      sw, sh,
+      0, 0,
+      targetWidth,
+      targetHeight
+    );
+
+    // ===== 시간 스탬프 =====
     const now = new Date();
-    const timeStr = `${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} `
-                  + `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
 
-    // ✅ 등대 이름 읽기 (화면에 표시된 텍스트 그대로 사용)
-    const lighthouseName = document.getElementById('lighthouse-name').innerText;
+    const timeStr =
+      `${now.getFullYear()}.` +
+      `${String(now.getMonth()+1).padStart(2,'0')}.` +
+      `${String(now.getDate()).padStart(2,'0')} ` +
+      `${String(now.getHours()).padStart(2,'0')}:` +
+      `${String(now.getMinutes()).padStart(2,'0')}`;
 
-    const fontSize = Math.floor(canvas.width * 0.045);
-    ctx.font      = `bold ${fontSize}px Arial`;
-    ctx.shadowColor   = 'rgba(0,0,0,0.8)';
-    ctx.shadowBlur    = 8;
+    const lighthouseName =
+      document.getElementById('lighthouse-name').innerText;
+
+    const fontSize = 42;
+
+    ctx.font = `bold ${fontSize}px Arial`;
+
+    ctx.shadowColor = 'rgba(0,0,0,0.8)';
+    ctx.shadowBlur = 8;
     ctx.shadowOffsetX = 2;
     ctx.shadowOffsetY = 2;
+
     ctx.fillStyle = 'white';
 
-    // ✅ 좌측 하단 — 등대 이름
+    // 등대명
     ctx.textAlign = 'left';
-    ctx.fillText(lighthouseName, 30, canvas.height - 30);
+    ctx.fillText(
+      lighthouseName,
+      40,
+      targetHeight - 50
+    );
 
-    // ✅ 우측 하단 — 시간
+    // 시간
     ctx.textAlign = 'right';
-    ctx.fillText(timeStr, canvas.width - 30, canvas.height - 30);
+    ctx.fillText(
+      timeStr,
+      targetWidth - 40,
+      targetHeight - 50
+    );
 
     callback(canvas.toDataURL('image/jpeg', 0.92));
   };
+
   img.src = dataUrl;
 }
 
