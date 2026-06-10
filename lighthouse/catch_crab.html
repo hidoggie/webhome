@@ -421,32 +421,27 @@ tapLayer.addEventListener('touchstart', (e) => {
 
   if (!boardPlaced) {
     // 8th Wall SLAM 바닥 인식 타격 테스트
+    // 1️⃣ ESTIMATED_SURFACE(추정된 바닥면)를 우선하도록 순서 변경
     const hitResult =
         XR8.XrController.hitTest(
           touch.clientX,
           touch.clientY,
-          ['FEATURE_POINT','ESTIMATED_SURFACE']
+          ['ESTIMATED_SURFACE', 'FEATURE_POINT'] 
         );
 
     if (hitResult && hitResult.length > 0) {
       const pose = hitResult[0];
       
       boardPlaced = true;
+      // 위치는 인식된 바닥 높이로 설정
       worldGroup.position.set(pose.position.x, pose.position.y, pose.position.z);
-      worldGroup.quaternion.set(pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w);
       
-      // 사용자를 바라보게 Y축 회전
-  //    const lookAtPos = camera.position.clone();
-  //    lookAtPos.y = worldGroup.position.y;
-  //    worldGroup.lookAt(lookAtPos);
-
       const camPos = camera.position.clone();
-
       const dx = camPos.x - worldGroup.position.x;
       const dz = camPos.z - worldGroup.position.z;
 
-      worldGroup.rotation.y =
-      Math.atan2(dx,dz);
+      // 3️⃣ X와 Z축 회전은 0으로 만들어 바닥에 평평하게 붙이고, Y축(좌우)만 나를 바라보게 고정합니다.
+      worldGroup.rotation.set(0, Math.atan2(dx, dz), 0);
       
       worldGroup.visible = true;
       document.getElementById('ar-instruction').style.display = 'none';
