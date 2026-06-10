@@ -215,50 +215,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const scene = document.querySelector('a-scene');
-
-// ✅ 디버깅 코드를 맨 위로 — DOMContentLoaded 직후 즉시 실행
-  const origDispatch = EventTarget.prototype.dispatchEvent;
-  EventTarget.prototype.dispatchEvent = function(event) {
-    if (event.type.includes('capture') || event.type.includes('photo') || 
-        event.type.includes('record') || event.type.includes('xrextras')) {
-      console.log('🔥 dispatchEvent 감지:', event.type, event.detail, this);
-    }
-    return origDispatch.call(this, event);
-  };
-
-  // ✅ scene이 로드된 후 이벤트 등록 (8th Wall은 scene 로드 후 동작)
-  const registerEvents = () => {
-    console.log('✅ scene 로드 완료, 이벤트 등록');
-    
-    scene.addEventListener('xrextras-capture-photo', (e) => {
-      e.stopImmediatePropagation();
-      console.log('📸 photo 이벤트 발생!', e.detail);
-      
-      const dataUrl = e.detail.dataUrl || e.detail.blob;
-      if (dataUrl instanceof Blob) {
-        const reader = new FileReader();
-        reader.onload = (ev) => addTimestampToImage(ev.target.result, (composed) => {
-          capturedDataUrl = composed;
-          showPreview(composed, 'photo');
-        });
-        reader.readAsDataURL(dataUrl);
-      } else {
-        addTimestampToImage(dataUrl, (composed) => {
-          capturedDataUrl = composed;
-          showPreview(composed, 'photo');
-        });
-      }
-    }, true);
-  };
-
-  // ✅ 8th Wall scene 로드 완료 후 등록 (loaded 이벤트 대기)
-  if (scene.hasLoaded) {
-    registerEvents();
-  } else {
-    scene.addEventListener('loaded', registerEvents);
-  }
-
-
   const uiLayer = document.getElementById('custom-ui-layer');
   
   // 미리보기 요소
