@@ -20,20 +20,20 @@ html,body{width:100vw; height:100vh;overflow:hidden;touch-action:none}
 body{background:transparent;font-family:'Segoe UI',sans-serif;cursor:crosshair;user-select:none}
 canvas {
   display: block;
-  position: absolute; /* fixed 대신 absolute 권장 */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%; 
+  height: 100%;
   z-index: 1;
   touch-action: none;
 }
-#camerafeed{
-  position:fixed;
-  top:0;
-  left:0;
-  
-  z-index:0;
+#camerafeed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 0;
+  /* ✅ width/height 지정 없음 — XR8이 카메라 해상도에 맞게 자동 설정 */
 }
 
 /* ── HUD (UI 컨테이너) ── */
@@ -666,72 +666,72 @@ function scheduleBGM(){
 
 // ── 8th Wall XR8 파이프라인 연동 ─────────────────────────────────────────────
 const initAR = () => {
-  // 기존의 animate() 역할을 대체할 XR8 커스텀 파이프라인 모듈 생성
   const crabGamePipelineModule = () => {
     return {
       name: 'crab-game',
-      // AR 초기화가 완료되고 Three.js 씬이 세팅되었을 때 호출됨
-      onStart: ({ canvas, camera: xrCamera, scene: xrScene, renderer: xrRenderer }) => {
-        scene = xrScene;
-        camera = xrCamera;
-        renderer = xrRenderer;    
-                
-        setupGameObjects(); // 게임 3D 요소 배치 (숨김 상태)
 
-        // UI 갱신: 시작 화면 숨기고 AR 지시문 표시
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('ar-instruction').style.display = 'block';
-        document.getElementById('ar-instruction').textContent = '바닥을 비추고 화면을 터치하세요!';
-        document.getElementById('exit-btn').classList.add('visible');
-        document.getElementById('tap-layer').style.display = 'block'; // 터치 활성화
+      // ✅ 핵심: onStart 대신 onRender에서 한 번만 초기화
+      onRender: () => {
+        // scene이 아직 없으면 이 시점에 xrScene()으로 가져옴
+        if (!scene) {
+          const xrScene = XR8.Threejs.xrScene();
+          if (!xrScene) return; // 아직 준비 안 됐으면 다음 프레임으로
+          scene = xrScene.scene;
+          camera = xrScene.camera;
+          renderer = xrScene.renderer;
+
+          setupGameObjects();
+
+          document.getElementById('start-screen').style.display = 'none';
+          document.getElementById('ar-instruction').style.display = 'block';
+          document.getElementById('ar-instruction').textContent = '바닥을 비추고 화면을 터치하세요!';
+          document.getElementById('exit-btn').classList.add('visible');
+          document.getElementById('tap-layer').style.display = 'block';
+        }
       },
-      // 매 프레임 렌더링 직전에 호출됨 (애니메이션 루프)
+
       onUpdate: () => {
-        if(!worldGroup) return;
+        if (!worldGroup) return;
         const dt = Math.min(clock.getDelta(), 0.05);
-        
-        // 크랩 상하 이동 처리
-        slots.forEach((s)=>{
+
+        slots.forEach((s) => {
           const dy = s.targetY - s.grp.position.y;
-          s.grp.position.y += dy * Math.min(1, dt * 14); 
-          
-          if(s.grp.position.y < MOLE_Y_DOWN + 0.1) {
+          s.grp.position.y += dy * Math.min(1, dt * 14);
+          if (s.grp.position.y < MOLE_Y_DOWN + 0.1) {
             s.moleObj.group.visible = false;
           } else {
             s.moleObj.group.visible = true;
           }
         });
 
-        // 망치 스윙 처리
-        if(swinging){
+        if (swinging) {
           swingT += dt * 14;
           const progress = Math.sin(swingT);
           malletRoot.position.y = MALLET_REST_Y - (MALLET_REST_Y - MALLET_STRIKE_Y) * progress;
-          if(progress > 0.85 && !swingFired){
+          if (progress > 0.85 && !swingFired) {
             swingFired = true;
-            if(swingTargetIdx >= 0 && slots[swingTargetIdx].up) hitMole(swingTargetIdx);
+            if (swingTargetIdx >= 0 && slots[swingTargetIdx].up) hitMole(swingTargetIdx);
             else playMiss();
             swingTargetIdx = -1;
           }
-          if(swingT >= Math.PI){
+          if (swingT >= Math.PI) {
             swinging = false; swingFired = false;
             malletRoot.position.y = MALLET_REST_Y;
           }
         }
       }
-    }
+    };
   };
 
-  // 8th Wall 엔진 실행 파이프라인 구성
   XR8.addCameraPipelineModules([
-    XR8.GlTextureRenderer.pipelineModule(), // 카메라 피드를 배경에 그림
-    XR8.Threejs.pipelineModule(),           // Three.js 카메라와 AR 동기화
-    XR8.XrController.pipelineModule(),      // 바닥 인식(Hit-Test) 등의 내부 제어
-    crabGamePipelineModule(),               // 직접 작성한 게임 모듈
+    XR8.GlTextureRenderer.pipelineModule(),
+    XR8.Threejs.pipelineModule(),
+    XR8.XrController.pipelineModule(),
+    crabGamePipelineModule(),
   ]);
 
-  const canvas = document.getElementById('camerafeed');
-  XR8.run({ canvas: document.getElementById('camerafeed') });       
+  // ✅ XR8.run()만 호출 — canvas 크기는 XR8이 전적으로 관리
+  XR8.run({ canvas: document.getElementById('camerafeed') });
 };
 
 // 시작 버튼 클릭 시 8th Wall 엔진 로드 및 실행
