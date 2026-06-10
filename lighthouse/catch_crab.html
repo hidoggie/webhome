@@ -8,7 +8,6 @@
 <title>🦀 AR 크랩 잡기</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script async src="./js/xr.js" data-preload-chunks="slam"></script>
 
@@ -17,7 +16,7 @@
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;height:100%;overflow:hidden;touch-action:none}
+html,body{width:100vw; height:100vh;overflow:hidden;touch-action:none}
 body{background:transparent;font-family:'Segoe UI',sans-serif;cursor:crosshair;user-select:none}
 canvas {
   display: block;
@@ -29,6 +28,14 @@ canvas {
   object-fit: cover;
   z-index: 1;
   touch-action: none;
+}
+#camerafeed{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw !important;
+  height:100vh !important;
+  z-index:0;
 }
 
 /* ── HUD (UI 컨테이너) ── */
@@ -266,64 +273,37 @@ function setupGameObjects() {
  // 3D 모델 원본을 담을 전역 변수
 let crabModelTemplate = null; 
 
-// 3D 모델 로더 초기화
-const gltfLoader = new THREE.GLTFLoader();
-
-// ★ 여기에 준비하신 크랩 3D 모델 파일의 경로를 넣어주세요! ★
-gltfLoader.load('./models/crab.glb', (gltf) => {
-  crabModelTemplate = gltf.scene;
-  
-  // 모델 크기가 너무 크거나 작으면 여기서 조절하세요 (기본 1.0)
-  crabModelTemplate.scale.set(1.0, 1.0, 1.0); 
-  
-  // 3D 모델에 그림자 효과 적용
-  crabModelTemplate.traverse((child) => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
-});
+const crabTex = new THREE.TextureLoader().load('./img/crab.png');
 
 function makeCrab(){
+
   const g = new THREE.Group();
-  let crabMesh = null;
 
-  // 로드가 완료된 모델이 있으면 복제해서 사용
-  if (crabModelTemplate) {
-    crabMesh = crabModelTemplate.clone();
-    
-    // 모델의 중심점(Origin)에 따라 Y축 위치를 조절해야 할 수 있습니다. 
-    // 구멍에 너무 깊게 들어가거나 붕 떠 있다면 이 값을 조절하세요.
-    crabMesh.position.y = 0.5; 
-    
-    g.add(crabMesh);
-  } else {
-    // 만약 모델 로드가 지연되면 임시로 빨간 상자를 띄움 (디버깅용)
-    crabMesh = new THREE.Mesh(
-      new THREE.BoxGeometry(0.8, 0.8, 0.8), 
-      new THREE.MeshLambertMaterial({color: 0xff0000})
-    );
-    crabMesh.position.y = 0.5;
-    g.add(crabMesh);
-  }
+  const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+          map: crabTex,
+          transparent:true
+      })
+  );
 
-  // 맞았을 때의 애니메이션 (3D 모델의 크기를 변형하여 찌그러지는 효과)
+  sprite.scale.set(1.4,1.4,1);
+
+  g.add(sprite);
+
   function setFace(face){
-    if(!crabMesh) return;
-    
-    if(face === 'hit'){
-      // 맞았을 때: 납작하게 찌그러지는 효과 (X, Y, Z 스케일)
-      crabMesh.scale.set(1.4, 0.4, 1.4); 
-    } else {
-      // 평상시: 원래 크기로 복구
-      crabMesh.scale.set(1.0, 1.0, 1.0);
-    }
+
+      if(face==='hit'){
+          sprite.scale.set(1.7,0.9,1);
+      }else{
+          sprite.scale.set(1.4,1.4,1);
+      }
   }
-  
-  return {group: g, setFace};
+
+  return {group:g,setFace};
 }
 
+  // 맞았을 때의 애니메이션 (3D 모델의 크기를 변형하여 찌그러지는 효과)
+  
   function makeHole(){
     const g = new THREE.Group();
     const mound = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.85, 0.5, 24, 1, true), MAT.dirt);
@@ -445,7 +425,13 @@ tapLayer.addEventListener('touchstart', (e) => {
 
   if (!boardPlaced) {
     // 8th Wall SLAM 바닥 인식 타격 테스트
-    const hitResult = XR8.XrController.hitTest(touch.clientX, touch.clientY, ['ESTIMATED_SURFACE']);
+    const hitResult =
+        XR8.XrController.hitTest(
+          touch.clientX,
+          touch.clientY,
+          ['FEATURE_POINT','ESTIMATED_SURFACE']
+        );
+
     if (hitResult && hitResult.length > 0) {
       const pose = hitResult[0];
       
@@ -454,9 +440,17 @@ tapLayer.addEventListener('touchstart', (e) => {
       worldGroup.quaternion.set(pose.rotation.x, pose.rotation.y, pose.rotation.z, pose.rotation.w);
       
       // 사용자를 바라보게 Y축 회전
-      const lookAtPos = camera.position.clone();
-      lookAtPos.y = worldGroup.position.y;
-      worldGroup.lookAt(lookAtPos);
+  //    const lookAtPos = camera.position.clone();
+  //    lookAtPos.y = worldGroup.position.y;
+  //    worldGroup.lookAt(lookAtPos);
+
+      const camPos = camera.position.clone();
+
+      const dx = camPos.x - worldGroup.position.x;
+      const dz = camPos.z - worldGroup.position.z;
+
+      worldGroup.rotation.y =
+      Math.atan2(dx,dz);
       
       worldGroup.visible = true;
       document.getElementById('ar-instruction').style.display = 'none';
@@ -740,7 +734,17 @@ const initAR = () => {
   ]);
 
   const canvas = document.getElementById('camerafeed');
-  XR8.run({ canvas });
+  XR8.run({ canvas: document.getElementById('camerafeed') });
+  
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    canvas.width  = window.innerWidth * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
+
+    canvas.style.width  = "100vw";
+    canvas.style.height = "100vh";
+  
 };
 
 // 시작 버튼 클릭 시 8th Wall 엔진 로드 및 실행
@@ -764,7 +768,9 @@ document.getElementById('start-ar-btn').addEventListener('click', () => {
   if (window.XR8) {
     startEngine();
   } else {
-    window.addEventListener('xrloaded', startEngine);
+    XRExtras.Loading.showLoading({
+       onxrloaded: startEngine
+    });
   }
 });
 </script>
