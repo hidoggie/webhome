@@ -1,0 +1,53 @@
+#container {
+  position: absolute;
+  width: 100vw;
+  max-height: 20vw;
+  left: 50%;
+  bottom: 6vh;
+  transform: translateX(-50%);
+  z-index: 10;  
+  text-align: center;
+  pointer-events:none;
+  overflow-x: scroll;
+  white-space: nowrap;
+}
+
+#container::-webkit-scrollbar {
+  display: none;
+}
+
+.carousel {
+  padding: 1.5rem;
+  border: 0.3rem solid white;
+  margin: 0.5rem;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  pointer-events:auto;
+}
+
+.coaching-overlay-prompt-status {
+  text-shadow: 0px 0px 5px rgba(0,0,0,0.1);
+}
+
+button:focus {
+  box-shadow: 0px 0px 0px 0.3rem white;
+  outline: none !important;
+}
+
+:xr-overlay { 
+    /* the following styling is identical to :fullscreen */
+    padding-left: 45px !important;
+    padding-right: 45px !important;
+}
+
+.fade-in { animation: fade-in 0.25s linear forwards; }
+@keyframes fade-in {
+  0% {opacity: 0;}
+  100% {opacity: 1;}
+} 
+
+.fade-out { animation: fade-out 0.25s linear forwards; }
+@keyframes fade-out {
+  0% {opacity: 1;}
+  100% {opacity: 0;}
+}
