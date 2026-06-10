@@ -55,17 +55,24 @@
   z-index: 1000;
 }
 .modal-content {
- /* background: white; */
-  background-image: url('./img/popup-bg-2.png'); 
-  width: 85%; 
-  max-width: 340px;
-  border-radius: 12px; 
-  padding: 25px 20px;
-  text-align: center; 
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  border: 3px solid #3d6353; /* 어두운 녹색 테두리 */
-  overflow: hidden; /* 하단 배경이 둥근 모서리를 튀어나오지 않게 */
+  position: relative;
 
+  background-image: url('./img/popup-bg-2.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+
+  width: 80%;
+  max-width: 340px;
+  min-height: 260px;
+
+  border-radius: 12px;
+  padding: 25px 20px;
+
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  border: 3px solid #3d6353;
+  overflow: hidden;
 }
 .modal-content p { font-size: 1.1rem; line-height: 1.4; margin-bottom: 25px; color: #333; }
 .share-text { font-size: 0.95rem !important; word-break: keep-all; }
@@ -78,6 +85,15 @@
 .btn-cancel { background: #e0e0e0; color: #555; }
 .btn-primary { background: #0056b3; color: white; }
 .btn-secondary { background: #4caf50; color: white; }
+.btn-post-review {
+  background:#F4F1E8;
+  color:#365246;
+}
+
+.btn-post-share {
+  background:#E68A3F;
+  color:white;
+}
 
         /* 우측 상단 X 버튼 */
         .modal-close {
@@ -139,7 +155,9 @@
 
   <div id="modal-confirm" class="modal hidden">
     <div class="modal-content">
-      <button class="modal-close" onclick="closeModal()">×</button>
+      <button class="modal-close"
+        onclick="document.getElementById('modal-confirm').classList.add('hidden')">
+      </button>
       <p>현재 등대의 스탬프를 획득하고<br>사진을 저장하시겠습니까?</p>
       <div class="modal-buttons">
         <button id="btn-confirm-cancel" class="btn-cancel">취소</button>
@@ -150,7 +168,9 @@
 
   <div id="modal-share" class="modal hidden">
     <div class="modal-content">
-      <button class="modal-close" onclick="closeModal()">×</button>
+      <button class="modal-close"
+        onclick="document.getElementById('modal-share').classList.add('hidden')">
+      </button>
       <p class="share-text">
         사진을 등대 커뮤니티에만 게시하려면 좌측의 <strong>'사진후기 게시'</strong> 버튼을,<br>
         게시 후 SNS 에 공유하려면 우측의 <strong>'게시 후 SNS 공유'</strong> 버튼을 눌러주세요.
@@ -366,12 +386,7 @@ function addTimestampToImage(dataUrl, callback) {
   }
 });
 
-// 모달 닫기
-function closeModal() {
-  document.getElementsByClassName("modal-content").style.display = 'none';
-}
-
-  // UI 초기화 및 AR 화면 복귀
+// UI 초기화 및 AR 화면 복귀
   function resetUI() {
     uiLayer.classList.add('hidden');
     previewScreen.classList.add('hidden');
