@@ -47,11 +47,13 @@ function routeTo(pageId) {
             if (!map) {
                 initNaverMap(); // 최초 생성
             } else {
-                // 단순 이벤트 호출을 넘어, 네이버 지도 자체 리사이즈 메서드 사용
-                window.dispatchEvent(new Event('resize')); 
-                map.autoResize(); // 👈 이 한 줄을 추가해 주세요!
+                // 부모 컨테이너 크기 변경 감지 후 지도 리사이즈 강제 실행
+                var mapElement = document.getElementById('map');
+                if(mapElement && mapElement.clientWidth > 0 && mapElement.clientHeight > 0) {
+                     map.setSize(new naver.maps.Size(mapElement.clientWidth, mapElement.clientHeight));
+                }
             }
-        }, 100); 
+        }, 300); // 렌더링 지연 시간을 살짝 늘려줌
     }
 }
 
