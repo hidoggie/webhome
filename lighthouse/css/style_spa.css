@@ -1,0 +1,1540 @@
+/* SPA 화면 전환 핵심 로직 */
+.page {
+  display: none;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* active 클래스가 붙은 section만 화면에 보임 */
+.page.active {
+  display: block;
+}
+
+/* ------------------------------------------- */
+/* 아래부터 기존 페이지들의 CSS 코드를 모두 붙여넣기 하세요 */
+/* ------------------------------------------- */
+
+/* 공통 초기화 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Pretendard", sans-serif;
+}
+
+/* 하단 공통 네비게이션 (중복 코드 제거 후 통합) */
+.bottom-nav {
+  position: absolute; /* 또는 fixed */
+  bottom: 0;
+  left: 0; /* 추가 */
+  right: 0; /* 추가 */
+  border-radius: 5px;
+  width: 100%;
+  height: 9%;
+  background-color: #1a3350;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 1000;
+}
+.nav-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #8fa6c1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.nav-item.active {
+  color: white;
+}
+.nav-item .icon {
+  font-size: 24px;
+}
+.nav-item .label {
+  font-size: 12px;
+  font-weight: 500;
+}
+.nav-item img {
+  width: 24px;
+  height: 24px;
+} /* 커스텀 아이콘 사용 시 */
+
+/* 공통 - 추후 통일 작업 필요*/
+/* 초기화면용 css */
+body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100dvh;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  font-family: "Noto Sans KR", sans-serif;
+  background: #1679bb;
+  margin: 0;
+  overscroll-behavior: none;
+}
+
+/* 기본 링크 스타일 */
+a {
+  color: white;
+  text-decoration: none;
+}
+a:visited {
+  color: white;
+}
+
+.mobile-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  height: 100dvh;
+  background-color: #99caf2; /* 지도 로드 전 임시 바다색 배경 */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 모바일 화면 */
+.mobile {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  overflow: hidden;
+  border-radius: 35px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+}
+
+/* ── 하늘 배경 ── */
+.sky {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    175deg,
+    #42c8f5 0%,
+    #1e9fe8 35%,
+    #1a8fdc 60%,
+    #a8d8f0 100%
+  );
+}
+
+/* ── 구름 ── */
+.cloud {
+  position: absolute;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.88);
+  animation: cloudDrift linear infinite;
+}
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  background: inherit;
+  border-radius: 50%;
+}
+.cloud-1 {
+  width: 140px;
+  height: 45px;
+  top: 12%;
+  left: -160px;
+  animation-duration: 28s;
+  animation-delay: 0s;
+}
+.cloud-1::before {
+  width: 60px;
+  height: 60px;
+  top: -30px;
+  left: 20px;
+}
+.cloud-1::after {
+  width: 45px;
+  height: 45px;
+  top: -22px;
+  left: 60px;
+}
+
+.cloud-2 {
+  width: 90px;
+  height: 30px;
+  top: 8%;
+  left: -110px;
+  animation-duration: 22s;
+  animation-delay: -8s;
+  opacity: 0.7;
+}
+.cloud-2::before {
+  width: 40px;
+  height: 40px;
+  top: -20px;
+  left: 12px;
+}
+.cloud-2::after {
+  width: 30px;
+  height: 30px;
+  top: -16px;
+  left: 40px;
+}
+
+.cloud-3 {
+  width: 110px;
+  height: 35px;
+  top: 18%;
+  left: -130px;
+  animation-duration: 32s;
+  animation-delay: -15s;
+  opacity: 0.6;
+}
+.cloud-3::before {
+  width: 50px;
+  height: 50px;
+  top: -25px;
+  left: 15px;
+}
+.cloud-3::after {
+  width: 35px;
+  height: 35px;
+  top: -18px;
+  left: 52px;
+}
+
+.cloud-4 {
+  width: 80px;
+  height: 25px;
+  top: 6%;
+  right: -100px;
+  animation-duration: 25s;
+  animation-delay: -5s;
+  animation-direction: reverse;
+  opacity: 0.75;
+}
+.cloud-4::before {
+  width: 36px;
+  height: 36px;
+  top: -18px;
+  left: 10px;
+}
+.cloud-4::after {
+  width: 28px;
+  height: 28px;
+  top: -14px;
+  left: 38px;
+}
+
+@keyframes cloudDrift {
+  from {transform: translateX(0);}
+  to {transform: translateX(calc(100vw + 200px));}
+}
+
+/* ── 갈매기 ── */
+.seagull {
+  position: absolute;
+  width: 30px;
+  height: 12px;
+  animation: seagullFly linear infinite;
+}
+.seagull::before,
+.seagull::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 14px;
+  height: 12px;
+  border-top: 2.5px solid rgba(255, 255, 255, 0.9);
+  border-radius: 50% 50% 0 0 / 100% 0 0 0;
+  animation: wingFlap 0.55s ease-in-out infinite alternate;
+}
+.seagull::before {
+  left: 0;
+  transform-origin: right center;
+}
+.seagull::after {
+  right: 0;
+  transform-origin: left center;
+  animation-direction: alternate-reverse;
+}
+
+.sg-1 {
+  top: 14%;
+  left: -40px;
+  animation-duration: 14s;
+  animation-delay: 0s;
+}
+.sg-2 {
+  top: 9%;
+  left: -40px;
+  animation-duration: 18s;
+  animation-delay: -6s;
+  transform: scale(0.7);
+}
+.sg-3 {
+  top: 20%;
+  right: -40px;
+  animation-duration: 16s;
+  animation-delay: -3s;
+  animation-direction: reverse;
+  transform: scale(0.8) scaleX(-1);
+}
+
+@keyframes seagullFly {
+  from {transform: translateX(0) translateY(0);}
+  25% {transform: translateX(25vw) translateY(-10px);}
+  50% {transform: translateX(50vw) translateY(5px);}
+  75% {transform: translateX(75vw) translateY(-8px);}
+  to {transform: translateX(calc(100vw + 60px)) translateY(0);}
+}
+@keyframes wingFlap {
+  from {transform: rotate(-18deg);}
+  to {transform: rotate(18deg);}
+}
+
+/* ── 바다 ── */
+.ocean {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 32%;
+  background: linear-gradient(180deg, #0e74c8 0%, #0a5a9e 40%, #073e72 100%);
+  overflow: hidden;
+}
+.wave {
+  position: absolute;
+  width: 250%;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 50%;
+  animation: waveMove linear infinite;
+}
+.wave-1 {
+  top: 8px;
+  left: -150%;
+  animation-duration: 7s;
+}
+.wave-2 {
+  top: 20px;
+  left: -100%;
+  animation-duration: 10s;
+  animation-delay: -3s;
+  opacity: 0.6;
+}
+.wave-3 {
+  top: 4px;
+  left: -200%;
+  animation-duration: 8.5s;
+  animation-delay: -1.5s;
+  opacity: 0.4;
+}
+@keyframes waveMove {
+  from {transform: translateX(0);}
+  to {transform: translateX(40%);}
+}
+
+/* ── 배 ── */
+.boat {
+  position: absolute;
+  bottom: 28%;
+  left: 8%;
+  animation: boatRock 5s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+.boat-body {
+  width: 60px;
+  height: 20px;
+  background: #e8e8e8;
+  border-radius: 0 0 16px 16px;
+  position: relative;
+}
+.boat-cabin {
+  position: absolute;
+  width: 26px;
+  height: 14px;
+  background: #c9d4e0;
+  border-radius: 3px 3px 0 0;
+  top: -14px;
+  left: 10px;
+}
+.boat-mast {
+  position: absolute;
+  width: 2px;
+  height: 36px;
+  background: #888;
+  top: -50px;
+  left: 29px;
+}
+@keyframes boatRock {
+  0%,
+  100% {transform: rotate(-1.5deg) translateY(0);}
+  50% {transform: rotate(1.5deg) translateY(-3px);}
+}
+
+/* ── 방파제/부두 ── */
+.pier {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 240px;
+  background: linear-gradient(180deg, #e8dfc8 0%, #d4c9a8 50%, #b8a882 100%);
+  clip-path: polygon(
+    0 42%,
+    12% 22%,
+    72% 10%,
+    88% 0%,
+    100% 0%,
+    100% 100%,
+    0 100%
+  );
+}
+.fence-post {
+  width: 10px;
+  height: 30px;
+  background: #888;
+  border-radius: 2px;
+  position: absolute;
+  top: -15px;
+}
+.fence-post:nth-child(1) {left: 10%;}
+.fence-post:nth-child(2) {left: 20%;}
+.fence-post:nth-child(3) {left: 30%;}
+.fence-post:nth-child(4) {left: 40%;}
+.fence-post:nth-child(5) {left: 50%;}
+.fence-post:nth-child(6) {left: 60%;}
+.fence-post:nth-child(7) {left: 70%;}
+.fence-post:nth-child(8) {left: 80%;}
+.fence-post:nth-child(9) {left: 90%;}
+
+/* ── 등대 (우측) ── */
+.lighthouse-right {
+  position: absolute;
+  right: 6%;
+  bottom: 18%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: lighthouseAppear 1s ease-out both;
+  animation-delay: 0.6s;
+}
+.lh-light-glow {
+  position: absolute;
+  top: -8px;
+  width: 60px;
+  height: 60px;
+  background: radial-gradient(
+    circle,
+    rgba(255, 240, 100, 0.7) 0%,
+    rgba(255, 200, 0, 0.2) 50%,
+    transparent 70%
+  );
+  border-radius: 50%;
+  animation: glowPulse 2s ease-in-out infinite;
+}
+.lh-top {
+  width: 30px;
+  height: 18px;
+  background: linear-gradient(180deg, #c0392b 0%, #922b21 100%);
+  border-radius: 2px 2px 0 0;
+  position: relative;
+  z-index: 1;
+}
+.lh-lamp {
+  width: 34px;
+  height: 22px;
+  background: linear-gradient(180deg, #ffeaa0 0%, #f0c040 100%);
+  border: 2px solid #c0392b;
+  border-radius: 2px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 0 10px rgba(255, 220, 50, 0.8);
+  animation: lampBlink 3s ease-in-out infinite;
+}
+.lh-rail {
+  width: 44px;
+  height: 8px;
+  background: linear-gradient(180deg, #c0392b 0%, #922b21 100%);
+  border-radius: 1px;
+}
+.lh-body {
+  width: 36px;
+  height: 100px;
+  background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 50%, #d8d8d8 100%);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+.lh-stripe {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14px;
+  background: #c0392b;
+  opacity: 0.85;
+}
+.lh-stripe:nth-child(1) {
+  top: 18px;
+}
+.lh-stripe:nth-child(2) {
+  top: 50px;
+}
+.lh-stripe:nth-child(3) {
+  top: 82px;
+}
+.lh-door {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 10px;
+  height: 16px;
+  background: #4a90d9;
+  border-radius: 5px 5px 0 0;
+}
+.lh-base {
+  width: 46px;
+  height: 12px;
+  background: linear-gradient(180deg, #bbb 0%, #999 100%);
+  border-radius: 2px;
+}
+.lh-rock {
+  width: 60px;
+  height: 16px;
+  background: linear-gradient(180deg, #888 0%, #666 100%);
+  border-radius: 50% 50% 0 0;
+  margin-top: -2px;
+}
+@keyframes glowPulse {
+  0%,
+  100% {transform: scale(1); opacity: 0.9;}
+  50% {transform: scale(1.3); opacity: 1;}
+}
+@keyframes lampBlink {
+  0%,
+  90%,
+  100% {box-shadow: 0 0 10px rgba(255, 220, 50, 0.8);}
+  95% {box-shadow: 0 0 20px rgba(255, 220, 50, 1), 0 0 35px rgba(255, 200, 0, 0.6);
+  }
+}
+@keyframes lighthouseAppear {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+
+/* ── 마스코트 캐릭터 ── */
+.mascot {
+  position: absolute;
+  bottom: 24%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 240px;
+  animation:
+    mascotFloat 3.2s ease-in-out infinite,
+    mascotAppear 0.9s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 0s, 0.3s;
+  transform-origin: center bottom;
+  z-index: 10;
+}
+.mascot-inner {
+  width: 100%;
+  animation: mascotSway 5.6s ease-in-out infinite 0.6s;
+  transform-origin: center bottom;
+}
+.mascot-inner img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.28));
+}
+@keyframes mascotFloat {
+  0% {transform: translateX(-50%) translateY(0px);}
+  50% {transform: translateX(-50%) translateY(-20px);}
+  100% {transform: translateX(-50%) translateY(0px);}
+}
+@keyframes mascotSway {
+  0% {transform: rotate(0deg);}
+  20% {transform: rotate(10deg);}
+  50% {transform: rotate(0deg);}
+  80% {transform: rotate(-10deg);}
+  100% {transform: rotate(0deg);}
+}
+@keyframes mascotAppear {
+  from {opacity: 0; transform: translateX(-50%) scale(0.6) translateY(50px);}
+  to {opacity: 1; transform: translateX(-50%) scale(1) translateY(0);}
+}
+
+/* ── 별 장식 ── */
+.star {
+  position: absolute;
+  animation:
+    starFloat 3s ease-in-out infinite,
+    starAppear 0.5s ease both;
+}
+.star svg {
+  filter: drop-shadow(0 2px 6px rgba(255, 200, 0, 0.6));
+}
+.star-1 {
+  top: 30%;
+  left: 12%;
+  animation-delay: 0.2s, 0.5s;
+}
+.star-2 {
+  top: 20%;
+  left: 72%;
+  animation-delay: 0.8s, 0.8s;
+  animation-duration: 3.5s, 0.5s;
+}
+@keyframes starFloat {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(15deg);
+  }
+}
+@keyframes starAppear {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(-30deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* ── 타이틀 이미지 ── */
+.title-container {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(360px, 78vw);
+  text-align: center;
+  z-index: 20;
+  animation: titleDrop 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 0.1s;
+}
+.title-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.2));
+}
+@keyframes titleDrop {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-30px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+/* ── 스파클 ── */
+.sparkle {
+  position: absolute;
+  pointer-events: none;
+  animation: sparklePop ease-out forwards;
+}
+@keyframes sparklePop {
+  0% {
+    opacity: 1;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2) rotate(90deg);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(180deg);
+  }
+}
+
+/* ── 버튼 ── */
+.btn {
+  position: absolute;
+  top: 80%;
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 2;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 50px;
+}
+
+.btn-start {
+  display: inline-block;
+  padding: 16px 48px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #ffffff;
+  background: linear-gradient(135deg, #ff7e5f, #feb47b);
+  border: none;
+  border-radius: 50px;
+  text-decoration: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  cursor: pointer;
+}
+
+/* ── 여권 발급 팝업(모달) ── */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  background-color: #ffffff;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 340px;
+  padding: 30px 20px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: #e8e8e8;
+  border: none;
+  color: #555;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-header {
+  font-size: 18px;
+  font-weight: 900;
+  color: #1a8fdc;
+  margin-bottom: 15px;
+}
+
+/* 캡처를 위해 여권 번호와 안내 문구를 감싸는 영역 */
+#captureArea {
+  background-color: #ffffff;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.warning-text {
+  font-size: 13px;
+  color: #e74c3c;
+  margin-bottom: 15px;
+  line-height: 1.4;
+  word-break: keep-all;
+}
+
+.passport-id-box {
+  background-color: #f0f4f8;
+  border: 2px dashed #1a8fdc;
+  color: #111;
+  font-size: 20px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.btn-copy {
+  flex: 1;
+  background: none;
+  border: 1px solid #aaa;
+  color: #555;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  font-weight: bold;
+}
+.btn-copy:active {
+  background: #eee;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  margin: 20px 0;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #ddd;
+}
+.divider span {
+  padding: 0 10px;
+}
+
+.input-passport {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 15px;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.btn-action {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+}
+.btn-coral {
+  background: linear-gradient(135deg, #ff7e5f, #feb47b);
+}
+.btn-blue {
+  background: linear-gradient(135deg, #1e9fe8, #1a8fdc);
+}
+
+/* 초기 표시 Map */
+
+/* 지도가 들어가는 부모 영역과 지도 컨테이너 모두 화면에 꽉 차도록 설정 */
+#page-map {
+  width: 100vw;
+  height: 100vh;
+  display: none; /* SPA 기본 숨김 처리 */
+}
+
+#page-map.active {
+  display: block; /* 활성화 시 보임 */
+}
+
+#map {
+  width: 100%;
+  height: 100%; /* 부모 높이를 100% 따라가도록 설정 */
+}
+
+/* 1. 헤더 스타일 */
+.header {
+  background-image: url("./img/wave.svg");
+  background-size: 100% 150%;
+  color: white;
+  padding: 20px 20px 50px 20px; /* 하단 패딩 50px로 물결 공간 확보 */
+  position: relative;
+  text-align: center;
+  z-index: 10;
+}
+.header-top {
+  justify-content: space-between;
+  align-items: center;
+}
+.back-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+.title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.spacer {
+  width: 24px;
+} /* 타이틀 중앙 정렬용 */
+.subtitle {
+  color: #8fa6c1;
+  font-size: 14px;
+  margin-top: 5px;
+}
+.header-icon {
+  margin-top: 10px;
+  font-size: 20px;
+}
+
+/* 헤더 하단 곡선 */
+.header-curve {
+  position: absolute;
+  bottom: -20px;
+  left: 0;
+  width: 100%;
+  height: 40px;
+  /*  background-color: #1a3350;  */
+  border-radius: 0 0 50% 50% / 0 0 20px 20px;
+}
+
+/* 2. 지도 영역 */
+.map-area {
+  top: -15%;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+}
+#map {
+  width: 100%;
+  height: 120%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #dcece2; /* 지도 API 로딩 전 배경색 */
+}
+.map-placeholder-text {
+  color: #888;
+  font-weight: bold;
+}
+
+/* 1. 커스텀 마커(이벤트 핀) CSS 애니메이션 */
+.stamp-pin {
+  width: 60px;
+  height: 60px;
+  background-size: cover;
+  background-position: center;
+  animation: floating 1.5s ease-in-out infinite alternate;
+  cursor: pointer;
+}
+.comp-pin {
+  width: 30px;
+  height: 30px;
+  background-size: cover;
+  background-position: left;
+  animation: floating 1.5s ease-in-out infinite alternate;
+  cursor: pointer;
+}
+
+@keyframes floating {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-15px);
+  }
+}
+
+/* 내 위치 확인 버튼 UI */
+.btn-my-location {
+  position: absolute;
+  top: 22%;
+  right: 20px;
+  z-index: 100;
+  padding: 12px 20px;
+  background-color: #ffffff;
+  color: #333;
+  border: 2px solid #e1e1e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-my-location:active {
+  background-color: #f0f0f0;
+}
+
+/* 내 현재 위치를 표시할 파란색 점 핀 */
+.my-loc-pin {
+  width: 40px;
+  height: 40px;
+  /*           border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);  */
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(0, 123, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+  }
+}
+
+/* 3. 스탬프 인증 현황 카드 전체 틀 */
+.progress-card {
+  position: absolute;
+  bottom: 70px;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(5px);
+  border-radius: 15px 15px 0 0;
+  padding: 15px 20px;
+  box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.1);
+  z-index: 30;
+  transition: all 0.3s ease;
+}
+.progress-card.expanded {
+  background-color: rgba(255, 255, 255, 0.98);
+}
+
+/* 헤더 부분 (클릭 영역) */
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+.progress-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.progress-title {
+  font-weight: 700;
+  color: #1a3350;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.progress-count .current {
+  color: #1e826b;
+  font-weight: 700;
+  font-size: 16px;
+}
+.progress-count .total {
+  color: #888;
+  font-size: 14px;
+}
+.expand-btn {
+  background: none;
+  border: none;
+  color: #1a3350;
+  transition: transform 0.3s ease;
+  pointer-events: none;
+}
+.progress-card.expanded .expand-btn {
+  transform: rotate(180deg);
+}
+
+/* 🌟 펼쳐지는 영역 애니메이션 설정 */
+.expandable-area {
+  max-height: 0;
+  overflow: hidden;
+  transition:
+    max-height 0.4s ease,
+    margin-top 0.4s ease;
+}
+.progress-card.expanded .expandable-area {
+  max-height: 60vh; /* 화면 높이의 최대 60%까지만 확장 */
+  margin-top: 15px;
+}
+
+/* 부활한 프로그레스 바 스타일 */
+.progress-bar-container {
+  position: relative;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  position: relative;
+}
+.progress-fill {
+  height: 100%;
+  background-color: #1a3350;
+  border-radius: 10px;
+  width: 10%;
+  transition: width 0.5s;
+}
+.progress-thumb {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 24px;
+  left: 10%;
+  transition: left 0.5s;
+}
+
+/* 🌟 스크롤 가능한 등대 리스트 영역 */
+.lighthouse-list {
+  list-style: none;
+  max-height: calc(60vh - 60px); /* 전체 60vh 중 프로그레스바 높이 제외 */
+  overflow-y: auto; /* 리스트가 길면 이 안에서만 스크롤됨 */
+  border-top: 1px solid #eee;
+}
+
+/* 리스트 아이템 (줄 단위) */
+.lh-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+.lh-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 스탬프 이미지 테두리 처리 */
+.lh-stamp-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #f0f0f0;
+  border: 2px solid #ddd;
+  padding: 2px;
+}
+.lh-item.acquired .lh-stamp-img {
+  border-color: #1e826b;
+  background: white;
+}
+
+/* 텍스트 영역 */
+.lh-name {
+  font-weight: 700;
+  color: #333;
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+.lh-dist {
+  font-size: 12px;
+  color: #888;
+}
+
+/* 우측 뱃지 (스탬프존 진입 등) */
+.stamp-zone-text {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ff5722;
+  background: #ffeee8;
+  padding: 5px 10px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(255, 87, 34, 0.2);
+}
+.stamp-done-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e826b;
+  padding-right: 5px;
+}
+
+/* 팝업 오버레이 (배경 어둡게 및 중앙 정렬) */
+.popup-overlay {
+  display: none; /* 기본 숨김 */
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 60, 90, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* 팝업 카드 메인 */
+.popup-card {
+  position: relative;
+  width: calc(100% - 40px);
+  max-width: 360px;
+  box-sizing: border-box;
+  background: rgba(176, 209, 226, 0.85);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 28px;
+  box-shadow:
+    0 8px 32px rgba(30, 80, 120, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: scale(0.88) translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* 내부 요소들 */
+.card-header {
+  padding: 18px 20px 10px;
+  text-align: center;
+}
+.card-title {
+  font-family: "Black Han Sans", sans-serif;
+  font-size: 13px;
+  color: #2a5070;
+  opacity: 0.85;
+}
+.top-actions {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 18px;
+  z-index: 10;
+}
+.action-btn {
+  width: 52px;
+  height: 52px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(30, 80, 120, 0.18);
+  transition: 0.2s;
+}
+.action-btn:hover,
+.action-btn.playing {
+  background: rgba(255, 255, 255, 0.82);
+  transform: scale(1.08);
+}
+.action-btn svg {
+  width: 24px;
+  height: 24px;
+  fill: #1a3a5c;
+}
+.action-btn.playing svg {
+  fill: #e84040;
+}
+
+/* 오디오 애니메이션 */
+.wave-bars {
+  display: none;
+  align-items: center;
+  gap: 2px;
+  height: 20px;
+}
+.action-btn.playing .wave-bars {
+  display: flex;
+}
+.action-btn.playing .sound-icon {
+  display: none;
+}
+.wave-bar {
+  width: 3px;
+  border-radius: 2px;
+  background: #e84040;
+  animation: waveAnim 0.6s ease-in-out infinite alternate;
+}
+.wave-bar:nth-child(1) {
+  height: 6px;
+  animation-delay: 0s;
+}
+.wave-bar:nth-child(2) {
+  height: 14px;
+  animation-delay: 0.1s;
+}
+.wave-bar:nth-child(3) {
+  height: 10px;
+  animation-delay: 0.2s;
+}
+.wave-bar:nth-child(4) {
+  height: 18px;
+  animation-delay: 0.05s;
+}
+.wave-bar:nth-child(5) {
+  height: 8px;
+  animation-delay: 0.15s;
+}
+@keyframes waveAnim {
+  from {
+    transform: scaleY(0.4);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+/* 이미지 및 텍스트 */
+.circle-image-wrap {
+  position: relative;
+  width: 65%;
+  aspect-ratio: 1;
+  margin: 8px auto 0;
+}
+.circle-image-wrap::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #5bbfdf 0%, #88d4ef 50%, #3a9fc5 100%);
+  z-index: 0;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.5),
+    0 8px 28px rgba(30, 100, 160, 0.25);
+}
+.circle-image-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.65) 0%,
+    rgba(0, 0, 0, 0.25) 35%,
+    transparent 60%
+  );
+  z-index: 1; /* circle-image(z:1) 위, label(z:2) 아래 */
+}
+.circle-image {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 4px solid rgba(255, 255, 255, 0.7);
+}
+.circle-image-label {
+  position: absolute;
+  bottom: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  font-family: "Black Han Sans", sans-serif;
+  font-size: 20px;
+  color: #fff;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+.card-desc {
+  padding: 20px 24px 10px;
+  text-align: center;
+  font-family: "Black Han Sans", sans-serif;
+  font-size: 16px;
+  color: #1a3a5c;
+  line-height: 1.5;
+}
+.divider {
+  margin: 12px 20px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(91, 191, 223, 0.5),
+    transparent
+  );
+}
+
+/* 새로 추가된 주소 영역 */
+.card-address {
+  text-align: center;
+  padding: 5px 24px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2a5070;
+}
+
+/* 앱 연결 모달 */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 60, 90, 0.45);
+  backdrop-filter: blur(6px);
+  z-index: 1100;
+  align-items: center;
+  justify-content: center;
+}
+.modal-overlay.open {
+  display: flex;
+}
+.modal-box {
+  background: rgba(200, 230, 245, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 24px;
+  padding: 28px 24px 22px;
+  width: min(340px, 90vw);
+  text-align: center;
+}
+.modal-title {
+  font-family: "Black Han Sans", sans-serif;
+  font-size: 17px;
+  color: #1a3a5c;
+  margin-bottom: 6px;
+}
+.modal-sub {
+  font-size: 12px;
+  color: #2a5070;
+  margin-bottom: 20px;
+  opacity: 0.8;
+}
+.app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.app-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+  padding: 12px 16px;
+  text-decoration: none;
+  text-align: left;
+  transition: 0.2s;
+}
+.app-item:hover {
+  background: rgba(255, 255, 255, 0.88);
+  transform: translateX(3px);
+}
+.app-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.app-name {
+  font-family: "Black Han Sans", sans-serif;
+  font-size: 14px;
+  color: #1a3a5c;
+}
+.app-desc {
+  font-size: 11px;
+  color: #2a5070;
+  margin-top: 2px;
+}
+.app-arrow {
+  margin-left: auto;
+  font-size: 16px;
+  color: #4a9fc8;
+}
+.modal-close {
+  margin-top: 16px;
+  width: 100%;
+  padding: 11px;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 12px;
+  font-family: "Black Han Sans", sans-serif;
+  font-size: 14px;
+  color: #2a5070;
+  cursor: pointer;
+}
+
+/* 패스포트 */
+
+/* 배경 이미지 */
+.bg {
+  height: 91%;
+  position: absolute;
+  inset: 0;
+  background-image: url("./img/bg-lighthouse-passport.png");
+  background-size: cover;
+  background-position: center;
+}
+
+/* 안내 영역 */
+.swipe-guide {
+  position: absolute;
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  width: 100%;
+}
+
+/* 아이콘 */
+.swipe-icon {
+  width: 95px;
+  height: auto;
+  filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.35));
+  animation: swipeMove 1.8s ease-in-out infinite;
+}
+
+/* 안내문구 */
+.guide-text {
+  margin-top: 22px;
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: center;
+  color: white;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  padding: 0 40px;
+  animation: fadeIn 1.2s ease;
+}
+
+/* 스와이프 애니메이션 */
+@keyframes swipeMove {
+  0% {transform: translateX(-35px);}
+  50% {transform: translateX(35px);}
+  100% {transform: translateX(-35px);}
+}
+
+/* 등장 효과 */
+@keyframes fadeIn {
+  from {opacity: 0; transform: translateY(15px);}
+  to {opacity: 1; transform: translateY(0);}
+}
