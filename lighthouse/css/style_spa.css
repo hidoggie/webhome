@@ -640,7 +640,7 @@ a:visited {
 .sparkle {
   position: absolute;
   pointer-events: none;
-  animation: sparklePop ease-out forwards;
+/*  animation: sparklePop ease-out forwards;  */
 }
 @keyframes sparklePop {
   0% {
