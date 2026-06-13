@@ -47,7 +47,9 @@ function routeTo(pageId) {
             if (!map) {
                 initNaverMap(); // 최초 생성
             } else {
-                window.dispatchEvent(new Event('resize')); // 이미 있다면 사이즈 재조정
+                // 단순 이벤트 호출을 넘어, 네이버 지도 자체 리사이즈 메서드 사용
+                window.dispatchEvent(new Event('resize')); 
+                map.autoResize(); // 👈 이 한 줄을 추가해 주세요!
             }
         }, 100); 
     }
