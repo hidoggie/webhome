@@ -1538,3 +1538,29 @@ a:visited {
   from {opacity: 0; transform: translateY(15px);}
   to {opacity: 1; transform: translateY(0);}
 }
+
+/* =========================================
+   [SPA] 지도 페이지 레이아웃 크기 강제 지정
+========================================= */
+
+/* 1. 지도 페이지(page-map)가 켜졌을 때 flex 모드로 화면을 꽉 채우게 함 */
+#page-map.active {
+    display: flex !important;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+}
+
+/* 2. 상단 헤더, 인증 현황 바 등을 제외한 나머지 '모든 빈 공간'을 지도가 차지하게 함 */
+.map-area {
+    flex: 1; /* 남은 높이를 모두 가져감 */
+    position: relative;
+    width: 100%;
+    min-height: 300px; /* 지도가 찌그러지는 것 방지 최소 높이 */
+}
+
+/* 3. 최종적으로 네이버 지도 컨테이너가 부모(map-area)의 100%를 쓰게 함 */
+#map {
+    width: 100%;
+    height: 100%;
+}
