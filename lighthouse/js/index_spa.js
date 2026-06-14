@@ -340,90 +340,89 @@ setInterval(function() {
             }
         }
 
-        // --- [네이버 지도용 전역 변수 설정] ---
-        let smap = null;
-        // 예시용 목표 등대 좌표 (현재 오동도등대 기준 위경도 설정, 추후 DB 연동 시 변경 가능)
-        const lighthouseCoords = { lat: 34.7442, lng: 127.7677 };   
+// --- [네이버 지도용 전역 변수 설정 (미션 탭 전용)] ---
+let smap = null;
+const lighthouseCoords = { lat: 34.7442, lng: 127.7677 };   
 
-        // 탭 전환 및 지도 호출 연동
-        function switchTab(tabName, clickedBtn) {
-            const tabContents = document.querySelectorAll('.tab-content');
-            tabContents.forEach(tab => tab.classList.remove('active'));
+// 탭 전환 및 지도 호출 연동
+function switchTab(tabName, clickedBtn) {
+    const tabContents = document.querySelectorAll('.tab-content');
+    tabContents.forEach(tab => tab.classList.remove('active'));
 
-            const navItems = document.querySelectorAll('.top-item');
-            navItems.forEach(item => item.classList.remove('active'));
+    const navItems = document.querySelectorAll('.top-item');
+    navItems.forEach(item => item.classList.remove('active'));
 
-            document.getElementById(`tab-${tabName}`).classList.add('active');
-            clickedBtn.classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    clickedBtn.classList.add('active');
 
-            // 등대 위치 탭 클릭 시 지도 초기화 및 위치 가져오기
-            if (tabName === 's-map') {
-                initNaverMap();
-            }
-        }
+    // ★ 미션 탭의 '등대 위치(smap)' 클릭 시 전용 지도 호출
+    if (tabName === 'smap') {
+        setTimeout(() => {
+            initMissionMap(); // 이름이 변경된 함수 호출
+        }, 100);
+    }
+}
 
-        // 네이버 지도 초기화 및 현위치-등대 매핑 함수
-        function initNaverMap() {
-            // 지도가 이미 생성된 경우, 리사이즈 이슈 방지를 위해 크기 재조정 처리만 진행
-            if (smap) {
-                smap.autoResize();
-                return;
-            }
+// ★ 함수 이름 변경 (initNaverMap -> initMissionMap)
+function initMissionMap() {
+    if (smap) {
+        window.dispatchEvent(new Event('resize')); 
+        smap.autoResize();
+        return;
+    }
 
-            const lighthouseLatLng = new naver.maps.LatLng(lighthouseCoords.lat, lighthouseCoords.lng);
+    const lighthouseLatLng = new naver.maps.LatLng(lighthouseCoords.lat, lighthouseCoords.lng);
 
-            // HTML5 Geolocation을 이용해 사용자 실시간 위치 가져오기
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const userLat = position.coords.latitude;
-                    const userLng = position.coords.longitude;
-                    const userLatLng = new naver.maps.LatLng(userLat, userLng);
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+            const userLat = position.coords.latitude;
+            const userLng = position.coords.longitude;
+            const userLatLng = new naver.maps.LatLng(userLat, userLng);
 
-                    // 1. 지도 생성 (등대를 중심으로 두고 1km 반경이 한눈에 보이는 줌 레벨 15 설정 및 위성모드)
-                    smap = new naver.maps.Map('map', {
-                        center: lighthouseLatLng,
-                        zoom: 17, // 약 1km 반경 표시 최적화 줌
-                        mapTypeId: naver.maps.MapTypeId.HYBRID // 위성(하이브리드) 모드 설정
-                    });
-
-                    // 2. 현재 사용자 위치 마커 생성
-                    new naver.maps.Marker({
-                        position: userLatLng,
-                        map: smap,
-                        icon: {
-                            content: '<div class="my-loc-pin"><img src="./img/lh-man-map.png" style="width:40px;height:40px;"></div>',
-                            size: new naver.maps.Size(20, 20),
-                            anchor: new naver.maps.Point(10, 10) // 점의 정중앙을 좌표에 맞춤
-                        },
-                        title: '현재 나의 위치'
-                    });
-
-                    // 3. 목표 등대 위치 마커 생성
-                    new naver.maps.Marker({
-                        position: lighthouseLatLng,
-                        map: smap,
-                        title: '목표 등대 위치'
-                    });
-
-                }, function(error) {
-                    console.error("위치 획득 실패, 기본 등대 위치 위주로 표시합니다.", error);
-                    loadDefaultLighthouseMap(lighthouseLatLng);
-                });
-            } else {
-                loadDefaultLighthouseMap(lighthouseLatLng);
-            }
-        }
-
-        // 위치 정보를 허용하지 않았을 때의 예외 처리 지도 로드
-        function loadDefaultLighthouseMap(lighthouseLatLng) {
-            smap = new naver.maps.Map('map', {
+            // ★ 지도 생성 타겟을 'map'에서 'smap'으로 변경
+            smap = new naver.maps.Map('smap', {
                 center: lighthouseLatLng,
-                zoom: 17,
-                mapTypeId: naver.maps.MapTypeId.HYBRID
+                zoom: 17, 
+                mapTypeId: naver.maps.MapTypeId.HYBRID 
             });
+
+            new naver.maps.Marker({
+                position: userLatLng,
+                map: smap,
+                icon: {
+                    content: '<div class="my-loc-pin"><img src="./img/lh-man-map.png" style="width:40px;height:40px;"></div>',
+                    size: new naver.maps.Size(20, 20),
+                    anchor: new naver.maps.Point(10, 10) 
+                },
+                title: '현재 나의 위치'
+            });
+
             new naver.maps.Marker({
                 position: lighthouseLatLng,
                 map: smap,
                 title: '목표 등대 위치'
             });
-        }
+
+        }, function(error) {
+            console.error("위치 획득 실패, 기본 등대 위치 위주로 표시합니다.", error);
+            loadDefaultLighthouseMap(lighthouseLatLng);
+        });
+    } else {
+        loadDefaultLighthouseMap(lighthouseLatLng);
+    }
+}
+
+// 위치 정보를 허용하지 않았을 때의 예외 처리 지도 로드
+function loadDefaultLighthouseMap(lighthouseLatLng) {
+    // ★ 지도 생성 타겟을 'map'에서 'smap'으로 변경
+    smap = new naver.maps.Map('smap', {
+        center: lighthouseLatLng,
+        zoom: 17,
+        mapTypeId: naver.maps.MapTypeId.HYBRID
+    });
+    new naver.maps.Marker({
+        position: lighthouseLatLng,
+        map: smap,
+        title: '목표 등대 위치'
+    });
+}
