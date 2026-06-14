@@ -2011,7 +2011,7 @@ a:visited {
 /* 상단 타이틀 영역 */
 .title-area {
   text-align: center;
-  padding-top: 2.5%;
+  padding-top: 15px;
   color: #ffffff;
 }
 .title-area h1 {
@@ -2085,7 +2085,7 @@ a:visited {
 /* 3. 하단 인증샷 및 정보 카드 영역 */
 .cards-section {
   margin-top: 15px;
-  margin-bottom: 20px;
+  margin-bottom: 90px;
   display: flex;
   gap: 12px;
   padding: 0 15px;
@@ -2193,7 +2193,7 @@ a:visited {
 }
 
 /* 해시태그 스타일 */
-.tag {
+.hashtag {
   display: inline-block;
   padding: 6px 12px;
   margin-right: 8px;
@@ -2205,11 +2205,11 @@ a:visited {
 }
 
 /* 색상별 클래스 */
-.tag.pink {
+.hashtag.pink {
   background-color: #ff6fae; /* 분홍색 */
 }
 
-.tag.blue {
+.hashtag.blue {
   background-color: #5bc0de; /* 하늘색 */
 }
 
