@@ -270,7 +270,7 @@
 
         <section id="page-mission" class="page">
             <nav class="top-nav">
-                <button class="top-item" onclick="routeTo('map')">
+                <button class="top-item" onclick="switchTab('smap', this)">
                     <span class="icon"><img src="./img/location-ico.png"></span>
                     <span class="label">등대 위치</span>
                 </button>
@@ -284,9 +284,9 @@
                 </button>
             </nav>
 
-            <!--main id="tab-map" class="tab-content">
-                <div id="map"></div>
-            </main-->
+            <main id="tab-map" class="tab-content">
+                <div id="smap"></div>
+            </main>
 
             <main id="tab-mission" class="tab-content active mission-path">
                 <div class="step-container">
@@ -383,21 +383,15 @@
 
         <section id="page-passport" class="page">
             <div class="bg"></div>
-
             <div class="swipe-guide">
-
                 <img class="swipe-icon" src="./img/swipe-white.png" alt="좌우 스와이프">
-
                 <div class="guide-text">
-
                     양쪽으로 넘기면서<br>
                     스탬프북을 열람 할 수 있습니다.
-
                 </div>
-
             </div>
-
         </section>
+
     </main>
 
     <nav id="global-bottom-nav" class="bottom-nav" style="display: none;">
