@@ -26,13 +26,13 @@
 
 /* 하단 공통 네비게이션 (중복 코드 제거 후 통합) */
 .bottom-nav {
-  position: absolute; /* 또는 fixed */
+  position: fixed;
   bottom: 0;
-  left: 0; /* 추가 */
-  right: 0; /* 추가 */
+  left: 0; 
+  right: 0; 
   border-radius: 5px;
   width: 100%;
-  height: 9%;
+  height: 72px;
   background-color: #1a3350;
   display: flex;
   justify-content: space-around;
@@ -933,12 +933,8 @@ a:visited {
 /* 지도가 들어가는 부모 영역과 지도 컨테이너 모두 화면에 꽉 차도록 설정 */
 #page-map {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   display: none; /* SPA 기본 숨김 처리 */
-}
-
-#page-map.active {
-  display: block; /* 활성화 시 보임 */
 }
 
 #map {
@@ -1088,7 +1084,7 @@ a:visited {
 /* 3. 스탬프 인증 현황 카드 전체 틀 */
 .progress-card {
   position: absolute;
-  bottom: 9%;
+  bottom: calc(72px + env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   background-color: rgba(255, 255, 255, 0.65);
@@ -1645,7 +1641,7 @@ a:visited {
   display: flex !important;
   flex-direction: column;
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
 }
 
 /* 2. 상단 헤더, 인증 현황 바 등을 제외한 나머지 '모든 빈 공간'을 지도가 차지하게 함 */
