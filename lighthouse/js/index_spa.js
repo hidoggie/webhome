@@ -307,8 +307,8 @@ function toggleAudio() {
 }
 if(audio) audio.addEventListener('ended', () => { isPlaying = false; if(audioBtn) audioBtn.classList.remove('playing'); });
 function openAppModal() { document.getElementById('appModal').classList.add('open'); }
-function closeModal() { document.getElementById('appModal').classList.remove('open'); document.getElementById('missionModal').style.display = 'none'; }
-function closeModalOutside(e) { if (e.target === document.getElementById('appModal')) closeModal(); }
+function closeappModal() { document.getElementById('appModal').classList.remove('open'); document.getElementById('missionModal').style.display = 'none'; }
+function closeModalOutside(e) { if (e.target === document.getElementById('appModal')) closeappModal(); }
 
 // 스파클 애니메이션
 setInterval(function() {
