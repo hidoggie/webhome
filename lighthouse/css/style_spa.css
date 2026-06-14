@@ -227,8 +227,12 @@ a:visited {
 }
 
 @keyframes cloudDrift {
-  from {transform: translateX(0);}
-  to {transform: translateX(calc(100vw + 200px));}
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100vw + 200px));
+  }
 }
 
 /* ── 갈매기 ── */
@@ -282,15 +286,29 @@ a:visited {
 }
 
 @keyframes seagullFly {
-  from {transform: translateX(0) translateY(0);}
-  25% {transform: translateX(25vw) translateY(-10px);}
-  50% {transform: translateX(50vw) translateY(5px);}
-  75% {transform: translateX(75vw) translateY(-8px);}
-  to {transform: translateX(calc(100vw + 60px)) translateY(0);}
+  from {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(25vw) translateY(-10px);
+  }
+  50% {
+    transform: translateX(50vw) translateY(5px);
+  }
+  75% {
+    transform: translateX(75vw) translateY(-8px);
+  }
+  to {
+    transform: translateX(calc(100vw + 60px)) translateY(0);
+  }
 }
 @keyframes wingFlap {
-  from {transform: rotate(-18deg);}
-  to {transform: rotate(18deg);}
+  from {
+    transform: rotate(-18deg);
+  }
+  to {
+    transform: rotate(18deg);
+  }
 }
 
 /* ── 바다 ── */
@@ -331,8 +349,12 @@ a:visited {
   opacity: 0.4;
 }
 @keyframes waveMove {
-  from {transform: translateX(0);}
-  to {transform: translateX(40%);}
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(40%);
+  }
 }
 
 /* ── 배 ── */
@@ -369,8 +391,12 @@ a:visited {
 }
 @keyframes boatRock {
   0%,
-  100% {transform: rotate(-1.5deg) translateY(0);}
-  50% {transform: rotate(1.5deg) translateY(-3px);}
+  100% {
+    transform: rotate(-1.5deg) translateY(0);
+  }
+  50% {
+    transform: rotate(1.5deg) translateY(-3px);
+  }
 }
 
 /* ── 방파제/부두 ── */
@@ -399,15 +425,33 @@ a:visited {
   position: absolute;
   top: -15px;
 }
-.fence-post:nth-child(1) {left: 10%;}
-.fence-post:nth-child(2) {left: 20%;}
-.fence-post:nth-child(3) {left: 30%;}
-.fence-post:nth-child(4) {left: 40%;}
-.fence-post:nth-child(5) {left: 50%;}
-.fence-post:nth-child(6) {left: 60%;}
-.fence-post:nth-child(7) {left: 70%;}
-.fence-post:nth-child(8) {left: 80%;}
-.fence-post:nth-child(9) {left: 90%;}
+.fence-post:nth-child(1) {
+  left: 10%;
+}
+.fence-post:nth-child(2) {
+  left: 20%;
+}
+.fence-post:nth-child(3) {
+  left: 30%;
+}
+.fence-post:nth-child(4) {
+  left: 40%;
+}
+.fence-post:nth-child(5) {
+  left: 50%;
+}
+.fence-post:nth-child(6) {
+  left: 60%;
+}
+.fence-post:nth-child(7) {
+  left: 70%;
+}
+.fence-post:nth-child(8) {
+  left: 80%;
+}
+.fence-post:nth-child(9) {
+  left: 90%;
+}
 
 /* ── 등대 (우측) ── */
 .lighthouse-right {
@@ -509,19 +553,36 @@ a:visited {
 }
 @keyframes glowPulse {
   0%,
-  100% {transform: scale(1); opacity: 0.9;}
-  50% {transform: scale(1.3); opacity: 1;}
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
 }
 @keyframes lampBlink {
   0%,
   90%,
-  100% {box-shadow: 0 0 10px rgba(255, 220, 50, 0.8);}
-  95% {box-shadow: 0 0 20px rgba(255, 220, 50, 1), 0 0 35px rgba(255, 200, 0, 0.6);
+  100% {
+    box-shadow: 0 0 10px rgba(255, 220, 50, 0.8);
+  }
+  95% {
+    box-shadow:
+      0 0 20px rgba(255, 220, 50, 1),
+      0 0 35px rgba(255, 200, 0, 0.6);
   }
 }
 @keyframes lighthouseAppear {
-  from {opacity: 0; transform: translateY(20px);}
-  to {opacity: 1; transform: translateY(0);}
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── 마스코트 캐릭터 ── */
@@ -550,20 +611,42 @@ a:visited {
   filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.28));
 }
 @keyframes mascotFloat {
-  0% {transform: translateX(-50%) translateY(0px);}
-  50% {transform: translateX(-50%) translateY(-20px);}
-  100% {transform: translateX(-50%) translateY(0px);}
+  0% {
+    transform: translateX(-50%) translateY(0px);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-20px);
+  }
+  100% {
+    transform: translateX(-50%) translateY(0px);
+  }
 }
 @keyframes mascotSway {
-  0% {transform: rotate(0deg);}
-  20% {transform: rotate(10deg);}
-  50% {transform: rotate(0deg);}
-  80% {transform: rotate(-10deg);}
-  100% {transform: rotate(0deg);}
+  0% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(10deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+  80% {
+    transform: rotate(-10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
 }
 @keyframes mascotAppear {
-  from {opacity: 0; transform: translateX(-50%) scale(0.6) translateY(50px);}
-  to {opacity: 1; transform: translateX(-50%) scale(1) translateY(0);}
+  from {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.6) translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) scale(1) translateY(0);
+  }
 }
 
 /* ── 별 장식 ── */
@@ -640,7 +723,7 @@ a:visited {
 .sparkle {
   position: absolute;
   pointer-events: none;
-/*  animation: sparklePop ease-out forwards;  */
+  /*  animation: sparklePop ease-out forwards;  */
 }
 @keyframes sparklePop {
   0% {
@@ -1528,15 +1611,27 @@ a:visited {
 
 /* 스와이프 애니메이션 */
 @keyframes swipeMove {
-  0% {transform: translateX(-35px);}
-  50% {transform: translateX(35px);}
-  100% {transform: translateX(-35px);}
+  0% {
+    transform: translateX(-35px);
+  }
+  50% {
+    transform: translateX(35px);
+  }
+  100% {
+    transform: translateX(-35px);
+  }
 }
 
 /* 등장 효과 */
 @keyframes fadeIn {
-  from {opacity: 0; transform: translateY(15px);}
-  to {opacity: 1; transform: translateY(0);}
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* =========================================
@@ -1545,286 +1640,331 @@ a:visited {
 
 /* 1. 지도 페이지(page-map)가 켜졌을 때 flex 모드로 화면을 꽉 채우게 함 */
 #page-map.active {
-    display: flex !important;
-    flex-direction: column;
-    width: 100vw;
-    height: 100vh;
+  display: flex !important;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
 }
 
 /* 2. 상단 헤더, 인증 현황 바 등을 제외한 나머지 '모든 빈 공간'을 지도가 차지하게 함 */
 
 .top-map-area {
-    flex: 1; /* 남은 높이를 모두 가져감 */
-    position: relative;
-    width: 100%;
-    min-height: 300px; /* 지도가 찌그러지는 것 방지 최소 높이 */
+  flex: 1; /* 남은 높이를 모두 가져감 */
+  position: relative;
+  width: 100%;
+  min-height: 300px; /* 지도가 찌그러지는 것 방지 최소 높이 */
 }
 
 /* 3. 최종적으로 네이버 지도 컨테이너가 부모(map-area)의 100%를 쓰게 함 */
 #top-map {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 /* 게임 Process */
-        /* 미션 경로 */
-        .mission-path {
-            flex: 1;
-            overflow: hidden;
-            padding: 10px 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-evenly;
-        }
+/* 미션 경로 */
+.mission-path {
+  flex: 1;
+  overflow: hidden;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+}
 
-        /* 지그재그 */
-        .step-container {
-            width: 100%;
-            display: flex;
-            margin-bottom: 0;
-        }
+/* 지그재그 */
+.step-container {
+  width: 100%;
+  display: flex;
+  margin-bottom: 0;
+}
 
-        .step-container:nth-child(odd){
-            padding-left:15%;
-            justify-content:flex-start;
-        }
+.step-container:nth-child(odd) {
+  padding-left: 15%;
+  justify-content: flex-start;
+}
 
-        .step-container:nth-child(even){
-            padding-right:15%;
-            justify-content:flex-end;
-        }
+.step-container:nth-child(even) {
+  padding-right: 15%;
+  justify-content: flex-end;
+}
 
-        .round-btn {
-            width: 90px;
-            height: 90px;
-            border-radius: 50%;
-            border: none;
-            background-color: transparent;
-            cursor: pointer;
-            position: relative;
-            z-index: 2;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.2s;
-        }
+.round-btn {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: transform 0.2s;
+}
 
-        .round-btn:active {
-            transform: scale(0.95);
-        }
+.round-btn:active {
+  transform: scale(0.95);
+}
 
-        .round-btn img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-            box-shadow: 0 5px 15px rgba(255, 115, 139, 0.4);
-        }
+.round-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 5px 15px rgba(255, 115, 139, 0.4);
+}
 
-        /* 현재 미션 파동효과 애니메이션 */
-        @keyframes wave {
-            0%{ transform:scale(1); opacity:.8; }
-            100%{ transform:scale(1.7); opacity:0; }
-        }
+/* 현재 미션 파동효과 애니메이션 */
+@keyframes wave {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1.7);
+    opacity: 0;
+  }
+}
 
-        .step-container.active .round-btn::before,
-        .step-container.active .round-btn::after{
-            content:'';
-            position:absolute;
-            inset:0;
-            border-radius:50%;
-            border:3px solid #7fd2ff;
-            animation:wave 2s infinite;
-        }
+.step-container.active .round-btn::before,
+.step-container.active .round-btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid #7fd2ff;
+  animation: wave 2s infinite;
+}
 
-        .step-container.active .round-btn::after{
-            animation-delay:1s;
-        }
+.step-container.active .round-btn::after {
+  animation-delay: 1s;
+}
 
-        /* 팝업 모달창 디자인 */
-        .modal-overlay {
-           position: fixed;
-           top: 0;
-           left: 50%;
-           transform: translateX(-50%);
-           width: 100%;
-           max-width: 480px;
-           height: 100vh;
-           background: rgba(0,0,0,0.5);
-           display: none;
-           justify-content: center;
-           align-items: center;
-           z-index: 100; 
-        }
+/* 팝업 모달창 디자인 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
 
-        .modal-content {
-            background: white;
-            width: 80%;
-            border-radius: 20px;
-            padding: 30px 20px;
-            text-align: center;
-            position: relative;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
+.modal-content {
+  background: white;
+  width: 80%;
+  border-radius: 20px;
+  padding: 30px 20px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
 
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #888;
-            cursor: pointer;
-        }
+.close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #888;
+  cursor: pointer;
+}
 
-        .modal-title {
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 25px;
-        }
+.modal-title {
+  font-size: 20px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 25px;
+}
 
-        .action-btn {
-            background-color: #ff738b;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 30px;
-            font-size: 16px;
-            font-weight: bold;
-            width: 100%;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(255, 115, 139, 0.3);
-        }
+.action-btn {
+  background-color: #ff738b;
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: bold;
+  width: 100%;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(255, 115, 139, 0.3);
+}
 
-        /* 상단 네비게이션 */
-        .top-nav {
-            height: 100px; 
-            background-color: #FAF9F3;
-            display: flex; 
-            justify-content: space-around; 
-            align-items: center;
-            z-index: 30;
-            flex-shrink: 0;
-        }
-        .top-item {
-            background: none; border: none; color: #8fa6c1; cursor: pointer;
-            display: flex; flex-direction: column; align-items: center; padding-top: 4px; height: 100%; justify-content: center;
-        }
-        .top-item.active { color: black; }
-        .top-item .label { font-size: 12px; font-weight: 500; line-height: 1; color: black; margin-top: 2px;}
-        .top-item img { width: 54px; height: 54px; }
+/* 상단 네비게이션 */
+.top-nav {
+  height: 100px;
+  background-color: #faf9f3;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 30;
+  flex-shrink: 0;
+}
+.top-item {
+  background: none;
+  border: none;
+  color: #8fa6c1;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 4px;
+  height: 100%;
+  justify-content: center;
+}
+.top-item.active {
+  color: black;
+}
+.top-item .label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  color: black;
+  margin-top: 2px;
+}
+.top-item img {
+  width: 54px;
+  height: 54px;
+}
 
-                /* --- 탭 공통 스타일 --- */
-        .tab-content {
-            display: none;
-            flex: 1;
-            overflow-y: auto;
-            width: 100%;
-        }
+/* --- 탭 공통 스타일 --- */
+.tab-content {
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+}
 
-        .tab-content.active {
-            display: flex; 
-        }
+.tab-content.active {
+  display: flex;
+}
 
-        #tab-mission {
-            flex-direction: column;
-        }
+#tab-mission {
+  flex-direction: column;
+}
 
-      /* --- 사진 후기 UI 스타일 --- */
-        .review-list {
-            flex-direction: column;
-            background-color: #f2f2f5;
-            padding: 15px 10px;
-            gap: 15px;
-        }
+/* --- 사진 후기 UI 스타일 --- */
+.review-list {
+  flex-direction: column;
+  background-color: #f2f2f5;
+  padding: 15px 10px;
+  gap: 15px;
+}
 
-        .review-card {
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 15px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
+.review-card {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
 
-        .review-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            gap: 8px;
-        }
+.review-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 8px;
+}
 
-        .user-profile {
-            width: 24px;
-            height: 24px;
-            background-color: #c4c4c4;
-            border-radius: 50%;
-        }
+.user-profile {
+  width: 24px;
+  height: 24px;
+  background-color: #c4c4c4;
+  border-radius: 50%;
+}
 
-        .user-info {
-            font-size: 13px;
-            color: #888;
-            font-weight: 500;
-        }
+.user-info {
+  font-size: 13px;
+  color: #888;
+  font-weight: 500;
+}
 
-        .review-image {
-           position: relative;
-           width: 100%;
-           aspect-ratio: 3 / 4; /* 스마트폰 기본 세로 사진 비율 (인스타 느낌을 원하시면 4 / 5) */
-           border-radius: 8px;
-           overflow: hidden;
-           margin-bottom: 12px;
-           background-color: #f0f0f0; /* 사진이 로딩되기 전 깔끔한 배경색 */
-        }
+.review-image {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 4; /* 스마트폰 기본 세로 사진 비율 (인스타 느낌을 원하시면 4 / 5) */
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background-color: #f0f0f0; /* 사진이 로딩되기 전 깔끔한 배경색 */
+}
 
-        .review-image img {
-          width: 100%;
-          height: 100%;
-          object-fit: cover; /* 비율이 약간 달라도 찌그러지지 않고 영역을 꽉 채움 */
-          display: block;
-        }
+.review-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* 비율이 약간 달라도 찌그러지지 않고 영역을 꽉 채움 */
+  display: block;
+}
 
-        .image-count {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background-color: rgba(0, 0, 0, 0.6);
-            color: #fff;
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 12px;
-        }
+.image-count {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background-color: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 12px;
+}
 
-        .review-tags {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-        }
+.review-tags {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 
-        .tag {
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
-        }
+.tag {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
 
-        .tag.pink { background-color: #fce4ec; color: #ad1457; }
-        .tag.blue { background-color: #e3f2fd; color: #1565c0; }
+.tag.pink {
+  background-color: #fce4ec;
+  color: #ad1457;
+}
+.tag.blue {
+  background-color: #e3f2fd;
+  color: #1565c0;
+}
 
-        .review-text {
-            font-size: 14px;
-            color: #333;
-            line-height: 1.4;
-        }
+.review-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
 
-        /* --- 지도 스타일 수정 --- */
-        #tab-smap {
-            background-color: #fff;
-            position: relative;
-        }
-        #smap {
-            width: 100%; 
-            height: 100%; /* 화면 스크롤이 생기지 않도록 100%로 최적화 */
-        }
+/* --- 지도 스타일 수정 --- */
+#tab-smap {
+  background-color: #fff;
+  position: relative;
+}
+#smap {
+  width: 100%;
+  height: 100%; /* 화면 스크롤이 생기지 않도록 100%로 최적화 */
+}
 
+.mission-bg {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background-image: url("../img/lighthouse-path-bg.png");
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  isolation: isolate;
+}
