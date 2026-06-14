@@ -41,6 +41,11 @@ function routeTo(pageId) {
         if(pageId === 'passport') document.querySelectorAll('#global-bottom-nav .nav-item')[2].classList.add('active');
     }
 
+    const progressCard = document.getElementById('progress-card');
+    if (progressCard && progressCard.classList.contains('expanded')) {
+        progressCard.classList.remove('expanded');
+    }
+
     // ★ 지도가 있는 화면이 열렸을 때 지도를 생성하거나 리사이즈
     if (pageId === 'map') {
         setTimeout(() => {
