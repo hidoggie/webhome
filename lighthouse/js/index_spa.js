@@ -652,6 +652,8 @@ function loadDefaultLighthouseMap(lighthouseLatLng) {
 
 function openModal() { document.getElementById('infoModal').style.display = 'flex'; }
 function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
+function emptyopenModal() { document.getElementById('empty-infoModal').style.display = 'flex'; }
+function emptycloseModal() { document.getElementById('empty-infoModal').style.display = 'none'; }
 
 // ==========================================
 // [스와이프 및 클릭 페이지 전환 로직]
