@@ -783,7 +783,7 @@ a:visited {
   justify-content: center;
   align-items: center;
   z-index: 100;
-  animation: fadeIn 0.3s ease;
+  /* animation: fadeIn 0.3s ease;  */
 }
 @keyframes fadeIn {
   from {
@@ -803,6 +803,8 @@ a:visited {
   text-align: center;
   position: relative;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  animation: none !important;
+  transform: none !important;
 }
 
 .close-btn {
@@ -1744,7 +1746,7 @@ a:visited {
 }
 
 /* 팝업 모달창 디자인 */
-.modal-overlay {
+.mission-modal-overlay {
   position: fixed;
   top: 0;
   left: 50%;
@@ -1759,7 +1761,7 @@ a:visited {
   z-index: 100;
 }
 
-.modal-content {
+.mission-modal-content {
   background: white;
   width: 80%;
   border-radius: 20px;
@@ -1787,7 +1789,7 @@ a:visited {
   margin-bottom: 25px;
 }
 
-.action-btn {
+.mission-action-btn {
   background-color: #ff738b;
   color: white;
   border: none;
