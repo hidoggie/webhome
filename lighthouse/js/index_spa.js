@@ -160,7 +160,7 @@ function renderLighthouseList(userLat, userLng) {
         var li = document.createElement('li');
         li.className = `lh-item ${acquiredClass}`;
         li.style.cursor = 'pointer';
-        li.onclick = function() { routeTo('passport'); };
+        li.onclick = function() { routeTo('mission'); };
 
         li.innerHTML = `
             <div class="lh-left">
