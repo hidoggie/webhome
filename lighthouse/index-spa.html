@@ -269,108 +269,111 @@
         </section>
 
         <section id="page-mission" class="page">
-            <nav class="top-nav">
-                <button class="top-item" onclick="switchTab('smap', this)">
-                    <span class="icon"><img src="./img/location-ico.png"></span>
-                    <span class="label">등대 위치</span>
-                </button>
-                <button class="top-item active" onclick="switchTab('mission', this)">
-                    <span class="icon"><img src="./img/mission-ico.png"></span>
-                    <span class="label">미션 안내</span>
-                </button>
-                <button class="top-item" onclick="switchTab('review', this)">
-                    <span class="icon"><img src="./img/photo-place-ico.png"></span>
-                    <span class="label">사진 후기</span>
-                </button>
-            </nav>
+            <div class="mission-bg">
+                <nav class="top-nav">
+                    <button class="top-item" onclick="switchTab('smap', this)">
+                        <span class="icon"><img src="./img/location-ico.png"></span>
+                        <span class="label">등대 위치</span>
+                    </button>
+                    <button class="top-item active" onclick="switchTab('mission', this)">
+                        <span class="icon"><img src="./img/mission-ico.png"></span>
+                        <span class="label">미션 안내</span>
+                    </button>
+                    <button class="top-item" onclick="switchTab('review', this)">
+                        <span class="icon"><img src="./img/photo-place-ico.png"></span>
+                        <span class="label">사진 후기</span>
+                    </button>
+                </nav>
 
-            <main id="tab-smap" class="tab-content">
-                <div id="smap"></div>
-            </main>
+                <main id="tab-smap" class="tab-content">
+                    <div id="smap"></div>
+                </main>
 
-            <main id="tab-mission" class="tab-content active mission-path">
-                <div class="step-container">
-                    <button class="round-btn" onclick="openModal('스탬프 획득 완료')">
-                        <img src="./img/star-button.png" alt="스탬프 버튼">
-                    </button>
-                </div>
-                <div class="step-container">
-                    <!--button class="round-btn" onclick="openModal('AR 인증샷 업로드')"-->
-                    <button class="round-btn" onclick="location.href='./photo-auth2.html'">
-                        <img src="./img/camera-button.png" alt="인증샷 버튼">
-                    </button>
-                </div>
-                <div class="step-container active">
-                    <!--button class="round-btn" onclick="openModal('보물찾기 미션 수행')"-->
-                    <button class="round-btn"
-                        onclick="location.href='https://toysun.github.io/doggie/curved-aframe/hero.html'">
-                        <img src="./img/treasure-button.png" alt="보물찾기 버튼">
-                    </button>
-                </div>
-                <div class="step-container">
-                    <!--button class="round-btn" onclick="openModal('루미 캐릭터 AR 길안내')"-->
-                    <button class="round-btn" onclick="location.href='./lh-navi.html'">
-                        <img src="./img/map-button.png" alt="길안내 버튼">
-                    </button>
-                </div>
-            </main>
-
-            <main id="tab-review" class="tab-content review-list">
-                <div class="review-card">
-                    <div class="review-header">
-                        <div class="user-profile"></div> <span class="user-info">MK109643 · 2025.10.18 오후 2:33</span>
+                <main id="tab-mission" class="tab-content active mission-path">
+                    <div class="step-container">
+                        <button class="round-btn" onclick="openModal('스탬프 획득 완료')">
+                            <img src="./img/star-button.png" alt="스탬프 버튼">
+                        </button>
                     </div>
-                    <div class="review-image">
-                        <div
-                            style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
-                            <img src="./img/photo-demo.jpg" alt="인증사진">
+                    <div class="step-container">
+                        <!--button class="round-btn" onclick="openModal('AR 인증샷 업로드')"-->
+                        <button class="round-btn" onclick="location.href='./photo-auth2.html'">
+                            <img src="./img/camera-button.png" alt="인증샷 버튼">
+                        </button>
+                    </div>
+                    <div class="step-container active">
+                        <!--button class="round-btn" onclick="openModal('보물찾기 미션 수행')"-->
+                        <button class="round-btn"
+                            onclick="location.href='https://toysun.github.io/doggie/curved-aframe/hero.html'">
+                            <img src="./img/treasure-button.png" alt="보물찾기 버튼">
+                        </button>
+                    </div>
+                    <div class="step-container">
+                        <!--button class="round-btn" onclick="openModal('루미 캐릭터 AR 길안내')"-->
+                        <button class="round-btn" onclick="location.href='./lh-navi.html'">
+                            <img src="./img/map-button.png" alt="길안내 버튼">
+                        </button>
+                    </div>
+                </main>
+
+                <main id="tab-review" class="tab-content review-list">
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="user-profile"></div> <span class="user-info">MK109643 · 2025.10.18 오후
+                                2:33</span>
                         </div>
-                        <!--span class="image-count">1/1</span-->
-                    </div>
-                    <div class="review-tags">
-                        <span class="tag pink"># 등대스탬프투어</span>
-                        <span class="tag blue"># 오동도등대</span>
-                    </div>
-                    <p class="review-text">오동도등대 스탬프투어 첫번째 시작 기념</p>
-                </div>
-
-                <div class="review-card">
-                    <div class="review-header">
-                        <div class="user-profile"></div>
-                        <span class="user-info">JK305946 · 2025.11.09 오전 7:18</span>
-                    </div>
-                    <div class="review-image">
-                        <div
-                            style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
-                            <img src="./img/photo-demo2.jpg" alt="인증사진">
+                        <div class="review-image">
+                            <div
+                                style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                                <img src="./img/photo-demo.jpg" alt="인증사진">
+                            </div>
+                            <!--span class="image-count">1/1</span-->
                         </div>
-                    </div>
-                    <div class="review-tags">
-                        <span class="tag pink"># 등대스탬프투어</span>
-                        <span class="tag blue"># 간절곶등대</span>
-                    </div>
-                    <p class="review-text">바다와 함께 AR 캐릭터 인증 완료!</p>
-                </div>
-
-                <div class="review-card">
-                    <div class="review-header">
-                        <div class="user-profile"></div>
-                        <span class="user-info">OW386946 · 2025.10.19 오후 1:18</span>
-                    </div>
-                    <div class="review-image">
-                        <div
-                            style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
-                            <img src="./img/photo-demo3.jpg" alt="인증사진">
+                        <div class="review-tags">
+                            <span class="tag pink"># 등대스탬프투어</span>
+                            <span class="tag blue"># 오동도등대</span>
                         </div>
+                        <p class="review-text">오동도등대 스탬프투어 첫번째 시작 기념</p>
                     </div>
-                    <div class="review-tags">
-                        <span class="tag pink"># 등대스탬프투어</span>
-                        <span class="tag blue"># 간절곶등대</span>
-                    </div>
-                    <p class="review-text">예쁜 AR 캐릭터들과 함께 찰칵~~</p>
-                </div>
 
-            </main>
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="user-profile"></div>
+                            <span class="user-info">JK305946 · 2025.11.09 오전 7:18</span>
+                        </div>
+                        <div class="review-image">
+                            <div
+                                style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                                <img src="./img/photo-demo2.jpg" alt="인증사진">
+                            </div>
+                        </div>
+                        <div class="review-tags">
+                            <span class="tag pink"># 등대스탬프투어</span>
+                            <span class="tag blue"># 간절곶등대</span>
+                        </div>
+                        <p class="review-text">바다와 함께 AR 캐릭터 인증 완료!</p>
+                    </div>
+
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="user-profile"></div>
+                            <span class="user-info">OW386946 · 2025.10.19 오후 1:18</span>
+                        </div>
+                        <div class="review-image">
+                            <div
+                                style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                                <img src="./img/photo-demo3.jpg" alt="인증사진">
+                            </div>
+                        </div>
+                        <div class="review-tags">
+                            <span class="tag pink"># 등대스탬프투어</span>
+                            <span class="tag blue"># 간절곶등대</span>
+                        </div>
+                        <p class="review-text">예쁜 AR 캐릭터들과 함께 찰칵~~</p>
+                    </div>
+
+                </main>
+            </div>
             <div class="modal-overlay" id="missionModal">
                 <div class="modal-content">
                     <button class="close-btn" onclick="closeModal()">X</button>
