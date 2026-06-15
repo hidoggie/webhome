@@ -152,15 +152,17 @@ function routeTo(pageId) {
         .classList.add("active");
   }
 
-  const arVideo = document.getElementById('arjs-video');
-  if (pageId === 'arnavi') {
-      document.body.classList.add('ar-mode'); // Flex 끄기 & 투명 배경
-      const arVideo = document.getElementById('arjs-video');
-      if (arVideo) arVideo.style.display = 'block';
+  const arVideo = document.getElementById("arjs-video");
+  const targets = ["arnavi", "photoauth"];
+
+  if (targets.includes(pageId)) {
+    document.body.classList.add("ar-mode"); // Flex 끄기 & 투명 배경
+    const arVideo = document.getElementById("arjs-video");
+    if (arVideo) arVideo.style.display = "block";
   } else {
-      document.body.classList.remove('ar-mode'); // 원래 블루 배경 & Flex 복구
-      const arVideo = document.getElementById('arjs-video');
-      if (arVideo) arVideo.style.display = 'none';
+    document.body.classList.remove("ar-mode"); // 원래 블루 배경 & Flex 복구
+    const arVideo = document.getElementById("arjs-video");
+    if (arVideo) arVideo.style.display = "none";
   }
 
   const progressCard = document.getElementById("progress-card");
@@ -660,11 +662,18 @@ function loadDefaultLighthouseMap(lighthouseLatLng) {
   });
 }
 
-
-function openModal() { document.getElementById('infoModal').style.display = 'flex'; }
-function closeModal() { document.getElementById('infoModal').style.display = 'none'; }
-function emptyopenModal() { document.getElementById('empty-infoModal').style.display = 'flex'; }
-function emptycloseModal() { document.getElementById('empty-infoModal').style.display = 'none'; }
+function openModal() {
+  document.getElementById("infoModal").style.display = "flex";
+}
+function closeModal() {
+  document.getElementById("infoModal").style.display = "none";
+}
+function emptyopenModal() {
+  document.getElementById("empty-infoModal").style.display = "flex";
+}
+function emptycloseModal() {
+  document.getElementById("empty-infoModal").style.display = "none";
+}
 
 // ==========================================
 // [스와이프 및 클릭 페이지 전환 로직]
@@ -675,18 +684,18 @@ let touchendX = 0;
 
 // 현재 활성화된 페이지에 따라 이전/다음 페이지 ID를 반환하는 함수
 function getPassportPagination() {
-  const activePage = document.querySelector('.page.active');
+  const activePage = document.querySelector(".page.active");
   if (!activePage) return { prev: null, next: null };
 
   const pageId = activePage.id;
 
   switch (pageId) {
-    case 'page-passport':
-      return { prev: null, next: 'passport-sub' };
-    case 'page-passport-sub':
-      return { prev: 'passport', next: 'passport-empty' };
-    case 'page-passport-empty':
-      return { prev: 'passport-sub', next: null };
+    case "page-passport":
+      return { prev: null, next: "passport-sub" };
+    case "page-passport-sub":
+      return { prev: "passport", next: "passport-empty" };
+    case "page-passport-empty":
+      return { prev: "passport-sub", next: null };
     default:
       // 여권 관련 페이지가 아닐 때는 스와이프 동작 안 함
       return { prev: null, next: null };
@@ -722,7 +731,7 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("a, button, [onclick], .modal-content")) return;
 
   const { prev, next } = getPassportPagination();
-  
+
   // 이동할 이전/다음 페이지가 없거나, 여권 탭이 아니면 클릭 동작 무시
   if (!prev && !next) return;
 
@@ -740,52 +749,57 @@ document.addEventListener("click", (e) => {
 });
 
 //AR Navi
-        // 1. 등대 데이터 
-        const lighthouses = [
-            { title: "간절곶등대", lat: 35.3590, lng: 129.3606 },
-            { title: "영도등대", lat: 35.0523, lng: 129.0921 },
-            { title: "산지등대", lat: 33.5214, lng: 126.5456 },
-            { title: "소매물도등대", lat: 34.6196, lng: 128.5479 },
-            { title: "오동도등대", lat: 34.7442, lng: 127.7677 },
-            { title: "등대", lat: 37.4891, lng: 126.9569 }   //test용
-            // 필요에 따라 추가
-        ];
+// 1. 등대 데이터
+const lighthouses = [
+  { title: "간절곶등대", lat: 35.359, lng: 129.3606 },
+  { title: "영도등대", lat: 35.0523, lng: 129.0921 },
+  { title: "산지등대", lat: 33.5214, lng: 126.5456 },
+  { title: "소매물도등대", lat: 34.6196, lng: 128.5479 },
+  { title: "오동도등대", lat: 34.7442, lng: 127.7677 },
+  { title: "등대", lat: 37.4891, lng: 126.9569 }, //test용
+  // 필요에 따라 추가
+];
 
-        let targetLighthouse = null;
-        let minimap = null;
-        let myLocMarker, targetMarker;
-        let watchId;
+let targetLighthouse = null;
+let minimap = null;
+let myLocMarker, targetMarker;
+let watchId;
 
-       // 시작 버튼 클릭 시 실행
-        async function startNavigation() {
-            // 1. [iOS 13+ 전용] 기기 방향(나침반/자이로스코프) 권한 명시적 요청
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try {
-                    const permission = await DeviceOrientationEvent.requestPermission();
-                    if (permission !== 'granted') {
-                        alert("AR 길안내를 위해 기기 방향 센서 권한이 필요합니다.");
-                        // 권한 거부 시에도 지도는 작동해야 하므로 계속 진행
-                    }
-                } catch (error) {
-                    console.error("방향 센서 권한 요청 에러:", error);
-                }
-            }
+// 시작 버튼 클릭 시 실행
+async function startNavigation() {
+  // 1. [iOS 13+ 전용] 기기 방향(나침반/자이로스코프) 권한 명시적 요청
+  if (
+    typeof DeviceOrientationEvent !== "undefined" &&
+    typeof DeviceOrientationEvent.requestPermission === "function"
+  ) {
+    try {
+      const permission = await DeviceOrientationEvent.requestPermission();
+      if (permission !== "granted") {
+        alert("AR 길안내를 위해 기기 방향 센서 권한이 필요합니다.");
+        // 권한 거부 시에도 지도는 작동해야 하므로 계속 진행
+      }
+    } catch (error) {
+      console.error("방향 센서 권한 요청 에러:", error);
+    }
+  }
 
-            // 2. 시작 화면 숨기고 UI 표시
-            document.getElementById("start_area").style.display = "none";
-            document.getElementById("minimap-wrapper").style.display = "block";
-            document.getElementById("info-panel").style.display = "block";
-            document.body.classList.add('ar-mode');
+  // 2. 시작 화면 숨기고 UI 표시
+  document.getElementById("start_area").style.display = "none";
+  document.getElementById("minimap-wrapper").style.display = "block";
+  document.getElementById("info-panel").style.display = "block";
+  document.body.classList.add("ar-mode");
 
-            const themeMeta = document.getElementById("theme-color-meta");
-            if (themeMeta) {
-               const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-               const originalColor = isDarkMode ? "#000000" : "#f1f3f4";
-               themeMeta.setAttribute("content", originalColor);
-            }
-            // 3. 버튼을 누른 직후에 AR 씬(카메라+GPS)을 동적으로 삽입 (권한 요청 팝업 발생 지점)
-            const arContainer = document.getElementById("ar-container");
-            arContainer.innerHTML = `
+  const themeMeta = document.getElementById("theme-color-meta");
+  if (themeMeta) {
+    const isDarkMode =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const originalColor = isDarkMode ? "#000000" : "#f1f3f4";
+    themeMeta.setAttribute("content", originalColor);
+  }
+  // 3. 버튼을 누른 직후에 AR 씬(카메라+GPS)을 동적으로 삽입 (권한 요청 팝업 발생 지점)
+  const arContainer = document.getElementById("ar-container");
+  arContainer.innerHTML = `
                 <a-scene embedded id="ar-scene" 
                               vr-mode-ui="enabled: false" 
                               device-orientation-permission-ui="enabled: false"
@@ -801,101 +815,348 @@ document.addEventListener("click", (e) => {
                 </a-scene>
             `;
 
-            // 4. 미니맵 및 위치 추적 실행
-            initMap();
-            startTracking();
-        }
+  // 4. 미니맵 및 위치 추적 실행
+  initMap();
+  startTracking();
+}
 
-        // 네이버 미니맵 초기화
-        function initMap() {
-            minimap = new naver.maps.Map('minimap', {
-                center: new naver.maps.LatLng(37.5666, 126.9784),
-                zoom: 17, // 최대 줌인
-                disableKinematicPan: true, mapDataControl: false, scaleControl: false, logoControl: false, zoomControl: false, draggable: false
+// 네이버 미니맵 초기화
+function initMap() {
+  minimap = new naver.maps.Map("minimap", {
+    center: new naver.maps.LatLng(37.5666, 126.9784),
+    zoom: 17, // 최대 줌인
+    disableKinematicPan: true,
+    mapDataControl: false,
+    scaleControl: false,
+    logoControl: false,
+    zoomControl: false,
+    draggable: false,
+  });
+}
+
+// 실시간 위치 추적 및 로직 처리
+function startTracking() {
+  if (navigator.geolocation) {
+    watchId = navigator.geolocation.watchPosition(
+      (position) =>
+        processLocationUpdate(
+          position.coords.latitude,
+          position.coords.longitude,
+        ),
+      (error) => console.warn(error),
+      { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 },
+    );
+  } else {
+    alert("GPS를 지원하지 않습니다.");
+  }
+}
+
+function processLocationUpdate(lat, lng) {
+  const currentLatLng = new naver.maps.LatLng(lat, lng);
+
+  // 미니맵 업데이트: 중심 이동 및 내 마커 표시
+  minimap.setCenter(currentLatLng);
+  if (!myLocMarker) {
+    myLocMarker = new naver.maps.Marker({
+      position: currentLatLng,
+      map: minimap,
+      icon: {
+        content:
+          '<div style="width:16px;height:16px;background:red;border-radius:50%;border:2px solid white;"></div>',
+      },
+    });
+  } else {
+    myLocMarker.setPosition(currentLatLng);
+  }
+
+  // 최초 1회, 가장 가까운 등대 타겟팅 및 AR 목적지 세팅
+  if (!targetLighthouse) {
+    targetLighthouse = findNearestLighthouse(lat, lng);
+
+    // AR 타겟 (m1) 위치 부여
+    let m1 = document.getElementById("m1");
+    m1.setAttribute(
+      "gps-projected-entity-place",
+      `latitude: ${targetLighthouse.lat}; longitude: ${targetLighthouse.lng};`,
+    );
+    m1.setAttribute("visible", "true");
+  }
+
+  // 거리 계산 및 UI/선 업데이트
+  const targetLatLng = new naver.maps.LatLng(
+    targetLighthouse.lat,
+    targetLighthouse.lng,
+  );
+  const distance = Math.round(
+    calculateDistance(lat, lng, targetLighthouse.lat, targetLighthouse.lng),
+  );
+
+  document.getElementById("distance-info").innerText =
+    `${targetLighthouse.title}까지 ${distance}m`;
+
+  // 미니맵 목적지 핀 및 점선 그리기
+  if (!targetMarker) {
+    targetMarker = new naver.maps.Marker({
+      position: targetLatLng,
+      map: minimap,
+      icon: {
+        content:
+          '<div style="font-size:20px;"><img src="./img/lighthouse-i.png" style="width:40px;height:40px;"></div>',
+      },
+    });
+  }
+
+  // 도착 및 범위 이탈 체크 (기존 코드 기준치 반영)
+  if (distance > 1000) {
+    showAlert("거리가 너무 멀어요!<br>등대 근처에서 다시 시도해 주세요.");
+    navigator.geolocation.clearWatch(watchId);
+  } else if (distance < 10) {
+    showAlert("축하합니다!<br>등대에 도착했습니다.");
+    navigator.geolocation.clearWatch(watchId);
+  }
+}
+
+// 가장 가까운 등대 찾기
+function findNearestLighthouse(lat, lng) {
+  let minDistance = Infinity;
+  let nearest = lighthouses[0];
+  lighthouses.forEach((lh) => {
+    let dist = calculateDistance(lat, lng, lh.lat, lh.lng);
+    if (dist < minDistance) {
+      minDistance = dist;
+      nearest = lh;
+    }
+  });
+  return nearest;
+}
+
+// 알림 모달
+function showAlert(msg) {
+  document.getElementById("alert-msg").innerHTML = msg;
+  document.getElementById("alert-modal").style.display = "flex";
+}
+
+function arnavicloseModal() {
+  document.getElementById("alert-modal").style.display = "none";
+}
+
+//인증샷 촬영
+document.addEventListener("DOMContentLoaded", () => {
+  const scene = document.querySelector("a-scene");
+  const uiLayer = document.getElementById("custom-ui-layer");
+
+  // 미리보기 요소
+  const previewScreen = document.getElementById("preview-screen");
+  const previewImg = document.getElementById("preview-image");
+  const previewVid = document.getElementById("preview-video");
+  const captureTimeText = document.getElementById("capture-time");
+  const btnSaveStamp = document.getElementById("btn-save-stamp");
+
+  // 모달 요소
+  const modalConfirm = document.getElementById("modal-confirm");
+  const btnConfirmCancel = document.getElementById("btn-confirm-cancel");
+  const btnConfirmSave = document.getElementById("btn-confirm-save");
+
+  const modalShare = document.getElementById("modal-share");
+  const btnPostReview = document.getElementById("btn-post-review");
+  const btnPostShare = document.getElementById("btn-post-share");
+
+  // 임시 저장용 데이터 변수
+  let capturedDataUrl = null;
+  let capturedFile = null;
+
+  // --- [1] 사진/영상 촬영 완료 이벤트 감지 ---
+  window.addEventListener("mediarecorder-photocomplete", (e) => {
+    console.log("📸 photo 이벤트 발생!", e.detail);
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      addTimestampToImage(ev.target.result, (composed) => {
+        capturedDataUrl = composed;
+
+        fetch(composed)
+          .then((r) => r.blob())
+          .then((blob) => {
+            capturedFile = new File([blob], "lighthouse-stamp.jpg", {
+              type: "image/jpeg",
             });
-        }
+          });
 
-        // 실시간 위치 추적 및 로직 처리
-        function startTracking() {
-            if (navigator.geolocation) {
-                watchId = navigator.geolocation.watchPosition(
-                    position => processLocationUpdate(position.coords.latitude, position.coords.longitude),
-                    error => console.warn(error),
-                    { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
-                );
-            } else {
-                alert("GPS를 지원하지 않습니다.");
-            }
-        }
+        showPreview(composed, "photo");
+      });
+    };
+    reader.readAsDataURL(e.detail.blob);
+  });
 
-        function processLocationUpdate(lat, lng) {
-            const currentLatLng = new naver.maps.LatLng(lat, lng);
-            
-            // 미니맵 업데이트: 중심 이동 및 내 마커 표시
-            minimap.setCenter(currentLatLng);
-            if (!myLocMarker) {
-                myLocMarker = new naver.maps.Marker({
-                    position: currentLatLng, map: minimap,
-                    icon: { content: '<div style="width:16px;height:16px;background:red;border-radius:50%;border:2px solid white;"></div>' }
-                });
-            } else {
-                myLocMarker.setPosition(currentLatLng);
-            }
+  // ✅ 핵심 함수: Canvas로 시간 합성
+  function addTimestampToImage(dataUrl, callback) {
+    const img = new Image();
 
-            // 최초 1회, 가장 가까운 등대 타겟팅 및 AR 목적지 세팅
-            if (!targetLighthouse) {
-                targetLighthouse = findNearestLighthouse(lat, lng);
-                
-                // AR 타겟 (m1) 위치 부여
-                let m1 = document.getElementById('m1');
-                m1.setAttribute('gps-projected-entity-place', `latitude: ${targetLighthouse.lat}; longitude: ${targetLighthouse.lng};`);
-                m1.setAttribute('visible', 'true');
-            }
+    img.onload = () => {
+      // ===== 최종 출력 크기 =====
+      const targetWidth = 1080;
+      const targetHeight = 1350; // 4:5 비율
 
-            // 거리 계산 및 UI/선 업데이트
-            const targetLatLng = new naver.maps.LatLng(targetLighthouse.lat, targetLighthouse.lng);
-            const distance = Math.round(calculateDistance(lat, lng, targetLighthouse.lat, targetLighthouse.lng));
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
 
-            document.getElementById('distance-info').innerText = `${targetLighthouse.title}까지 ${distance}m`;
+      const ctx = canvas.getContext("2d");
 
-            // 미니맵 목적지 핀 및 점선 그리기
-            if (!targetMarker) {
-                targetMarker = new naver.maps.Marker({
-                    position: targetLatLng, map: minimap,
-                    icon: { content: '<div style="font-size:20px;"><img src="./img/lighthouse-i.png" style="width:40px;height:40px;"></div>' }
-                });
-             }
- 
-            // 도착 및 범위 이탈 체크 (기존 코드 기준치 반영)
-            if (distance > 1000) {
-                showAlert("거리가 너무 멀어요!<br>등대 근처에서 다시 시도해 주세요.");
-                navigator.geolocation.clearWatch(watchId);
-            } else if (distance < 10) {
-                showAlert("축하합니다!<br>등대에 도착했습니다.");
-                navigator.geolocation.clearWatch(watchId);
-            }
-        }
+      // ===== 중앙 크롭 계산 =====
+      const targetRatio = targetWidth / targetHeight;
+      const imageRatio = img.width / img.height;
 
-        // 가장 가까운 등대 찾기
-        function findNearestLighthouse(lat, lng) {
-            let minDistance = Infinity;
-            let nearest = lighthouses[0];
-            lighthouses.forEach(lh => {
-                let dist = calculateDistance(lat, lng, lh.lat, lh.lng);
-                if (dist < minDistance) {
-                    minDistance = dist;
-                    nearest = lh;
-                }
-            });
-            return nearest;
-        }
+      let sx, sy, sw, sh;
 
-        // 알림 모달
-        function showAlert(msg) {
-            document.getElementById('alert-msg').innerHTML = msg;
-            document.getElementById('alert-modal').style.display = 'flex';
-        }
+      if (imageRatio > targetRatio) {
+        // 사진이 더 넓음
+        sh = img.height;
+        sw = sh * targetRatio;
 
-        function arnavicloseModal() {
-            document.getElementById('alert-modal').style.display = 'none';
-        }
+        sx = (img.width - sw) / 2;
+        sy = 0;
+      } else {
+        // 사진이 더 길쭉함
+        sw = img.width;
+        sh = sw / targetRatio;
+
+        sx = 0;
+        sy = (img.height - sh) * 0.35;
+      }
+
+      // ===== 중앙 크롭 후 1080x1350으로 그림 =====
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, targetWidth, targetHeight);
+
+      // ===== 시간 스탬프 =====
+      const now = new Date();
+
+      const timeStr =
+        `${now.getFullYear()}.` +
+        `${String(now.getMonth() + 1).padStart(2, "0")}.` +
+        `${String(now.getDate()).padStart(2, "0")} ` +
+        `${String(now.getHours()).padStart(2, "0")}:` +
+        `${String(now.getMinutes()).padStart(2, "0")}`;
+
+      const lighthouseName =
+        document.getElementById("lighthouse-name").innerText;
+
+      const fontSize = 42;
+
+      ctx.font = `bold ${fontSize}px Arial`;
+
+      ctx.shadowColor = "rgba(0,0,0,0.8)";
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetX = 2;
+      ctx.shadowOffsetY = 2;
+
+      ctx.fillStyle = "white";
+
+      // 등대명
+      ctx.textAlign = "left";
+      ctx.fillText(lighthouseName, 40, targetHeight - 50);
+
+      // 시간
+      ctx.textAlign = "right";
+      ctx.fillText(timeStr, targetWidth - 40, targetHeight - 50);
+
+      callback(canvas.toDataURL("image/jpeg", 0.92));
+    };
+
+    img.src = dataUrl;
+  }
+
+  function showPreview(mediaUrl, type) {
+    uiLayer.classList.remove("hidden");
+    previewScreen.classList.remove("hidden");
+
+    document.querySelector(".info-overlay").classList.add("hidden");
+
+    if (type === "photo") {
+      previewImg.src = mediaUrl;
+      previewImg.classList.remove("hidden");
+      previewVid.classList.add("hidden");
+    } else {
+      previewVid.src = mediaUrl;
+      previewVid.classList.remove("hidden");
+      previewImg.classList.add("hidden");
+      previewVid.play();
+    }
+  }
+
+  // --- [2] 스탬프북 저장 (확인 모달 띄우기) ---
+  btnSaveStamp.addEventListener("click", () => {
+    modalConfirm.classList.remove("hidden");
+  });
+
+  // 저장 취소
+  btnConfirmCancel.addEventListener("click", () => {
+    modalConfirm.classList.add("hidden");
+  });
+
+  // DB 임시 저장 및 공유 모달 띄우기
+  btnConfirmSave.addEventListener("click", () => {
+    // TODO: 서버 API 통신 로직 추가 (여권번호, 등대위치, 촬영시간, 사진 데이터 전송)
+    console.log("DB 저장 완료: 스탬프 획득 처리됨!");
+
+    modalConfirm.classList.add("hidden");
+    modalShare.classList.remove("hidden"); // 3번 프로세스로 넘어감
+  });
+
+  // --- [4] 사진후기 게시 버튼 로직 ---
+  btnPostReview.addEventListener("click", () => {
+    // TODO: 사용자 DB 정보에서 게시 flag = true 처리 로직
+    console.log("게시 flag true 업데이트 완료 (game-process.html에 반영)");
+    alert("사진 후기가 성공적으로 게시되었습니다.");
+    resetUI();
+  });
+
+  // --- [5] 게시 후 SNS 공유 버튼 로직 ---
+  btnPostShare.addEventListener("click", async () => {
+    if (!capturedFile) {
+      alert("사진 준비 중입니다. 잠시 후 다시 눌러주세요.");
+      return;
+    }
+
+    if (navigator.canShare && navigator.canShare({ files: [capturedFile] })) {
+      navigator
+        .share({
+          files: [capturedFile],
+          title: "등대 스탬프 투어",
+          text: "호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!",
+        })
+        .then(() => {
+          resetUI();
+        })
+        .catch((err) => {
+          console.log("공유 취소 또는 실패", err);
+          resetUI();
+        });
+    } else if (navigator.share) {
+      navigator
+        .share({
+          title: "등대 스탬프 투어",
+          text: "호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!",
+        })
+        .then(() => resetUI())
+        .catch(() => resetUI());
+    } else {
+      alert("해당 브라우저에서는 공유 기능을 지원하지 않습니다.");
+      resetUI();
+    }
+  });
+
+  // UI 초기화 및 AR 화면 복귀
+  function resetUI() {
+    uiLayer.classList.add("hidden");
+    previewScreen.classList.add("hidden");
+    modalConfirm.classList.add("hidden");
+    modalShare.classList.add("hidden");
+    previewImg.src = "";
+    previewVid.src = "";
+    capturedDataUrl = null;
+    capturedFile = null;
+  }
+
+  window.resetUI = resetUI;
+});
