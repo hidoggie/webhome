@@ -24,15 +24,12 @@
                 <div class="cloud cloud-2"></div>
                 <div class="cloud cloud-3"></div>
                 <div class="cloud cloud-4"></div>
-
                 <div class="seagull sg-1"></div>
                 <div class="seagull sg-2"></div>
                 <div class="seagull sg-3"></div>
-
                 <div class="title-container">
                     <img src="./img/intro-text.png" alt="페이지 타이틀">
                 </div>
-
                 <div class="star star-1">
                     <svg width="42" height="42" viewBox="0 0 42 42">
                         <polygon points="21,4 25,15 37,15 27,22 31,34 21,27 11,34 15,22 5,15 17,15" fill="#ffd700"
@@ -45,20 +42,17 @@
                             stroke="#f0a500" stroke-width="1" />
                     </svg>
                 </div>
-
                 <div class="ocean">
                     <div class="wave wave-1"></div>
                     <div class="wave wave-2"></div>
                     <div class="wave wave-3"></div>
                 </div>
-
                 <div class="boat">
                     <div class="boat-mast"></div>
                     <div class="boat-body">
                         <div class="boat-cabin"></div>
                     </div>
                 </div>
-
                 <div class="pier">
                     <div class="fence-post"></div>
                     <div class="fence-post"></div>
@@ -70,7 +64,6 @@
                     <div class="fence-post"></div>
                     <div class="fence-post"></div>
                 </div>
-
                 <div class="lighthouse-right">
                     <div class="lh-light-glow"></div>
                     <div class="lh-top"></div>
@@ -85,39 +78,31 @@
                     <div class="lh-base"></div>
                     <div class="lh-rock"></div>
                 </div>
-
                 <div class="mascot">
                     <div class="mascot-inner"><img src="./img/lumi-wink-2.gif" alt="AR 등대 스탬프투어 마스코트 루미"></div>
                 </div>
-
                 <div class="btn">
                     <button class="btn-start" onclick="openPassportModal()">시작하기</button>
                 </div>
-
             </div>
 
             <div id="passportModal" class="modal-overlay">
                 <div class="modal-content">
                     <button class="close-btn" onclick="closePassportModal()">×</button>
                     <div class="modal-header">나의 등대 여권 발급</div>
-
                     <div class="new-user-section">
                         <div id="captureArea">
                             <p class="warning-text">브라우저나 기기 변경 시 이력을 불러오기 위해<br>아래 <strong>여권 번호</strong>를 복사하거나 이미지로
                                 저장해주세요!</p>
                             <div class="passport-id-box" id="newPassportId">생성 중...</div>
                         </div>
-
                         <div class="action-buttons">
                             <button class="btn-copy" onclick="copyPassportId()">번호 복사</button>
                             <button class="btn-copy" onclick="savePassportImage()">이미지 저장</button>
                         </div>
-
                         <button class="btn-action btn-coral" onclick="startNewJourney()">새로 시작하기</button>
                     </div>
-
                     <div class="divider"><span>또는</span></div>
-
                     <div class="existing-user-section">
                         <input type="text" id="existingPassportId" class="input-passport" placeholder="기존 여권 번호 입력"
                             autocomplete="off">
@@ -127,13 +112,10 @@
             </div>
         </section>
 
-
         <section id="page-map" class="page">
             <header class="header">
                 <div class="header-top">
-                    <!--button class="back-btn"><img src="./img/back_white.png" width="30" height="30"></button-->
                     <h1 class="title">AR 등대 스탬프투어</h1>
-                    <!--div class="spacer"></div-->
                 </div>
                 <p class="map-subtitle">등대 위치 & 스탬프 인증 현황</p>
                 <!--div class="header-icon">🗼</div-->
@@ -144,17 +126,14 @@
                     <!--span class="map-placeholder-text">지도 API 로드 영역</span-->
                 </div>
             </main>
-
             <audio id="audioPlayer" preload="none">
                 <source id="audioSource" src="" type="audio/mpeg">
             </audio>
-
             <div class="popup-overlay" id="popupOverlay" onclick="closePopupOutside(event)">
                 <div class="popup-card" id="popupCard">
                     <div class="card-header">
                         <p class="card-title">등대 정보</p>
                     </div>
-
                     <div class="top-actions">
                         <button class="action-btn" id="audioBtn" aria-label="음성 안내 재생" onclick="toggleAudio()">
                             <svg class="sound-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -169,7 +148,6 @@
                                 <div class="wave-bar"></div>
                             </div>
                         </button>
-
                         <button class="action-btn" id="locationBtn" aria-label="지도 앱으로 위치 확인" onclick="openAppModal()">
                             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -177,16 +155,12 @@
                             </svg>
                         </button>
                     </div>
-
                     <div class="circle-image-wrap">
                         <img class="circle-image" id="lighthouseImg" src="" alt="등대 이미지">
                         <span class="circle-image-label" id="lighthouseName">등대이름</span>
                     </div>
-
                     <p class="card-desc" id="lighthouseDesc">등대 설명</p>
-
                     <div class="divider"></div>
-
                     <div class="card-address">
                         📍 <span id="lighthouseAddr">주소 정보</span>
                     </div>
@@ -235,7 +209,6 @@
                 </div>
             </div>
 
-
             <div class="progress-card" id="progress-card">
                 <div class="progress-header" id="toggle-progress">
                     <div class="progress-title">
@@ -249,9 +222,7 @@
                         <button class="expand-btn" id="expand-btn">▼</button>
                     </div>
                 </div>
-
                 <div class="expandable-area" id="expandable-area">
-
                     <div class="progress-bar-container">
                         <div class="progress-track">
                             <div class="progress-fill" id="progress-fill"></div>
@@ -259,14 +230,11 @@
                                     height="30"></div>
                         </div>
                     </div>
-
                     <ul class="lighthouse-list">
                     </ul>
                 </div>
             </div>
-
             </div>
-
         </section>
 
         <section id="page-mission" class="page">
@@ -285,11 +253,9 @@
                         <span class="label">사진 후기</span>
                     </button>
                 </nav>
-
                 <main id="tab-smap" class="tab-content">
                     <div id="smap"></div>
                 </main>
-
                 <main id="tab-mission" class="tab-content active mission-path">
                     <div class="step-container">
                         <button class="round-btn" onclick="openModal('스탬프 획득 완료')">
@@ -297,21 +263,18 @@
                         </button>
                     </div>
                     <div class="step-container">
-                        <!--button class="round-btn" onclick="openModal('AR 인증샷 업로드')"-->
                         <button class="round-btn" onclick="location.href='./photo-auth2.html'">
                             <img src="./img/camera-button.png" alt="인증샷 버튼">
                         </button>
                     </div>
                     <div class="step-container active">
-                        <!--button class="round-btn" onclick="openModal('보물찾기 미션 수행')"-->
                         <button class="round-btn"
                             onclick="location.href='https://toysun.github.io/doggie/curved-aframe/hero.html'">
                             <img src="./img/treasure-button.png" alt="보물찾기 버튼">
                         </button>
                     </div>
                     <div class="step-container">
-                        <!--button class="round-btn" onclick="openModal('루미 캐릭터 AR 길안내')"-->
-                        <button class="round-btn" onclick="location.href='./lh-navi.html'">
+                        <button class="round-btn" onclick="routeTo('arnavi')">
                             <img src="./img/map-button.png" alt="길안내 버튼">
                         </button>
                     </div>
@@ -336,7 +299,6 @@
                         </div>
                         <p class="review-text">오동도등대 스탬프투어 첫번째 시작 기념</p>
                     </div>
-
                     <div class="review-card">
                         <div class="review-header">
                             <div class="user-profile"></div>
@@ -354,7 +316,6 @@
                         </div>
                         <p class="review-text">바다와 함께 AR 캐릭터 인증 완료!</p>
                     </div>
-
                     <div class="review-card">
                         <div class="review-header">
                             <div class="user-profile"></div>
@@ -372,7 +333,6 @@
                         </div>
                         <p class="review-text">예쁜 AR 캐릭터들과 함께 찰칵~~</p>
                     </div>
-
                 </main>
             </div>
             <div class="mission-modal-overlay" id="missionModal">
@@ -382,7 +342,6 @@
                     <button class="mission-action-btn">미션 바로가기</button>
                 </div>
             </div>
-
         </section>
 
         <section id="page-passport" class="page">
@@ -404,9 +363,7 @@
                         <div class="title-area">
                             <h1>AR 등대여권</h1>
                         </div>
-
                         <div class="ticket-area">
-                            <!--img src="./img/stamp-preview-1.png" alt="등대 스탬프" class="stamp-img"-->
                             <img src="./img/stamp-ganjolgot.png" alt="등대 스탬프" class="stamp-img">
                             <div class="stamp-time">2026.05.28 12:36</div>
                         </div>
@@ -427,16 +384,11 @@
                 </div>
 
                 <div class="cards-section">
-
                     <div class="photo-card">
                         <img src="./img/photo-demo.jpg">
                     </div>
-
                     <div class="info-card">
                         <img src="./img/photo-demo-2.jpg" style="cursor: pointer;" onclick="openModal()">
-
-                        <!--hr class="info-divider"-->
-
                         <div class="review-space">
                             <div class="hashtags">
                                 <span class="hashtag pink"># 등대스탬프투어</span>
@@ -444,15 +396,12 @@
                             </div>
                             <p class="subtitle">스탬프투어 첫번째 시작이다... 나머지도 열심히 모아서 꼭 완주해야지~~</p>
                         </div>
-
                     </div>
-
                 </div>
 
                 <div id="infoModal" class="info-modal-overlay">
                     <div class="info-modal-content">
                         <button class="modal-close" onclick="closeModal()">×</button>
-
                         <div class="modal-body">
                             <div class="info-group">
                                 <div class="info-label">불 밝힌날 : </div>
@@ -477,7 +426,6 @@
                                 <div class="info-value" id="val-dayoff">매주 월요일 휴관</div>
                             </div>
                         </div>
-
                         <div class="modal-footer">
                             <button class="btn-ok" onclick="closeModal()">OK</button>
                         </div>
@@ -518,21 +466,15 @@
                 </div>
 
                 <div class="cards-section">
-
                     <div class="photo-card">
                         <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path
                                 d="M4 8V19C4 19.55 4.45 20 5 20H19C19.55 20 20 19.55 20 19V8C20 7.45 19.55 7 19 7H16.83L15 5H9L7.17 7H5C4.45 7 4 7.45 4 8ZM12 18C9.79 18 8 16.21 8 14C8 11.79 9.79 10 12 10C14.21 10 16 11.79 16 14C16 16.21 14.21 18 12 18ZM12 11.5C10.62 11.5 9.5 12.62 9.5 14C9.5 15.38 10.62 16.5 12 16.5C13.38 16.5 14.5 15.38 14.5 14C14.5 12.62 13.38 11.5 12 11.5Z" />
                         </svg>
                         <p>인증샷을<br>남겨보세요!</p>
-                        <!--img src="./img/photo-demo.jpg"-->
                     </div>
-
                     <div class="info-card">
                         <img src="./img/photo-demo-3.jpg" style="cursor: pointer;" onclick="emptyopenModal()">
-
-                        <!--hr class="info-divider"-->
-
                         <div class="review-space">
                             <div class="hashtags">
                                 <span class="hashtag pink"># 등대스탬프투어</span>
@@ -540,15 +482,12 @@
                             </div>
                             <p class="subtitle"></p>
                         </div>
-
                     </div>
-
                 </div>
 
                 <div id="empty-infoModal" class="info-modal-overlay">
                     <div class="info-modal-content">
                         <button class="modal-close" onclick="emptycloseModal()">×</button>
-
                         <div class="modal-body">
                             <div class="info-group">
                                 <div class="info-label">불 밝힌날 :</div>
@@ -573,14 +512,34 @@
                                 <div class="info-value" id="val-dayoff">매주 월요일 및 설·추석 당일 휴관</div>
                             </div>
                         </div>
-
                         <div class="modal-footer">
                             <button class="btn-ok" onclick="emptycloseModal()">OK</button>
                         </div>
                     </div>
                 </div>
-
             </div>
+        </section>
+
+        <section id="page-arnavi" class="page">
+            <div id="start_area">
+                <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
+                <img src="./img/ar-navi-text.png" alt="AR 등대 길찾기" width="200">
+                <p style="color: #066265; font-weight:bold;">증강현실(AR) 사용시,<br>주변 사물과 부딪치지 않도록 주의하세요.</p>
+                <button id="start_btn" onclick="startNavigation()">안내 시작</button>
+            </div>
+            <div id="minimap-wrapper">
+                <div id="minimap"></div>
+            </div>
+            <div class="info-panel" id="info-panel">
+                <p class="distance-text" id="distance-info">가까운 등대 찾는 중...</p>
+            </div>
+            <div class="arnavi-modal" id="alert-modal">
+                <div class="arnavi-modal-content">
+                    <p id="alert-msg"></p>
+                    <button class="btn-confirm" onclick="arnavicloseModal()">확인</button>
+                </div>
+            </div>
+            <div class="ar-overlay" id="ar-container"></div>
         </section>
 
     </main>
@@ -601,7 +560,7 @@
     </nav>
 
     <script src="js/index_spa.js"></script>
-    <!--script src="./js/draw_map.js"></script-->
+
 </body>
 
 </html>
