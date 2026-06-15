@@ -152,6 +152,17 @@ function routeTo(pageId) {
         .classList.add("active");
   }
 
+  const arVideo = document.getElementById('arjs-video');
+  if (pageId === 'arnavi') {
+      // AR 화면일 때는 body의 파란 배경을 투명하게 만들어 카메라가 보이게 함
+      document.body.style.background = 'transparent';
+      if (arVideo) arVideo.style.display = 'block';
+  } else {
+      // 다른 화면일 때는 원래 파란 배경 복구 및 카메라 숨김
+      document.body.style.background = '#1679bb';
+      if (arVideo) arVideo.style.display = 'none';
+  }
+
   const progressCard = document.getElementById("progress-card");
   if (progressCard && progressCard.classList.contains("expanded")) {
     progressCard.classList.remove("expanded");
@@ -764,6 +775,7 @@ document.addEventListener("click", (e) => {
             document.getElementById("start_area").style.display = "none";
             document.getElementById("minimap-wrapper").style.display = "block";
             document.getElementById("info-panel").style.display = "block";
+            document.body.style.background = 'transparent';
 
             const themeMeta = document.getElementById("theme-color-meta");
             if (themeMeta) {
