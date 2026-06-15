@@ -154,12 +154,12 @@ function routeTo(pageId) {
 
   const arVideo = document.getElementById('arjs-video');
   if (pageId === 'arnavi') {
-      // AR 화면일 때는 body의 파란 배경을 투명하게 만들어 카메라가 보이게 함
-      document.body.style.background = 'transparent';
+      document.body.classList.add('ar-mode'); // Flex 끄기 & 투명 배경
+      const arVideo = document.getElementById('arjs-video');
       if (arVideo) arVideo.style.display = 'block';
   } else {
-      // 다른 화면일 때는 원래 파란 배경 복구 및 카메라 숨김
-      document.body.style.background = '#1679bb';
+      document.body.classList.remove('ar-mode'); // 원래 블루 배경 & Flex 복구
+      const arVideo = document.getElementById('arjs-video');
       if (arVideo) arVideo.style.display = 'none';
   }
 
@@ -775,7 +775,7 @@ document.addEventListener("click", (e) => {
             document.getElementById("start_area").style.display = "none";
             document.getElementById("minimap-wrapper").style.display = "block";
             document.getElementById("info-panel").style.display = "block";
-            document.body.style.background = 'transparent';
+            document.body.classList.add('ar-mode');
 
             const themeMeta = document.getElementById("theme-color-meta");
             if (themeMeta) {
