@@ -2458,3 +2458,50 @@ a:visited {
   margin: 0 !important;
   object-fit: cover !important;
 }
+
+/* ==========================================
+   [SPA] AR 네비게이션 화면 쪼개짐 완벽 해결 
+========================================== */
+
+/* AR 모드가 켜졌을 때 body의 flex 속성을 꺼서 화면이 가로로 분할되는 것을 방지 */
+body.ar-mode {
+    display: block !important;
+    background: transparent !important;
+}
+
+/* 메인 앱 컨테이너가 화면 전체를 덮도록 고정 (UI 영역) */
+body.ar-mode #app {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 10 !important;
+    background: transparent !important;
+}
+
+/* AR.js가 생성하는 카메라 비디오를 화면 전체 배경으로 강제 고정 */
+#arjs-video {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: cover !important;
+    z-index: -2 !important;
+}
+
+/* A-Frame이 렌더링하는 AR 캔버스(캐릭터)를 카메라 비디오 위에 꽉 차게 겹침 */
+body.ar-mode .a-canvas {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    object-fit: cover !important;
+    z-index: -1 !important;
+}
