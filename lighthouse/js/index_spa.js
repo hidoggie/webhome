@@ -727,3 +727,163 @@ document.addEventListener("click", (e) => {
     routeTo(prev); // SPA 방식에 맞게 routeTo 함수 사용
   }
 });
+
+//AR Navi
+        // 1. 등대 데이터 
+        const lighthouses = [
+            { title: "간절곶등대", lat: 35.3590, lng: 129.3606 },
+            { title: "영도등대", lat: 35.0523, lng: 129.0921 },
+            { title: "산지등대", lat: 33.5214, lng: 126.5456 },
+            { title: "소매물도등대", lat: 34.6196, lng: 128.5479 },
+            { title: "오동도등대", lat: 34.7442, lng: 127.7677 },
+            { title: "등대", lat: 37.4891, lng: 126.9569 }   //test용
+            // 필요에 따라 추가
+        ];
+
+        let targetLighthouse = null;
+        let minimap = null;
+        let myLocMarker, targetMarker;
+        let watchId;
+
+       // 시작 버튼 클릭 시 실행
+        async function startNavigation() {
+            // 1. [iOS 13+ 전용] 기기 방향(나침반/자이로스코프) 권한 명시적 요청
+            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceOrientationEvent.requestPermission();
+                    if (permission !== 'granted') {
+                        alert("AR 길안내를 위해 기기 방향 센서 권한이 필요합니다.");
+                        // 권한 거부 시에도 지도는 작동해야 하므로 계속 진행
+                    }
+                } catch (error) {
+                    console.error("방향 센서 권한 요청 에러:", error);
+                }
+            }
+
+            // 2. 시작 화면 숨기고 UI 표시
+            document.getElementById("start_area").style.display = "none";
+            document.getElementById("minimap-wrapper").style.display = "block";
+            document.getElementById("info-panel").style.display = "block";
+
+            const themeMeta = document.getElementById("theme-color-meta");
+            if (themeMeta) {
+               const isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+               const originalColor = isDarkMode ? "#000000" : "#f1f3f4";
+               themeMeta.setAttribute("content", originalColor);
+            }
+            // 3. 버튼을 누른 직후에 AR 씬(카메라+GPS)을 동적으로 삽입 (권한 요청 팝업 발생 지점)
+            const arContainer = document.getElementById("ar-container");
+            arContainer.innerHTML = `
+                <a-scene embedded id="ar-scene" 
+                              vr-mode-ui="enabled: false" 
+                              device-orientation-permission-ui="enabled: false"
+                              arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;" 
+                              renderer="antialias: true; alpha: true">
+                    <a-entity light="type: ambient; intensity: 1.5;"></a-entity>
+                    <a-entity id="m1" scale="1 1 1" visible="false" gltf-model="url(./models/lighthouse.glb)" animation-mixer="loop: true"></a-entity>      
+                    <a-camera id="camera" look-controls-enabled="false" arjs-look-controls="smoothingFactor: 0.1" gps-projected-camera="maxDistance: 700"> 
+                        <a-entity id="m0" position="0 -1.3 -1.5" scale="0.3 0.3 0.3" gltf-model="url(./models/lumi-light-ani.glb)" animation-mixer="loop: true"></a-entity> 
+                        <a-entity id="cylinderGroup" position="0 -1.7 -2.5"></a-entity>
+                    </a-camera>
+                    <a-entity run></a-entity>
+                </a-scene>
+            `;
+
+            // 4. 미니맵 및 위치 추적 실행
+            initMap();
+            startTracking();
+        }
+
+        // 네이버 미니맵 초기화
+        function initMap() {
+            minimap = new naver.maps.Map('minimap', {
+                center: new naver.maps.LatLng(37.5666, 126.9784),
+                zoom: 17, // 최대 줌인
+                disableKinematicPan: true, mapDataControl: false, scaleControl: false, logoControl: false, zoomControl: false, draggable: false
+            });
+        }
+
+        // 실시간 위치 추적 및 로직 처리
+        function startTracking() {
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(
+                    position => processLocationUpdate(position.coords.latitude, position.coords.longitude),
+                    error => console.warn(error),
+                    { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+                );
+            } else {
+                alert("GPS를 지원하지 않습니다.");
+            }
+        }
+
+        function processLocationUpdate(lat, lng) {
+            const currentLatLng = new naver.maps.LatLng(lat, lng);
+            
+            // 미니맵 업데이트: 중심 이동 및 내 마커 표시
+            minimap.setCenter(currentLatLng);
+            if (!myLocMarker) {
+                myLocMarker = new naver.maps.Marker({
+                    position: currentLatLng, map: minimap,
+                    icon: { content: '<div style="width:16px;height:16px;background:red;border-radius:50%;border:2px solid white;"></div>' }
+                });
+            } else {
+                myLocMarker.setPosition(currentLatLng);
+            }
+
+            // 최초 1회, 가장 가까운 등대 타겟팅 및 AR 목적지 세팅
+            if (!targetLighthouse) {
+                targetLighthouse = findNearestLighthouse(lat, lng);
+                
+                // AR 타겟 (m1) 위치 부여
+                let m1 = document.getElementById('m1');
+                m1.setAttribute('gps-projected-entity-place', `latitude: ${targetLighthouse.lat}; longitude: ${targetLighthouse.lng};`);
+                m1.setAttribute('visible', 'true');
+            }
+
+            // 거리 계산 및 UI/선 업데이트
+            const targetLatLng = new naver.maps.LatLng(targetLighthouse.lat, targetLighthouse.lng);
+            const distance = Math.round(calculateDistance(lat, lng, targetLighthouse.lat, targetLighthouse.lng));
+
+            document.getElementById('distance-info').innerText = `${targetLighthouse.title}까지 ${distance}m`;
+
+            // 미니맵 목적지 핀 및 점선 그리기
+            if (!targetMarker) {
+                targetMarker = new naver.maps.Marker({
+                    position: targetLatLng, map: minimap,
+                    icon: { content: '<div style="font-size:20px;"><img src="./img/lighthouse-i.png" style="width:40px;height:40px;"></div>' }
+                });
+             }
+ 
+            // 도착 및 범위 이탈 체크 (기존 코드 기준치 반영)
+            if (distance > 1000) {
+                showAlert("거리가 너무 멀어요!<br>등대 근처에서 다시 시도해 주세요.");
+                navigator.geolocation.clearWatch(watchId);
+            } else if (distance < 10) {
+                showAlert("축하합니다!<br>등대에 도착했습니다.");
+                navigator.geolocation.clearWatch(watchId);
+            }
+        }
+
+        // 가장 가까운 등대 찾기
+        function findNearestLighthouse(lat, lng) {
+            let minDistance = Infinity;
+            let nearest = lighthouses[0];
+            lighthouses.forEach(lh => {
+                let dist = calculateDistance(lat, lng, lh.lat, lh.lng);
+                if (dist < minDistance) {
+                    minDistance = dist;
+                    nearest = lh;
+                }
+            });
+            return nearest;
+        }
+
+        // 알림 모달
+        function showAlert(msg) {
+            document.getElementById('alert-msg').innerHTML = msg;
+            document.getElementById('alert-modal').style.display = 'flex';
+        }
+
+        function arnavicloseModal() {
+            document.getElementById('alert-modal').style.display = 'none';
+        }
