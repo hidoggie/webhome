@@ -1975,13 +1975,13 @@ a:visited {
 .app-container {
   width: 100%;
   max-width: 420px;
-  min-height: 100vh;
+  height: 100%;
+  overflow-y: auto;
   background-color: #fbf9f4; /* 앱 전체 배경색 */
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
   display: flex;
   flex-direction: column;
-  /*          position: relative;
-            padding-bottom: 9%;  */
+  padding-bottom: 40px;
 }
 
 /* 1. 상단 여권 배경 및 스탬프 영역 */
@@ -2090,6 +2090,7 @@ a:visited {
   gap: 12px;
   padding: 0 15px;
   flex: 1;
+  flex-shrink: 0; /* 🔥 공간이 부족해도 카드가 위아래로 찌그러지지 않게 방어 */
 }
 
 /* 좌측 인증샷 카드 */
