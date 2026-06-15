@@ -14,44 +14,52 @@
 
     <script src="js/html2canvas.min.js"></script>
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
- 
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+
+    <!--script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script-->
+
+    <script src="./js/8frame-1.5.0.min.js"></script>
+    <script src="./js/xrextras.js"></script>
+    <script src="//cdn.8thwall.com/web/aframe/aframe-extras-7.2.0.min.js"></script>
+    <script async src="./js/xr.js" data-preload-chunks="slam"></script>
+    <script src="./js/coaching-overlay.js"></script>
+    <script src="./js/CSS2DRenderer.js"></script>
+    <script type="module" src="./js/app1.js" defer></script>
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/Pretendard/dist/web/static/pretendard.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
 
     <script>
-    AFRAME.registerComponent("run", {
-        init: function() {
-            this.m0 = document.querySelector("#m0");
-            this.m1 = document.querySelector("#m1");
-            this.p0 = new THREE.Vector3();
-            this.p1 = new THREE.Vector3();
-            
-            // 선(실린더) 생성
-            var geometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 12);
-            geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
-            geometry.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(90)));
-            var material = new THREE.MeshLambertMaterial({ color: 0x066265, opacity: 0.6, transparent: true });
+        AFRAME.registerComponent("run", {
+            init: function () {
+                this.m0 = document.querySelector("#m0");
+                this.m1 = document.querySelector("#m1");
+                this.p0 = new THREE.Vector3();
+                this.p1 = new THREE.Vector3();
 
-            this.cylinder = new THREE.Mesh(geometry, material);
-            this.cylinderGroup = document.querySelector("#cylinderGroup").object3D;
-            this.cylinderGroup.add(this.cylinder);
-        },
-        tick: function() {
-            if (!this.m0 || !this.m1) return;
-            this.m0.object3D.getWorldPosition(this.p0);
-            this.m1.object3D.getWorldPosition(this.p1);
+                // 선(실린더) 생성
+                var geometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 12);
+                geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
+                geometry.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(90)));
+                var material = new THREE.MeshLambertMaterial({ color: 0x066265, opacity: 0.6, transparent: true });
 
-            let distance = this.p0.distanceTo(this.p1);
-            this.cylinderGroup.lookAt(this.p1);
-            this.cylinder.scale.set(1, 1, distance);
-            this.cylinder.visible = true;
-        }
-    });
+                this.cylinder = new THREE.Mesh(geometry, material);
+                this.cylinderGroup = document.querySelector("#cylinderGroup").object3D;
+                this.cylinderGroup.add(this.cylinder);
+            },
+            tick: function () {
+                if (!this.m0 || !this.m1) return;
+                this.m0.object3D.getWorldPosition(this.p0);
+                this.m1.object3D.getWorldPosition(this.p1);
+
+                let distance = this.p0.distanceTo(this.p1);
+                this.cylinderGroup.lookAt(this.p1);
+                this.cylinder.scale.set(1, 1, distance);
+                this.cylinder.visible = true;
+            }
+        });
     </script>
 
 </head>
@@ -245,7 +253,7 @@
                             </div><span class="app-arrow">›</span>
                         </a>
                     </div>
-                    <button class="modal-close" onclick="closeappModal()">닫기</button>
+                    <button class="appmodal-close" onclick="closeappModal()">닫기</button>
                 </div>
             </div>
 
@@ -303,7 +311,7 @@
                         </button>
                     </div>
                     <div class="step-container">
-                        <button class="round-btn" onclick="location.href='./photo-auth2.html'">
+                        <button class="round-btn" onclick=""routeTo('photoauth')">
                             <img src="./img/camera-button.png" alt="인증샷 버튼">
                         </button>
                     </div>
@@ -580,6 +588,100 @@
                 </div>
             </div>
             <div class="ar-overlay" id="ar-container"></div>
+        </section>
+
+        <section id="page-photoauth" class="page">
+            <a-scene responsive-immersive coaching-overlay landing-page xrextras-gesture-detector xrextras-loading
+                xrextras-runtime-error gltf-model="dracoDecoderPath: https://cdn.8thwall.com/web/aframe/draco-decoder/"
+                renderer="colorManagement: true" xrweb="allowedDevices: any; defaultEnvironmentFogIntensity: 0.5; defaultEnvironmentFloorTexture: #groundTex; defaultEnvironmentFloorColor: #FFF; defaultEnvironmentSkyBottomColor: #B4C4CC; defaultEnvironmentSkyTopColor: #5ac8fa; defaultEnvironmentSkyGradientStrength: 0.5; scale: absolute">
+
+                <a-assets>
+                    <a-asset-item id="LumiModel" src="./models/lumi-photo-ani.glb"></a-asset-item>
+                    <a-asset-item id="vfx" src="./models/appear-effect.glb"></a-asset-item>
+                    <img id="groundTex" src="./models/textures/concrete.jpg">
+                </a-assets>
+
+                <xrextras-capture-button capture-mode="photo"></xrextras-capture-button>
+                <xrextras-capture-config file-name-prefix="my-photo-" request-mic="manual"></xrextras-capture-config>
+
+                <a-camera id="camera" position="0 1.75 12" raycaster="objects: .cantap"
+                    cursor="fuse: false; rayOrigin: mouse;">
+                </a-camera>
+
+                <a-entity xr-light light="type: directional; castShadow: true; shadowMapHeight:2048; shadowMapWidth:2048; shadowCameraTop: 20; shadowCameraBottom: -20; shadowCameraLeft: -20; shadowCameraRight: 20; target: #car; shadowRadius: 3" 
+                          xrextras-attach="target: car; offset: 0 15 0;" shadow>
+                </a-entity>
+
+                <a-light xr-light="max: 0.5" type="ambient">
+                </a-light>
+
+                <a-entity id="car" gltf-model="#LumiModel" rotation="0 0 0" scale="2 2 2"
+                    xrextras-hold-drag="rise-height: 0" xrextras-two-finger-rotate absolute-pinch-scale proximity
+                    animation="property: position; from: 0 -10 0; to: 0 0 0; dir: linear; delay: 4000; dur: 8000; loop: false"
+                    animation__1="property: scale; from: 0 0 0; to: 2 2 2; dir: linear; delay: 4000; dur: 8000; loop: false"
+                    animation-mixer shadow="receive: false">
+                    <a-entity id="car" gltf-model="#vfx" rotation="0 0 0" scale="2 2 2"
+                        xrextras-hold-drag="rise-height: 0" xrextras-two-finger-rotate absolute-pinch-scale proximity
+                        animation="property: scale; from: 2 2 2; to: 0 0 0; dir: linear; delay: 16000; dur: 1000; loop: false"
+                        animation-mixer>
+                    </a-entity>
+                </a-entity>
+
+                <a-plane id="ground" rotation="-90 0 0" width="100" height="100"
+                    material="shader: shadow; opacity: 0.5;" shadow></a-plane>
+
+            </a-scene>
+
+            <div id="custom-ui-layer" class="hidden">
+
+                <div id="preview-screen" class="screen hidden">
+                    <div class="media-container">
+                        <img id="preview-image" class="media-content hidden" />
+                        <video id="preview-video" class="media-content hidden" autoplay loop muted playsinline></video>
+                        <div class="info-overlay">
+                            <h3 id="lighthouse-name">📍 호미곶 등대</h3>
+                            <p id="capture-time"></p>
+                        </div>
+                    </div>
+
+                    <div class="bottom-action">
+                        <button id="btn-cancel" class="cancel-btn"
+                            style="background: linear-gradient(to right, #f0d7a6, #f0d7a6);" onclick="resetUI()">다시
+                            촬영</button>
+                        <button id="btn-save-stamp" class="action-btn"
+                            style="background: linear-gradient(to right, #9AD28B, #37BBA3);">스탬프북 저장</button>
+                    </div>
+                </div>
+
+                <div id="modal-confirm" class="photomodal hidden">
+                    <div class="photo-modal-content">
+                        <button class="modal-close"
+                            onclick="document.getElementById('modal-confirm').classList.add('hidden')">×
+                        </button>
+                        <p>현재 등대의 스탬프를 획득하고<br>사진을 저장하시겠습니까?</p>
+                        <div class="modal-buttons">
+                            <button id="btn-confirm-cancel" class="btn-cancel">취소</button>
+                            <button id="btn-confirm-save" class="btn-primary">확인</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="modal-share" class="photomodal hidden">
+                    <div class="photo-modal-content">
+                        <button class="modal-close"
+                            onclick="document.getElementById('modal-share').classList.add('hidden')">×
+                        </button>
+                        <p class="share-text">
+                            사진을 등대 커뮤니티에만 게시하려면 좌측의 <strong>'사진후기 게시'</strong> 버튼을,<br>
+                            게시 후 SNS 에 공유하려면 우측의 <strong>'게시 후 SNS 공유'</strong> 버튼을 눌러주세요.
+                        </p>
+                        <div class="modal-buttons flex-row">
+                            <button id="btn-post-review" class="btn-secondary">사진후기 게시</button>
+                            <button id="btn-post-share" class="btn-primary">게시 후 SNS 공유</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
     </main>
