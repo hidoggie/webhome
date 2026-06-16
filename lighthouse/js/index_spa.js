@@ -14,6 +14,22 @@ AFRAME.registerComponent('auto-hide-overlay', {
     }
 });
 
+// 1. 사진 촬영이 완료된 순간 캡처 버튼 컨테이너 숨기기
+window.addEventListener('mediarecorder-photocomplete', () => {
+    const recorder = document.getElementById('recorder');
+    if (recorder) {
+        recorder.style.display = 'none';
+    }
+});
+
+// 2. 미리보기 창을 닫거나 취소했을 때 캡처 버튼 다시 나타나게 하기
+window.addEventListener('mediarecorder-previewclosed', () => {
+    const recorder = document.getElementById('recorder');
+    if (recorder) {
+        recorder.style.display = 'flex'; // 8th Wall 기본 display 속성 복구
+    }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   const captureBtn = document.querySelector('xrextras-capture-button');
   
