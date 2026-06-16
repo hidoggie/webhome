@@ -15,50 +15,11 @@
     <script src="js/html2canvas.min.js"></script>
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
 
-    <script src="./js/8frame-1.5.0.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <script src="//cdn.8thwall.com/web/aframe/aframe-extras-7.2.0.min.js"></script>
-    <script src="./js/xrextras.js"></script>
-    <script async src="./js/xr.js" data-preload-chunks="slam"></script>
-    <script src="./js/coaching-overlay.js"></script>
     <script src="./js/CSS2DRenderer.js"></script>
-    <script type="module" src="./js/app1.js" defer></script>
-
+ 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/Pretendard/dist/web/static/pretendard.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-
-    <script>
-        AFRAME.registerComponent("run", {
-            init: function () {
-                this.m0 = document.querySelector("#m0");
-                this.m1 = document.querySelector("#m1");
-                this.p0 = new THREE.Vector3();
-                this.p1 = new THREE.Vector3();
-
-                // 선(실린더) 생성
-                var geometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 12);
-                geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
-                geometry.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(90)));
-                var material = new THREE.MeshLambertMaterial({ color: 0x066265, opacity: 0.6, transparent: true });
-
-                this.cylinder = new THREE.Mesh(geometry, material);
-                this.cylinderGroup = document.querySelector("#cylinderGroup").object3D;
-                this.cylinderGroup.add(this.cylinder);
-            },
-            tick: function () {
-                if (!this.m0 || !this.m1) return;
-                this.m0.object3D.getWorldPosition(this.p0);
-                this.m1.object3D.getWorldPosition(this.p1);
-
-                let distance = this.p0.distanceTo(this.p1);
-                this.cylinderGroup.lookAt(this.p1);
-                this.cylinder.scale.set(1, 1, distance);
-                this.cylinder.visible = true;
-            }
-        });
-    </script>
-
+ 
 </head>
 
 <body>
@@ -572,80 +533,16 @@
         </section>
 
         <section id="page-arnavi" class="page">
-            <div id="start_area">
-                <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
-                <img src="./img/ar-navi-text.png" alt="AR 등대 길찾기" width="200">
-                <p style="color: #066265; font-weight:bold;">증강현실(AR) 사용시,<br>주변 사물과 부딪치지 않도록 주의하세요.</p>
-                <button id="start_btn" onclick="startNavigation()">안내 시작</button>
-            </div>
-            <div id="minimap-wrapper">
-                <div id="minimap"></div>
-            </div>
-            <div class="info-panel" id="info-panel">
-                <p class="distance-text" id="distance-info">가까운 등대 찾는 중...</p>
-            </div>
-            <div class="arnavi-modal" id="alert-modal">
-                <div class="arnavi-modal-content">
-                    <p id="alert-msg"></p>
-                    <button class="btn-confirm" onclick="arnavicloseModal()">확인</button>
-                </div>
-            </div>
-            <div class="ar-overlay" id="ar-container"></div>
+            <iframe id="iframe-arnavi" allow="camera; microphone; geolocation; gyroscope; accelerometer; magnetometer"
+                style="width: 100%; height: 100vh; border: none; display: block;">
+            </iframe>
         </section>
 
         <section id="page-photoauth" class="page">
-            <div id="photoauth-ar-container"></div>
-
-            <div id="custom-ui-layer" class="hidden">
-
-                <div id="preview-screen" class="screen hidden">
-                    <div class="media-container">
-                        <img id="preview-image" class="media-content hidden" />
-                        <video id="preview-video" class="media-content hidden" autoplay loop muted playsinline></video>
-                        <div class="info-overlay">
-                            <h3 id="lighthouse-name">📍 호미곶 등대</h3>
-                            <p id="capture-time"></p>
-                        </div>
-                    </div>
-
-                    <div class="bottom-action">
-                        <button id="btn-cancel" class="cancel-btn"
-                            style="background: linear-gradient(to right, #f0d7a6, #f0d7a6);" onclick="resetUI()">다시
-                            촬영</button>
-                        <button id="btn-save-stamp" class="action-btn"
-                            style="background: linear-gradient(to right, #9AD28B, #37BBA3);">스탬프북 저장</button>
-                    </div>
-                </div>
-
-                <div id="modal-confirm" class="photo-modal hidden">
-                    <div class="photo-modal-content">
-                        <button class="modal-close"
-                            onclick="document.getElementById('modal-confirm').classList.add('hidden')">×
-                        </button>
-                        <p>현재 등대의 스탬프를 획득하고<br>사진을 저장하시겠습니까?</p>
-                        <div class="modal-buttons">
-                            <button id="btn-confirm-cancel" class="btn-cancel">취소</button>
-                            <button id="btn-confirm-save" class="btn-primary">확인</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="modal-share" class="photo-modal hidden">
-                    <div class="photo-modal-content">
-                        <button class="modal-close"
-                            onclick="document.getElementById('modal-share').classList.add('hidden')">×
-                        </button>
-                        <p class="share-text">
-                            사진을 등대 커뮤니티에만 게시하려면 좌측의 <strong>'사진후기 게시'</strong> 버튼을,<br>
-                            게시 후 SNS 에 공유하려면 우측의 <strong>'게시 후 SNS 공유'</strong> 버튼을 눌러주세요.
-                        </p>
-                        <div class="modal-buttons flex-row">
-                            <button id="btn-post-review" class="btn-secondary">사진후기 게시</button>
-                            <button id="btn-post-share" class="btn-primary">게시 후 SNS 공유</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <iframe id="iframe-photoauth"
+                allow="camera; microphone; geolocation; gyroscope; accelerometer; magnetometer"
+                style="width: 100%; height: 100vh; border: none; display: block;">
+            </iframe>
         </section>
 
     </main>
