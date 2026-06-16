@@ -1683,12 +1683,12 @@ a:visited {
 }
 
 .step-container:nth-child(odd) {
-  padding-left: 15%;
+  padding-left: 10%;
   justify-content: flex-start;
 }
 
 .step-container:nth-child(even) {
-  padding-right: 15%;
+  padding-right: 10%;
   justify-content: flex-end;
 }
 
@@ -1845,7 +1845,7 @@ a:visited {
   flex: 1;
   overflow-y: auto;
   width: 100%;
-  max-height: 100%;
+  max-height: 84%;
 }
 
 .tab-content.active {
