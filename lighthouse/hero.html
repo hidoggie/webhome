@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>curved-aframe</title>
+
+  <script src="./../xr_st/8frame-1.5.0.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script src="./../xr_st/landing-page.js"></script>  
+  <script src="//cdn.8thwall.com/web/aframe/aframe-extras-7.2.0.min.js"></script>
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script crossorigin="anonymous" src="./../xr_st/aframe-chromakey-material-1.1.4.min.js"></script>
+  <script>
+     const onxrloaded = async () => {
+       const res = await fetch('./json/hero.json')
+       const json = await res.json()
+       const res1 = await fetch('./json/hero1.json')
+       const json1 = await res1.json()
+       
+       XR8.XrController.configure({
+         imageTargetData: [json, json1],
+       })
+     }
+     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
+  </script>
+  <style>
+    #start_area { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #ffffff; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    #start_btn { padding: 15px 30px; font-size: 18px; font-weight: bold; background: #066265; color: white; border: none; border-radius: 10px; margin-top: 20px; cursor: pointer; }
+  /* 수집도감 버튼 (우측 하단 토글) */
+#collection-toggle {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  background: #1a5fa8;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  z-index: 100;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+#collection-toggle img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+#collection-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #e74c3c;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  display: none;
+}
+
+/* 수집도감 패널 */
+#collection-panel {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 160px;
+  background: #f5f0e8;
+  border: 4px solid #1a5fa8;
+  border-radius: 16px;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 12px;
+  overflow: hidden;
+}
+#collection-panel-title {
+  background: #1a5fa8;
+  width: 100%;
+  text-align: center;
+  padding: 8px 0 4px;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+#collection-panel-title span {
+  display: block;
+  color: #FFD700;
+  font-size: 15px;
+  font-weight: bold;
+}
+.collection-slot {
+  width: 110px;
+  height: 110px;
+  background: #f5c842;
+  border-radius: 50%;
+  border: 3px dashed #ffffff;
+  margin: 12px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.collection-slot .question {
+  font-size: 40px;
+  font-weight: bold;
+  color: #ffffff;
+  opacity: 0.85;
+}
+.collection-slot img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  display: none;
+}
+.collection-slot.collected .question { display: none; }
+.collection-slot.collected img { display: block; }
+.collection-divider {
+  width: 90%;
+  border: none;
+  border-top: 2px dashed #ccbbaa;
+  margin: 10px auto 0;
+}
+
+/* 3D 모델 터치 힌트 */
+#touch-hint {
+  position: fixed;
+  bottom: 90px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.6);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  z-index: 100;
+  display: none;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* 수집 완료 팝업 */
+#collect-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  background: white;
+  border: 4px solid #1a5fa8;
+  border-radius: 20px;
+  z-index: 200;
+  padding: 24px 32px;
+  text-align: center;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  pointer-events: none;
+}
+#collect-popup.show { transform: translate(-50%, -50%) scale(1); }
+#collect-popup img { width: 80px; height: 80px; object-fit: contain; }
+#collect-popup p { margin: 8px 0 0; font-size: 14px; font-weight: bold; color: #1a5fa8; }
+  </style>
+  
+</head>
+
+<body>
+      <div id="start_area">     
+        <img src="./img/lh-hunt-t.png" alt="AR 등대 탐험대" width="200">
+        <img src="./img/hunt-spot.png" alt="AR 등대 보물 찾기" width="400">
+        <p style="color: #066265; font-weight:bold;">등대 주면에서 <br>위의 2개 장면에 숨겨진,<br>항해에 도움이 되는 아이템을 찾으세요.</p> 
+        <button id="start_btn" onclick="startNavigation()">찾기 시작</button>
+    </div>
+  <div id="scanning-overlay" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none;">
+    <img src="./img/hero-illust-s.svg" alt="스마트폰을 흔들어 스캔하세요" />
+  </div>
+<!-- 수집도감 토글 버튼 -->
+<div id="collection-toggle" onclick="toggleCollection()">
+  <img src="./img/lh-hunt-t.png" alt="수집도감">
+  <div id="collection-badge">0</div>
+</div>
+
+<!-- 수집도감 패널 -->
+<div id="collection-panel">
+  <div id="collection-panel-title">
+    등대 탐험대<span>수집도감</span>
+  </div>
+  <div class="collection-slot" id="slot-hero_target">
+    <span class="question">?</span>
+    <img src="./img/compass-thumb.png" alt="나침반">
+  </div>
+  <hr class="collection-divider">
+  <div class="collection-slot" id="slot-hero_target1">
+    <span class="question">?</span>
+    <img src="./img/anchor-thumb.png" alt="닻">
+  </div>
+</div>
+
+<!-- 터치 힌트 -->
+<div id="touch-hint">아이템을 터치해서 수집하세요!</div>
+
+<!-- 수집 완료 팝업 -->
+<div id="collect-popup">
+  <img id="collect-popup-img" src="" alt="">
+  <p id="collect-popup-msg">수집 완료!</p>
+</div>
+  <a-scene
+    landing-page
+    xrextras-loading
+    xrextras-runtime-error
+    renderer="colorManagement: true; physicallyBasedRendering: true;"
+    xrweb="disableWorldTracking: true">
+    
+    <a-assets>
+      <a-asset-item id="compass-glb" src="./models/compass-blue.glb"></a-asset-item>
+      <a-asset-item id="anchor-glb" src="./models/blue-anchor.glb"></a-asset-item>
+      
+      <!-- loop 제거: 1회 재생 후 마지막 프레임 유지 -->
+      <video
+        id="portal-video"
+        muted
+        autoplay
+        loop="true"
+        playsinline
+        webkit-playsinline
+        crossorigin="anonymous"
+        src="./video/portal-video-s.mp4">
+      </video>      
+    </a-assets>
+
+    <xrextras-capture-button></xrextras-capture-button>
+    <xrextras-capture-preview></xrextras-capture-preview>
+
+    <a-camera
+      position="0 1 1"
+      raycaster="objects: .cantap"
+      cursor="fuse: false; rayOrigin: mouse;">
+    </a-camera>
+
+    <a-light type="directional" intensity="0.5" position="0 1 0"></a-light>
+    <a-light type="ambient" intensity="0.1"></a-light>
+
+    <!-- hero_target: 비디오 종료 후 3D 모델 등장 -->
+    <xrextras-named-image-target name="hero_target">
+      <a-entity
+        id="video-plane-hero"
+        xrextras-play-video="video: #portal-video; canstop: true"
+        material="shader: chromakey; src: #portal-video; color: 0 0 0; blending: additive; side: front"
+        geometry="primitive: plane; height: 1; width: 1;"
+        animation="property: scale; from: 0 0 0; to: 1 1 1; loop: false; dur: 5000">
+      </a-entity>
+      <!-- 초기 visible: false로 대기 -->
+      <a-entity 
+        id="model-hero"
+        gltf-model="#compass-glb" 
+        position="0 0.5 0.2" 
+        rotation="0 0 0"
+        scale="0.5 0.5 0.5"
+        visible="false"
+        shadow="receive: false"
+        animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
+        animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
+        animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000"
+        animation-mixer>
+      </a-entity>
+    </xrextras-named-image-target>
+
+    <!-- w1-engine -->
+    <xrextras-named-image-target name="hero_target1">
+      <a-entity
+        id="video-plane-hero1"
+        xrextras-play-video="video: #portal-video1; canstop: true"
+        material="shader: chromakey; src: #portal-video1; color: 0 0 0; blending: additive; side: front"
+        geometry="primitive: plane; height: 1; width: 1;"
+        animation="property: scale; from: 0 0 0; to: 1 1 1; loop: false; dur: 5000">
+      </a-entity>
+      <a-entity
+        id="model-hero1"
+        gltf-model="#anchor-glb"
+        scale="0.5 0.5 0.5"
+        rotation="0 0 0"
+        position="0 0.5 0.2"
+        visible="false"
+        shadow="receive: false"
+        animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
+        animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
+        animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000"
+        animation-mixer>
+      </a-entity>
+    </xrextras-named-image-target>   
+
+    <a-plane
+      id="ground"
+      rotation="-90 0 0"
+      width="1000"
+      height="1000"
+      material="shader: shadow"
+      shadow>
+    </a-plane>
+  </a-scene>
+<script>
+  async function startNavigation() {
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      try {
+        const permission = await DeviceOrientationEvent.requestPermission();
+        if (permission !== 'granted') {
+          alert("AR을 위해 기기 방향 센서 권한이 필요합니다.");
+        }
+      } catch (e) {
+        console.error("방향 센서 권한 요청 에러:", e);
+      }
+    }
+    document.getElementById('start_area').style.display = 'none';
+  }
+
+  const overlay = document.getElementById('scanning-overlay');
+  let activeTarget = null;
+
+  const targetOrder = ['hero_target', 'hero_target1'];
+
+  const targetMap = {
+    'hero_target': {
+      video: document.getElementById('portal-video'),
+      modelId: 'model-hero',
+      overlayImg: './img/hero-illust-s.svg',
+      overlayOpacity: '0.5',                           
+      thumbImg: './img/compass-thumb.png',
+      itemName: '나침반'
+    },
+    'hero_target1': {
+      video: document.getElementById('portal-video'),
+      modelId: 'model-hero1',
+      overlayImg: './img/stone-illust-s.svg',
+      overlayOpacity: '0.5',                           
+      thumbImg: './img/anchor-thumb.png',
+      itemName: '닻'
+    }
+  };
+
+  const boundTargets = new Set();   
+
+  const collected = {};
+
+  overlay.style.opacity = targetMap['hero_target'].overlayOpacity;
+
+  function toggleCollection() {
+    const panel = document.getElementById('collection-panel');
+    panel.style.display = (panel.style.display === 'flex') ? 'none' : 'flex';
+  }
+
+  function collectItem(targetName) {
+    if (collected[targetName]) return;
+    collected[targetName] = true;
+
+    const slot = document.getElementById('slot-' + targetName);
+    if (slot) slot.classList.add('collected');
+
+    const count = Object.keys(collected).length;
+    const badge = document.getElementById('collection-badge');
+    badge.textContent = count;
+    badge.style.display = 'flex';
+
+    const popup    = document.getElementById('collect-popup');
+    const popupImg = document.getElementById('collect-popup-img');
+    const popupMsg = document.getElementById('collect-popup-msg');
+    popupImg.src = targetMap[targetName].thumbImg;
+    popupMsg.textContent = targetMap[targetName].itemName + ' 수집 완료!';
+    popup.classList.add('show');
+    setTimeout(() => { popup.classList.remove('show'); }, 2000);
+
+    document.getElementById('touch-hint').style.display = 'none';
+  }
+
+  function enableModelTouch(modelEntity, targetName) {
+    modelEntity.classList.add('cantap');
+    modelEntity.addEventListener('click', () => {
+      collectItem(targetName);
+    });
+  }
+
+  function fadeInModel(modelEntity) {
+    modelEntity.setAttribute('visible', true);
+    function startFade() {
+      const mesh = modelEntity.getObject3D('mesh');
+      if (!mesh) { setTimeout(startFade, 100); return; }
+      mesh.traverse((node) => {
+        if (node.material) {
+          const mats = Array.isArray(node.material) ? node.material : [node.material];
+          mats.forEach((mat) => { mat.transparent = true; mat.opacity = 0; });
+        }
+      });
+      function easeInOutQuad(t) { return t < 0.5 ? 2*t*t : -1+(4-2*t)*t; }
+      const duration = 1500, start = performance.now();
+      function fade(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = easeInOutQuad(progress);
+        mesh.traverse((node) => {
+          if (node.material) {
+            const mats = Array.isArray(node.material) ? node.material : [node.material];
+            mats.forEach((mat) => { mat.opacity = eased; });
+          }
+        });
+        if (progress < 1) requestAnimationFrame(fade);
+      }
+      requestAnimationFrame(fade);
+    }
+    startFade();
+  }
+
+  function bindVideoEnded(targetName) {
+    if (boundTargets.has(targetName)) return;
+    boundTargets.add(targetName);
+
+    const { video, modelId } = targetMap[targetName];
+    video.addEventListener('ended', () => {
+      if (activeTarget !== targetName) return;
+      const modelEntity = document.getElementById(modelId);
+      if (modelEntity) {                                         
+        fadeInModel(modelEntity);
+        enableModelTouch(modelEntity, targetName);
+        document.getElementById('touch-hint').style.display = 'block';
+      }                                                         
+      video.loop = true;
+      video.play();
+    });                                                          
+  }                                                              
+
+  document.querySelector('a-scene').addEventListener('xrimagefound', (event) => {
+    const name = event.detail.name;
+    if (!targetMap[name]) return;
+    activeTarget = name;
+    if (overlay) {
+      const overlayImgEl = overlay.querySelector('img');
+      if (overlayImgEl) overlayImgEl.src = targetMap[name].overlayImg;
+      overlay.style.animation = 'fadeOut 0.5s forwards';
+      setTimeout(() => { overlay.style.display = 'none'; }, 500);
+    }
+    const { video, modelId } = targetMap[name];
+    const modelEntity = document.getElementById(modelId);
+    video.loop = false;
+    video.currentTime = 0;
+    video.play().catch(() => {
+      document.addEventListener('click',      () => video.play(), { once: true });
+      document.addEventListener('touchstart', () => video.play(), { once: true });
+    });
+    if (modelEntity) {
+      modelEntity.setAttribute('visible', false);
+      const mesh = modelEntity.getObject3D('mesh');
+      if (mesh) {
+        mesh.traverse((node) => {
+          if (node.material) {
+            const mats = Array.isArray(node.material) ? node.material : [node.material];
+            mats.forEach((mat) => { mat.transparent = true; mat.opacity = 0; });
+          }
+        });
+      }
+    }
+    bindVideoEnded(name);
+  });
+
+  document.querySelector('a-scene').addEventListener('xrimagelost', (event) => {
+    const name = event.detail.name;
+    if (!targetMap[name]) return;
+    if (overlay) {
+      const currentIndex = targetOrder.indexOf(name);
+      const nextTarget   = targetOrder[(currentIndex + 1) % targetOrder.length];
+      const overlayImgEl = overlay.querySelector('img');
+      if (overlayImgEl) overlayImgEl.src = targetMap[nextTarget].overlayImg;
+      overlay.style.display   = 'flex';
+      overlay.style.animation = 'none';
+      overlay.style.opacity   = targetMap[nextTarget].overlayOpacity || '1';
+    }
+  });
+</script>
+</body>
+</html>
