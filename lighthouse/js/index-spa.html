@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffffff" id="theme-color-meta">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <title>AR 등대 스탬프투어</title>
+
+    <link rel="stylesheet" href="css/style_spa.css">
+
+    <script src="js/html2canvas.min.js"></script>
+    <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
+
+    <script src="./js/8frame-1.5.0.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script src="//cdn.8thwall.com/web/aframe/aframe-extras-7.2.0.min.js"></script>
+    <script src="./js/xrextras.js"></script>
+    <script async src="./js/xr.js" data-preload-chunks="slam"></script>
+    <script src="./js/coaching-overlay.js"></script>
+    <script src="./js/CSS2DRenderer.js"></script>
+    <script type="module" src="./js/app1.js" defer></script>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/Pretendard/dist/web/static/pretendard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <script>
+        AFRAME.registerComponent("run", {
+            init: function () {
+                this.m0 = document.querySelector("#m0");
+                this.m1 = document.querySelector("#m1");
+                this.p0 = new THREE.Vector3();
+                this.p1 = new THREE.Vector3();
+
+                // 선(실린더) 생성
+                var geometry = new THREE.CylinderGeometry(0.3, 0.3, 1, 12);
+                geometry.applyMatrix4(new THREE.Matrix4().makeTranslation(0, 0.5, 0));
+                geometry.applyMatrix4(new THREE.Matrix4().makeRotationX(THREE.Math.degToRad(90)));
+                var material = new THREE.MeshLambertMaterial({ color: 0x066265, opacity: 0.6, transparent: true });
+
+                this.cylinder = new THREE.Mesh(geometry, material);
+                this.cylinderGroup = document.querySelector("#cylinderGroup").object3D;
+                this.cylinderGroup.add(this.cylinder);
+            },
+            tick: function () {
+                if (!this.m0 || !this.m1) return;
+                this.m0.object3D.getWorldPosition(this.p0);
+                this.m1.object3D.getWorldPosition(this.p1);
+
+                let distance = this.p0.distanceTo(this.p1);
+                this.cylinderGroup.lookAt(this.p1);
+                this.cylinder.scale.set(1, 1, distance);
+                this.cylinder.visible = true;
+            }
+        });
+    </script>
+
+</head>
+
+<body>
+    <main id="app">
+        <section id="page-intro" class="page active">
+            <div class="sky">
+                <div class="cloud cloud-1"></div>
+                <div class="cloud cloud-2"></div>
+                <div class="cloud cloud-3"></div>
+                <div class="cloud cloud-4"></div>
+                <div class="seagull sg-1"></div>
+                <div class="seagull sg-2"></div>
+                <div class="seagull sg-3"></div>
+                <div class="title-container">
+                    <img src="./img/intro-text.png" alt="페이지 타이틀">
+                </div>
+                <div class="star star-1">
+                    <svg width="42" height="42" viewBox="0 0 42 42">
+                        <polygon points="21,4 25,15 37,15 27,22 31,34 21,27 11,34 15,22 5,15 17,15" fill="#ffd700"
+                            stroke="#f0a500" stroke-width="1.5" />
+                    </svg>
+                </div>
+                <div class="star star-2">
+                    <svg width="28" height="28" viewBox="0 0 28 28">
+                        <polygon points="14,3 17,10 25,10 19,15 21,23 14,18 7,23 9,15 3,10 11,10" fill="#ffd700"
+                            stroke="#f0a500" stroke-width="1" />
+                    </svg>
+                </div>
+                <div class="ocean">
+                    <div class="wave wave-1"></div>
+                    <div class="wave wave-2"></div>
+                    <div class="wave wave-3"></div>
+                </div>
+                <div class="boat">
+                    <div class="boat-mast"></div>
+                    <div class="boat-body">
+                        <div class="boat-cabin"></div>
+                    </div>
+                </div>
+                <div class="pier">
+                    <div class="fence-post"></div>
+                    <div class="fence-post"></div>
+                    <div class="fence-post"></div>
+                    <div class="fence-post"></div>
+                    <div class="fence-post"></div>
+                    <div class="fence-post"></div>
+                    <div class="fence-post"></div>
+                    <div class="fence-post"></div>
+                    <div class="fence-post"></div>
+                </div>
+                <div class="lighthouse-right">
+                    <div class="lh-light-glow"></div>
+                    <div class="lh-top"></div>
+                    <div class="lh-lamp"></div>
+                    <div class="lh-rail"></div>
+                    <div class="lh-body">
+                        <div class="lh-stripe"></div>
+                        <div class="lh-stripe"></div>
+                        <div class="lh-stripe"></div>
+                        <div class="lh-door"></div>
+                    </div>
+                    <div class="lh-base"></div>
+                    <div class="lh-rock"></div>
+                </div>
+                <div class="mascot">
+                    <div class="mascot-inner"><img src="./img/lumi-wink-2.gif" alt="AR 등대 스탬프투어 마스코트 루미"></div>
+                </div>
+                <div class="btn">
+                    <button class="btn-start" onclick="openPassportModal()">시작하기</button>
+                </div>
+            </div>
+
+            <div id="passportModal" class="modal-overlay">
+                <div class="modal-content">
+                    <button class="close-btn" onclick="closePassportModal()">×</button>
+                    <div class="modal-header">나의 등대 여권 발급</div>
+                    <div class="new-user-section">
+                        <div id="captureArea">
+                            <p class="warning-text">브라우저나 기기 변경 시 이력을 불러오기 위해<br>아래 <strong>여권 번호</strong>를 복사하거나 이미지로
+                                저장해주세요!</p>
+                            <div class="passport-id-box" id="newPassportId">생성 중...</div>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-copy" onclick="copyPassportId()">번호 복사</button>
+                            <button class="btn-copy" onclick="savePassportImage()">이미지 저장</button>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-coral" onclick="startNewJourney()">새로 시작하기</button>
+                        </div>
+                    </div>
+                    <div class="divider"><span>또는</span></div>
+                    <div class="existing-user-section">
+                        <div class="action-buttons">
+                            <input type="text" id="existingPassportId" class="input-passport" placeholder="기존 여권 번호 입력"
+                                autocomplete="off">
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn-action btn-blue" onclick="resumeJourney()">이어하기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-map" class="page">
+            <header class="header">
+                <div class="header-top">
+                    <h1 class="title">AR 등대 스탬프투어</h1>
+                </div>
+                <p class="map-subtitle">등대 위치 & 스탬프 인증 현황</p>
+                <!--div class="header-icon">🗼</div-->
+            </header>
+            <main class="map-area">
+                <button id="btn-location" class="btn-my-location">🎯 내 위치 확인</button>
+                <div id="map">
+                    <!--span class="map-placeholder-text">지도 API 로드 영역</span-->
+                </div>
+            </main>
+            <audio id="audioPlayer" preload="none">
+                <source id="audioSource" src="" type="audio/mpeg">
+            </audio>
+            <div class="popup-overlay" id="popupOverlay" onclick="closePopupOutside(event)">
+                <div class="popup-card" id="popupCard">
+                    <div class="card-header">
+                        <p class="card-title">등대 정보</p>
+                    </div>
+                    <div class="top-actions">
+                        <button class="action-btn" id="audioBtn" aria-label="음성 안내 재생" onclick="toggleAudio()">
+                            <svg class="sound-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+                            </svg>
+                            <div class="wave-bars">
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                                <div class="wave-bar"></div>
+                            </div>
+                        </button>
+                        <button class="action-btn" id="locationBtn" aria-label="지도 앱으로 위치 확인" onclick="openAppModal()">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path
+                                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="circle-image-wrap">
+                        <img class="circle-image" id="lighthouseImg" src="" alt="등대 이미지">
+                        <span class="circle-image-label" id="lighthouseName">등대이름</span>
+                    </div>
+                    <p class="card-desc" id="lighthouseDesc">등대 설명</p>
+                    <div class="divider"></div>
+                    <div class="card-address">
+                        📍 <span id="lighthouseAddr">주소 정보</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-overlay" id="appModal" onclick="closeModalOutside(event)">
+                <div class="modal-box">
+                    <p class="modal-title">📍 길찾기</p>
+                    <p class="modal-sub">사용할 앱을 선택하세요</p>
+                    <div class="app-list">
+                        <a class="app-item" id="kakaoBtn" href="#" target="_blank" rel="noopener"
+                            onclick="closeappModal()">
+                            <div class="app-icon" style="background:#FEE500;">🗺️</div>
+                            <div class="app-info">
+                                <div class="app-name">카카오맵</div>
+                                <div class="app-desc">카카오맵으로 길찾기</div>
+                            </div><span class="app-arrow">›</span>
+                        </a>
+                        <a class="app-item" id="naverBtn" href="#" target="_blank" rel="noopener"
+                            onclick="closeapModal()">
+                            <div class="app-icon" style="background:#03C75A;">🧭</div>
+                            <div class="app-info">
+                                <div class="app-name">네이버 지도</div>
+                                <div class="app-desc">네이버 지도로 길찾기</div>
+                            </div><span class="app-arrow">›</span>
+                        </a>
+                        <a class="app-item" id="googleBtn" href="#" target="_blank" rel="noopener"
+                            onclick="closeappModal()">
+                            <div class="app-icon" style="background:#fff; border:1px solid #eee;">🌍</div>
+                            <div class="app-info">
+                                <div class="app-name">Google 지도</div>
+                                <div class="app-desc">Google Maps로 보기</div>
+                            </div><span class="app-arrow">›</span>
+                        </a>
+                        <a class="app-item" id="tmapBtn" href="#" target="_blank" rel="noopener"
+                            onclick="closeappModal()">
+                            <div class="app-icon" style="background:#0066FF;">📱</div>
+                            <div class="app-info">
+                                <div class="app-name">T맵</div>
+                                <div class="app-desc">T맵으로 내비게이션</div>
+                            </div><span class="app-arrow">›</span>
+                        </a>
+                    </div>
+                    <button class="appmodal-close" onclick="closeappModal()">닫기</button>
+                </div>
+            </div>
+
+            <div class="progress-card" id="progress-card">
+                <div class="progress-header" id="toggle-progress">
+                    <div class="progress-title">
+                        <span class="icon">👤</span> 스탬프 인증 현황
+                    </div>
+                    <div class="progress-right">
+                        <div class="progress-count">
+                            <span id="current-stamps" class="current">1</span> / <span id="total-stamps"
+                                class="total">10</span>
+                        </div>
+                        <button class="expand-btn" id="expand-btn">▼</button>
+                    </div>
+                </div>
+                <div class="expandable-area" id="expandable-area">
+                    <div class="progress-bar-container">
+                        <div class="progress-track">
+                            <div class="progress-fill" id="progress-fill"></div>
+                            <div class="progress-thumb" id="progress-thumb"><img src="./img/lumi.png" width="30"
+                                    height="30"></div>
+                        </div>
+                    </div>
+                    <ul class="lighthouse-list">
+                    </ul>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <section id="page-mission" class="page">
+            <div class="mission-bg">
+                <nav class="top-nav">
+                    <button class="top-item" onclick="switchTab('smap', this)">
+                        <span class="icon"><img src="./img/location-ico.png"></span>
+                        <span class="label">등대 위치</span>
+                    </button>
+                    <button class="top-item active" onclick="switchTab('mission', this)">
+                        <span class="icon"><img src="./img/mission-ico.png"></span>
+                        <span class="label">미션 안내</span>
+                    </button>
+                    <button class="top-item" onclick="switchTab('review', this)">
+                        <span class="icon"><img src="./img/photo-place-ico.png"></span>
+                        <span class="label">사진 후기</span>
+                    </button>
+                </nav>
+                <main id="tab-smap" class="tab-content">
+                    <div id="smap"></div>
+                </main>
+                <main id="tab-mission" class="tab-content active mission-path">
+                    <div class="step-container">
+                        <button class="round-btn" onclick="openModal('스탬프 획득 완료')">
+                            <img src="./img/star-button.png" alt="스탬프 버튼">
+                        </button>
+                    </div>
+                    <div class="step-container">
+                        <button class="round-btn" onclick="routeTo('photoauth')">
+                            <img src="./img/camera-button.png" alt="인증샷 버튼">
+                        </button>
+                    </div>
+                    <div class="step-container active">
+                        <button class="round-btn"
+                            onclick="location.href='https://toysun.github.io/doggie/curved-aframe/hero.html'">
+                            <img src="./img/treasure-button.png" alt="보물찾기 버튼">
+                        </button>
+                    </div>
+                    <div class="step-container">
+                        <button class="round-btn" onclick="routeTo('arnavi')">
+                            <img src="./img/map-button.png" alt="길안내 버튼">
+                        </button>
+                    </div>
+                </main>
+
+                <main id="tab-review" class="tab-content review-list">
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="user-profile"></div> <span class="user-info">MK109643 · 2025.10.18 오후
+                                2:33</span>
+                        </div>
+                        <div class="review-image">
+                            <div
+                                style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                                <img src="./img/photo-demo.jpg" alt="인증사진">
+                            </div>
+                            <!--span class="image-count">1/1</span-->
+                        </div>
+                        <div class="review-tags">
+                            <span class="tag pink"># 등대스탬프투어</span>
+                            <span class="tag blue"># 오동도등대</span>
+                        </div>
+                        <p class="review-text">오동도등대 스탬프투어 첫번째 시작 기념</p>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="user-profile"></div>
+                            <span class="user-info">JK305946 · 2025.11.09 오전 7:18</span>
+                        </div>
+                        <div class="review-image">
+                            <div
+                                style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                                <img src="./img/photo-demo2.jpg" alt="인증사진">
+                            </div>
+                        </div>
+                        <div class="review-tags">
+                            <span class="tag pink"># 등대스탬프투어</span>
+                            <span class="tag blue"># 간절곶등대</span>
+                        </div>
+                        <p class="review-text">바다와 함께 AR 캐릭터 인증 완료!</p>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-header">
+                            <div class="user-profile"></div>
+                            <span class="user-info">OW386946 · 2025.10.19 오후 1:18</span>
+                        </div>
+                        <div class="review-image">
+                            <div
+                                style="width: 100%; height: 100%; background: #ddd; display: flex; align-items: center; justify-content: center;">
+                                <img src="./img/photo-demo3.jpg" alt="인증사진">
+                            </div>
+                        </div>
+                        <div class="review-tags">
+                            <span class="tag pink"># 등대스탬프투어</span>
+                            <span class="tag blue"># 간절곶등대</span>
+                        </div>
+                        <p class="review-text">예쁜 AR 캐릭터들과 함께 찰칵~~</p>
+                    </div>
+                </main>
+            </div>
+            <div class="mission-modal-overlay" id="missionModal">
+                <div class="mission-modal-content">
+                    <button class="close-btn" onclick="closeModal()">X</button>
+                    <h2 class="modal-title" id="modalTitle">미션 제목</h2>
+                    <button class="mission-action-btn">미션 바로가기</button>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-passport" class="page">
+            <div class="bg"></div>
+            <div class="swipe-guide">
+                <img class="swipe-icon" src="./img/swipe-white.png" alt="좌우 스와이프">
+                <div class="guide-text">
+                    양쪽으로 넘기면서<br>
+                    스탬프북을 열람 할 수 있습니다.
+                </div>
+            </div>
+        </section>
+
+        <section id="page-passport-sub" class="page">
+            <div class="app-container">
+                <div class="header-section">
+                    <img src="./img/passport-sub-bg1.png" alt="여권 배경" class="header-bg-img">
+                    <div class="header-overlay">
+                        <div class="title-area">
+                            <h1>AR 등대여권</h1>
+                        </div>
+                        <div class="ticket-area">
+                            <img src="./img/stamp-ganjolgot.png" alt="등대 스탬프" class="stamp-img">
+                            <div class="stamp-time">2026.05.28 12:36</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="record-section">
+                    <div class="record-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z"
+                                fill="#173357" />
+                        </svg>
+                        나의 스탬프 기록
+                    </div>
+                    <div class="record-count">
+                        <span class="current">01</span> / 10
+                    </div>
+                </div>
+
+                <div class="cards-section">
+                    <div class="photo-card">
+                        <img src="./img/photo-demo.jpg">
+                    </div>
+                    <div class="info-card">
+                        <img src="./img/photo-demo-2.jpg" style="cursor: pointer;" onclick="openModal()">
+                        <div class="review-space">
+                            <div class="hashtags">
+                                <span class="hashtag pink"># 등대스탬프투어</span>
+                                <span class="hashtag blue"># 간절곶등대</span>
+                            </div>
+                            <p class="subtitle">스탬프투어 첫번째 시작이다... 나머지도 열심히 모아서 꼭 완주해야지~~</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="infoModal" class="info-modal-overlay">
+                    <div class="info-modal-content">
+                        <button class="modal-close" onclick="closeModal()">×</button>
+                        <div class="modal-body">
+                            <div class="info-group">
+                                <div class="info-label">불 밝힌날 : </div>
+                                <div class="info-value" id="val-date">1920.03.26.</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">등대 위치 :</div>
+                                <div class="info-value" id="val-location">울산광역시 울주군 서생면 간절곶1길 39-2</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">등대 높이 :</div>
+                                <div class="info-value" id="val-height">17m</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">연락처 :</div>
+                                <div class="info-value" id="val-phone">052-239-6113 (간절곶항로표지관리소)</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">운영시간 :</div>
+                                <div class="info-value" id="val-time">하절기(4월~9월) 09:00~18:00<br>동절기(10월~3월) 09:00~17:00
+                                </div>
+                                <div class="info-value" id="val-dayoff">매주 월요일 휴관</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-ok" onclick="closeModal()">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-passport-empty" class="page">
+            <div class="app-container">
+                <div class="header-section">
+                    <img src="./img/passport-sub-bg1.png" alt="여권 배경" class="header-bg-img">
+                    <div class="header-overlay">
+                        <div class="title-area">
+                            <h1>AR 등대여권</h1>
+                            <!--h2>STAMP BOOK</h2-->
+                        </div>
+
+                        <div class="ticket-area">
+                            <img src="./img/stamp-preview-2.png" alt="등대 스탬프" class="stamp-img">
+                            <!--img src="./img/stamp-ganjolgot.png" alt="등대 스탬프" class="stamp-img"-->
+                            <div class="stamp-time">2026.05.28 12:36</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="record-section">
+                    <div class="record-title">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M12 2C8.13 2 5 5.13 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13 15.87 2 12 2ZM12 11.5C10.62 11.5 9.5 10.38 9.5 9C9.5 7.62 10.62 6.5 12 6.5C13.38 6.5 14.5 7.62 14.5 9C14.5 10.38 13.38 11.5 12 11.5Z"
+                                fill="#173357" />
+                        </svg>
+                        나의 스탬프 기록
+                    </div>
+                    <div class="record-count">
+                        <span class="current">01</span> / 10
+                    </div>
+                </div>
+
+                <div class="cards-section">
+                    <div class="photo-card">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M4 8V19C4 19.55 4.45 20 5 20H19C19.55 20 20 19.55 20 19V8C20 7.45 19.55 7 19 7H16.83L15 5H9L7.17 7H5C4.45 7 4 7.45 4 8ZM12 18C9.79 18 8 16.21 8 14C8 11.79 9.79 10 12 10C14.21 10 16 11.79 16 14C16 16.21 14.21 18 12 18ZM12 11.5C10.62 11.5 9.5 12.62 9.5 14C9.5 15.38 10.62 16.5 12 16.5C13.38 16.5 14.5 15.38 14.5 14C14.5 12.62 13.38 11.5 12 11.5Z" />
+                        </svg>
+                        <p>인증샷을<br>남겨보세요!</p>
+                    </div>
+                    <div class="info-card">
+                        <img src="./img/photo-demo-3.jpg" style="cursor: pointer;" onclick="emptyopenModal()">
+                        <div class="review-space">
+                            <div class="hashtags">
+                                <span class="hashtag pink"># 등대스탬프투어</span>
+                                <span class="hashtag blue"># 영도등대</span>
+                            </div>
+                            <p class="subtitle"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="empty-infoModal" class="info-modal-overlay">
+                    <div class="info-modal-content">
+                        <button class="modal-close" onclick="emptycloseModal()">×</button>
+                        <div class="modal-body">
+                            <div class="info-group">
+                                <div class="info-label">불 밝힌날 :</div>
+                                <div class="info-value" id="val-date">1906.12.01.</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">등대 위치 :</div>
+                                <div class="info-value" id="val-location">부산광역시 영도구 전망로 181</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">등대 높이 :</div>
+                                <div class="info-value" id="val-height">34m</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">연락처 :</div>
+                                <div class="info-value" id="val-phone">051-405-1201 (영도항로표지관리소)</div>
+                            </div>
+                            <div class="info-group">
+                                <div class="info-label">운영시간 :</div>
+                                <div class="info-value" id="val-time">- 3월~10월: 06:00~20:00<br>- 11월~2월: 07:00~18:00
+                                </div>
+                                <div class="info-value" id="val-dayoff">매주 월요일 및 설·추석 당일 휴관</div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn-ok" onclick="emptycloseModal()">OK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="page-arnavi" class="page">
+            <div id="start_area">
+                <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
+                <img src="./img/ar-navi-text.png" alt="AR 등대 길찾기" width="200">
+                <p style="color: #066265; font-weight:bold;">증강현실(AR) 사용시,<br>주변 사물과 부딪치지 않도록 주의하세요.</p>
+                <button id="start_btn" onclick="startNavigation()">안내 시작</button>
+            </div>
+            <div id="minimap-wrapper">
+                <div id="minimap"></div>
+            </div>
+            <div class="info-panel" id="info-panel">
+                <p class="distance-text" id="distance-info">가까운 등대 찾는 중...</p>
+            </div>
+            <div class="arnavi-modal" id="alert-modal">
+                <div class="arnavi-modal-content">
+                    <p id="alert-msg"></p>
+                    <button class="btn-confirm" onclick="arnavicloseModal()">확인</button>
+                </div>
+            </div>
+            <div class="ar-overlay" id="ar-container"></div>
+        </section>
+
+        <section id="page-photoauth" class="page">
+            <div id="photoauth-ar-container"></div>
+
+            <div id="custom-ui-layer" class="hidden">
+
+                <div id="preview-screen" class="screen hidden">
+                    <div class="media-container">
+                        <img id="preview-image" class="media-content hidden" />
+                        <video id="preview-video" class="media-content hidden" autoplay loop muted playsinline></video>
+                        <div class="info-overlay">
+                            <h3 id="lighthouse-name">📍 호미곶 등대</h3>
+                            <p id="capture-time"></p>
+                        </div>
+                    </div>
+
+                    <div class="bottom-action">
+                        <button id="btn-cancel" class="cancel-btn"
+                            style="background: linear-gradient(to right, #f0d7a6, #f0d7a6);" onclick="resetUI()">다시
+                            촬영</button>
+                        <button id="btn-save-stamp" class="action-btn"
+                            style="background: linear-gradient(to right, #9AD28B, #37BBA3);">스탬프북 저장</button>
+                    </div>
+                </div>
+
+                <div id="modal-confirm" class="photo-modal hidden">
+                    <div class="photo-modal-content">
+                        <button class="modal-close"
+                            onclick="document.getElementById('modal-confirm').classList.add('hidden')">×
+                        </button>
+                        <p>현재 등대의 스탬프를 획득하고<br>사진을 저장하시겠습니까?</p>
+                        <div class="modal-buttons">
+                            <button id="btn-confirm-cancel" class="btn-cancel">취소</button>
+                            <button id="btn-confirm-save" class="btn-primary">확인</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="modal-share" class="photo-modal hidden">
+                    <div class="photo-modal-content">
+                        <button class="modal-close"
+                            onclick="document.getElementById('modal-share').classList.add('hidden')">×
+                        </button>
+                        <p class="share-text">
+                            사진을 등대 커뮤니티에만 게시하려면 좌측의 <strong>'사진후기 게시'</strong> 버튼을,<br>
+                            게시 후 SNS 에 공유하려면 우측의 <strong>'게시 후 SNS 공유'</strong> 버튼을 눌러주세요.
+                        </p>
+                        <div class="modal-buttons flex-row">
+                            <button id="btn-post-review" class="btn-secondary">사진후기 게시</button>
+                            <button id="btn-post-share" class="btn-primary">게시 후 SNS 공유</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <nav id="global-bottom-nav" class="bottom-nav" style="display: none;">
+        <button class="nav-item" onclick="routeTo('map')">
+            <span class="icon"><img src="./img/home_white.png"></span>
+            <span class="label">홈</span>
+        </button>
+        <button class="nav-item" onclick="routeTo('passport')">
+            <span class="icon"><img src="./img/passport_white.png"></span>
+            <span class="label">스탬프북</span>
+        </button>
+        <button class="nav-item" onclick="routeTo('info')">
+            <span class="icon"><img src="./img/info_white.png"></span>
+            <span class="label">안내</span>
+        </button>
+    </nav>
+
+    <script src="js/index_spa.js"></script>
+
+</body>
+
+</html>
