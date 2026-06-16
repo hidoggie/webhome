@@ -4,6 +4,48 @@ let myLocationMarker = null;
 let isMapZoomedIn = false;
 const initialCenter = new naver.maps.LatLng(36.484881, 127.949252);
 const initialZoom = 7;
+const photoauthSceneTemplate = `
+<a-scene responsive-immersive coaching-overlay landing-page xrextras-gesture-detector xrextras-loading
+                xrextras-runtime-error gltf-model="dracoDecoderPath: https://cdn.8thwall.com/web/aframe/draco-decoder/"
+                renderer="colorManagement: true" xrweb="allowedDevices: any; defaultEnvironmentFogIntensity: 0.5; defaultEnvironmentFloorTexture: #groundTex; defaultEnvironmentFloorColor: #FFF; defaultEnvironmentSkyBottomColor: #B4C4CC; defaultEnvironmentSkyTopColor: #5ac8fa; defaultEnvironmentSkyGradientStrength: 0.5; scale: absolute">
+
+                <a-assets>
+                    <a-asset-item id="LumiModel" src="./models/lumi-photo-ani.glb"></a-asset-item>
+                    <a-asset-item id="vfx" src="./models/appear-effect.glb"></a-asset-item>
+                    <img id="groundTex" src="./models/textures/concrete.jpg">
+                </a-assets>
+
+                <xrextras-capture-button capture-mode="photo"></xrextras-capture-button>
+                <xrextras-capture-config file-name-prefix="my-photo-" request-mic="manual"></xrextras-capture-config>
+
+                <a-camera id="camera" position="0 1.75 12" raycaster="objects: .cantap"
+                    cursor="fuse: false; rayOrigin: mouse;">
+                </a-camera>
+
+                <a-entity xr-light light="type: directional; castShadow: true; shadowMapHeight:2048; shadowMapWidth:2048; shadowCameraTop: 20; shadowCameraBottom: -20; shadowCameraLeft: -20; shadowCameraRight: 20; target: #car; shadowRadius: 3" 
+                          xrextras-attach="target: car; offset: 0 15 0;" shadow>
+                </a-entity>
+
+                <a-light xr-light="max: 0.5" type="ambient">
+                </a-light>
+
+                <a-entity id="car" gltf-model="#LumiModel" rotation="0 0 0" scale="2 2 2"
+                    xrextras-hold-drag="rise-height: 0" xrextras-two-finger-rotate absolute-pinch-scale proximity
+                    animation="property: position; from: 0 -10 0; to: 0 0 0; dir: linear; delay: 4000; dur: 8000; loop: false"
+                    animation__1="property: scale; from: 0 0 0; to: 2 2 2; dir: linear; delay: 4000; dur: 8000; loop: false"
+                    animation-mixer shadow="receive: false">
+                    <a-entity id="car" gltf-model="#vfx" rotation="0 0 0" scale="2 2 2"
+                        xrextras-hold-drag="rise-height: 0" xrextras-two-finger-rotate absolute-pinch-scale proximity
+                        animation="property: scale; from: 2 2 2; to: 0 0 0; dir: linear; delay: 16000; dur: 1000; loop: false"
+                        animation-mixer>
+                    </a-entity>
+                </a-entity>
+
+                <a-plane id="ground" rotation="-90 0 0" width="100" height="100"
+                    material="shader: shadow; opacity: 0.5;" shadow></a-plane>
+
+            </a-scene>
+        `;
 
 // 10개 이벤트 지역 배열 (전역)
 const eventLocations = [
@@ -154,13 +196,24 @@ function routeTo(pageId) {
 
   const arVideo = document.getElementById("arjs-video");
   const targets = ["arnavi", "photoauth"];
+  const photoContainer = document.getElementById("photoauth-ar-container");
 
   if (targets.includes(pageId)) {
     document.body.classList.add("ar-mode"); // Flex 끄기 & 투명 배경
+
+    if (pageId === "photoauth" && photoContainer) {
+      if (!photoContainer.innerHTML.trim()) {
+        photoContainer.innerHTML = photoauthSceneTemplate;
+      }
+    }
+
     const arVideo = document.getElementById("arjs-video");
     if (arVideo) arVideo.style.display = "block";
   } else {
     document.body.classList.remove("ar-mode"); // 원래 블루 배경 & Flex 복구
+    if (photoContainer) {
+      photoContainer.innerHTML = "";
+    }
     const arVideo = document.getElementById("arjs-video");
     if (arVideo) arVideo.style.display = "none";
   }
