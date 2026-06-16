@@ -5,7 +5,7 @@ let isMapZoomedIn = false;
 const initialCenter = new naver.maps.LatLng(36.484881, 127.949252);
 const initialZoom = 7;
 const photoauthSceneTemplate = `
-<a-scene responsive-immersive coaching-overlay landing-page xrextras-gesture-detector xrextras-loading
+<a-scene responsive-immersive coaching-overlay landing-page xrextras-gesture-detector xrextras-loading hide-guide-on-start
                 xrextras-runtime-error gltf-model="dracoDecoderPath: https://cdn.8thwall.com/web/aframe/draco-decoder/"
                 renderer="colorManagement: true" xrweb="allowedDevices: any; defaultEnvironmentFogIntensity: 0.5; defaultEnvironmentFloorTexture: #groundTex; defaultEnvironmentFloorColor: #FFF; defaultEnvironmentSkyBottomColor: #B4C4CC; defaultEnvironmentSkyTopColor: #5ac8fa; defaultEnvironmentSkyGradientStrength: 0.5; scale: absolute">
 
@@ -1212,4 +1212,45 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   window.resetUI = resetUI;
+});
+
+// A-Frame 기준 커스텀 컴포넌트 등록
+AFRAME.registerComponent('hide-guide-on-found', {
+  init: function () {
+    const el = this.el;
+    
+    // 이미지를 찾았을 때 이벤트 리스너
+    el.sceneEl.addEventListener('xrimagefound', (event) => {
+      // 8th Wall 기본 스캔 오버레이나 튜토리얼 컨테이너 ID를 찾아 숨김
+      const runtimeLoadingUI = document.getElementById('recorder-loading-container'); 
+      const xrextrasRuntimeLoading = document.querySelector('.xrextras-overlay-container');
+      
+      if (runtimeLoadingUI) runtimeLoadingUI.style.display = 'none';
+      if (xrextrasRuntimeLoading) xrextrasRuntimeLoading.style.display = 'none';
+      
+      // 만약 자체 제작한 가이드라인 UI가 있다면 함께 처리
+      const myCustomGuide = document.getElementById('my-guide-ui');
+      if (myCustomGuide) myCustomGuide.style.visibility = 'hidden';
+    });
+
+    // 이미지를 놓쳤을 때 다시 보여주고 싶다면 추가 (선택사항)
+    el.sceneEl.addEventListener('xrimagelost', (event) => {
+      const myCustomGuide = document.getElementById('my-guide-ui');
+      if (myCustomGuide) myCustomGuide.style.visibility = 'visible';
+    });
+  }
+});
+
+AFRAME.registerComponent('hide-guide-on-start', {
+  init: function () {
+    // 8th wall의 카메라 파이프라인이 완전히 켜지고 렌더링이 시작될 때 이벤트 감지
+    this.el.sceneEl.addEventListener('realityready', () => {
+      // 숨길 가이드라인 UI 요소 선택
+      const xrextrasRuntimeLoading = document.querySelector('.xrextras-overlay-container');
+      const myCustomGuide = document.getElementById('my-guide-ui');
+      
+      if (xrextrasRuntimeLoading) xrextrasRuntimeLoading.style.display = 'none';
+      if (myCustomGuide) myCustomGuide.style.visibility = 'hidden';
+    });
+  }
 });
