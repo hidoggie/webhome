@@ -2513,6 +2513,7 @@ body.ar-mode .a-canvas {
   top: 0;
   left: 0;
   width: 100%;
+  height: 90%;
   z-index: 999;
   pointer-events: auto;
 }
@@ -2594,7 +2595,7 @@ body.ar-mode .a-canvas {
 }
 
 /* 모달 공통 스타일 */
-.photomodal {
+.photo-modal {
   position: absolute;
   top: 0;
   left: 0;
@@ -2606,7 +2607,7 @@ body.ar-mode .a-canvas {
   align-items: center;
   z-index: 1000;
 }
-.photomodal-content {
+.photo-modal-content {
   position: relative;
   background-image: url("../img/popup-bg-2.png");
   background-size: cover;
@@ -2622,7 +2623,7 @@ body.ar-mode .a-canvas {
   border: 3px solid #3d6353;
   overflow: hidden;
 }
-.photomodal-content p {
+.photo-modal-content p {
   font-size: 1.1rem;
   line-height: 1.4;
   margin-bottom: 25px;
