@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -8,7 +9,7 @@
 
   <script src="./js/8frame-1.5.0.min.js"></script>
   <script src="./js/xrextras.js"></script>
-  <!--script src="./js/landing-page.js"></script-->  
+  <!--script src="./js/landing-page.js"></script-->
   <script src="//cdn.8thwall.com/web/aframe/aframe-extras-7.2.0.min.js"></script>
   <script async src="./js/xr.js" data-preload-chunks="slam"></script>
 
@@ -17,149 +18,273 @@
   <script type="module" src="./js/app1.js" defer></script>
   <link rel="stylesheet" href="./css/photo-auth.css">
 
+  <script>
+    AFRAME.registerComponent('auto-hide-overlay', {
+      init: function () {
+        // 모델 애니메이션 딜레이(4000ms)와 동일한 시점에 오버레이 제거
+        setTimeout(() => {
+          // A-Frame 씬에서 컴포넌트 기능 해제
+          this.el.removeAttribute('coaching-overlay');
+
+          // DOM에 남아있는 UI 요소 강제 숨김 처리 (사진에 찍히지 않도록)
+          const overlayUI = document.getElementById('coachingOverlay') || document.querySelector('.coaching-overlay');
+          if (overlayUI) {
+            overlayUI.style.display = 'none';
+          }
+        }, 4000);
+      }
+    });
+
+    // 1. 사진 촬영이 완료된 순간 캡처 버튼 컨테이너 숨기기
+    window.addEventListener('mediarecorder-photocomplete', () => {
+      const recorder = document.getElementById('recorder');
+      if (recorder) {
+        recorder.style.display = 'none';
+      }
+    });
+
+    // 2. 미리보기 창을 닫거나 취소했을 때 캡처 버튼 다시 나타나게 하기
+    window.addEventListener('mediarecorder-previewclosed', () => {
+      const recorder = document.getElementById('recorder');
+      if (recorder) {
+        recorder.style.display = 'flex'; // 8th Wall 기본 display 속성 복구
+      }
+    });
+
+  </script>
+
   <style>
+    #recorder:not(.hidden) {
+      bottom: 110px !important;
+    }
+
+    /* 혹시 모를 충돌을 대비해 hidden 상태일 때는 확실히 안 보이게 처리 */
+    #recorder.hidden {
+      display: none !important;
+    }
+
     /* UI 전체를 덮는 투명 레이어 */
-#custom-ui-layer {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  z-index: 999; pointer-events: auto;
-}
-.hidden { display: none !important; }  
+    #custom-ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 999;
+      pointer-events: auto;
+    }
 
-/* 1. 미리보기 화면 */
-.screen {
-  position: relative; width: 100%; height: 100%; background: #ffff;
-  display: flex; flex-direction: column;
-}
-.media-container {
-  flex: 1;
+    .hidden {
+      display: none !important;
+    }
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
+    /* 1. 미리보기 화면 */
+    .screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #ffff;
+      display: flex;
+      flex-direction: column;
+    }
 
-  padding-top: 30px;
-  padding-bottom: 20px;
-}
-.media-content {
-  width: 90%;
-  aspect-ratio: 4 / 5;
+    .media-container {
+      flex: 1;
 
-  object-fit: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
 
-  border-radius: 16px;
-  box-shadow: 0 8px 20px rgba(0,0,0,.25);
-}
+      padding-top: 30px;
+      padding-bottom: 20px;
+    }
 
-/* 등대 정보 오버레이 */
-.info-overlay {
-  position: absolute; bottom: 20px; left: 20px; color: white;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.8);
-}
-.info-overlay h3 { margin: 0; font-size: 1.5rem; }
-.info-overlay p { margin: 5px 0 0 0; font-size: 1rem; opacity: 0.9; }
+    .media-content {
+      width: 90%;
+      aspect-ratio: 4 / 5;
 
-/* 하단 버튼 영역 */
-.bottom-action {
-  padding: 16px 20px; background: white; display: flex; gap: 12px;
-}
-.action-btn {
-  flex: 1; padding: 15px; font-size: 1.2rem; font-weight: bold;
-  background-color: #0056b3; color: white; border: none; border-radius: 8px; cursor: pointer;
-}
-.cancel-btn {
-  flex: 1; padding: 15px; font-size: 1.2rem; font-weight: bold;
-  background-color: #0056b3; color: white; border: none; border-radius: 8px; cursor: pointer;
-}
+      object-fit: cover;
 
-/* 모달 공통 스타일 */
-.modal {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center;
-  z-index: 1000;
-}
-.modal-content {
-  position: relative;
+      border-radius: 16px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, .25);
+    }
 
-  background-image: url('./img/popup-bg-2.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+    /* 등대 정보 오버레이 */
+    .info-overlay {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      color: white;
+      text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.8);
+    }
 
-  width: 80%;
-  max-width: 340px;
-  min-height: 260px;
+    .info-overlay h3 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
 
-  border-radius: 12px;
-  padding: 25px 20px;
+    .info-overlay p {
+      margin: 5px 0 0 0;
+      font-size: 1rem;
+      opacity: 0.9;
+    }
 
-  text-align: center;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  border: 3px solid #3d6353;
-  overflow: hidden;
-}
-.modal-content p { font-size: 1.1rem; line-height: 1.4; margin-bottom: 25px; color: #333; }
-.share-text { font-size: 0.95rem !important; word-break: keep-all; }
+    /* 하단 버튼 영역 */
+    .bottom-action {
+      padding: 16px 20px;
+      background: white;
+      display: flex;
+      gap: 12px;
+    }
 
-.modal-buttons { display: flex; gap: 10px; }
-.modal-buttons button {
-  flex: 1; padding: 12px; font-size: 1rem; font-weight: bold;
-  border: none; border-radius: 6px; cursor: pointer;
-}
-.btn-cancel { background: #e0e0e0; color: #555; }
-.btn-primary { background: #E68A3F; color: white; }
-.btn-secondary { background: #F4F1E8; color: #365246; }
+    .action-btn {
+      flex: 1;
+      padding: 15px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
-        /* 우측 상단 X 버튼 */
-        .modal-close {
-            position: absolute;
-            top: 15px; right: 15px;
-            background-color: #669c8a;
-            color: white;
-            border: none;
-            width: 28px; height: 28px;
-            border-radius: 50%;
-            font-size: 20px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
+    .cancel-btn {
+      flex: 1;
+      padding: 15px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      background-color: #0056b3;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
-        .preview-close {
-            position: absolute;
-            top: 15px; right: 15px;
-            background-color: transparent;
-            color: white;
-            border: none;
-            width: 35px; height: 35px;
-            border-radius: 50%;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-        }
+    /* 모달 공통 스타일 */
+    .modal {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
 
+    .modal-content {
+      position: relative;
+
+      background-image: url('./img/popup-bg-2.png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+
+      width: 80%;
+      max-width: 340px;
+      min-height: 260px;
+
+      border-radius: 12px;
+      padding: 25px 20px;
+
+      text-align: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      border: 3px solid #3d6353;
+      overflow: hidden;
+    }
+
+    .modal-content p {
+      font-size: 1.1rem;
+      line-height: 1.4;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    .share-text {
+      font-size: 0.95rem !important;
+      word-break: keep-all;
+    }
+
+    .modal-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-buttons button {
+      flex: 1;
+      padding: 12px;
+      font-size: 1rem;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .btn-cancel {
+      background: #e0e0e0;
+      color: #555;
+    }
+
+    .btn-primary {
+      background: #E68A3F;
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #F4F1E8;
+      color: #365246;
+    }
+
+    /* 우측 상단 X 버튼 */
+    .modal-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background-color: #669c8a;
+      color: white;
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
+
+    .preview-close {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      background-color: transparent;
+      color: white;
+      border: none;
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+    }
   </style>
 </head>
 
 <body>
   <div id="container"></div>
 
-  <a-scene
-    auto-hide-overlay
-    responsive-immersive
-    coaching-overlay
-    landing-page
-    xrextras-gesture-detector
-    xrextras-loading
-    xrextras-runtime-error
-    gltf-model="dracoDecoderPath: https://cdn.8thwall.com/web/aframe/draco-decoder/"
-    renderer="colorManagement: true"
+  <a-scene auto-hide-overlay responsive-immersive coaching-overlay landing-page xrextras-gesture-detector
+    xrextras-loading xrextras-runtime-error
+    gltf-model="dracoDecoderPath: https://cdn.8thwall.com/web/aframe/draco-decoder/" renderer="colorManagement: true"
     xrweb="allowedDevices: any;
     defaultEnvironmentFogIntensity: 0.5; 
     defaultEnvironmentFloorTexture: #groundTex; 
@@ -179,16 +304,10 @@
     <xrextras-capture-config file-name-prefix="my-photo-" request-mic="manual"></xrextras-capture-config>
     <!--xrextras-capture-preview style="display:none"></xrextras-capture-preview-->
 
-    <a-camera
-      id="camera"
-      position="0 1.75 12"
-      raycaster="objects: .cantap"
-      cursor="fuse: false; rayOrigin: mouse;">
+    <a-camera id="camera" position="0 1.75 12" raycaster="objects: .cantap" cursor="fuse: false; rayOrigin: mouse;">
     </a-camera>
-  
-  <a-entity
-    xr-light
-    light="type: directional;
+
+    <a-entity xr-light light="type: directional;
       castShadow: true;
       shadowMapHeight:2048;
       shadowMapWidth:2048;
@@ -197,384 +316,328 @@
       shadowCameraLeft: -20;
       shadowCameraRight: 20;
       target: #car;
-      shadowRadius: 3"
-    xrextras-attach="target: car; offset: 0 15 0;"
-    shadow>
-  </a-entity>
-  
-  <a-light
-    xr-light="max: 0.5"
-    type="ambient">
-  </a-light>
+      shadowRadius: 3" xrextras-attach="target: car; offset: 0 15 0;" shadow>
+    </a-entity>
 
-  <a-entity
-    id="car"
-    gltf-model="#carModel"
-    rotation="0 0 0"
-    scale="2 2 2"
-    xrextras-hold-drag="rise-height: 0"
-    xrextras-two-finger-rotate
-    absolute-pinch-scale
-    proximity
-    animation="property: position; from: 0 -10 0; to: 0 0 0; dir: linear; delay: 4000; dur: 8000; loop: false"
-    animation__1="property: scale; from: 0 0 0; to: 2 2 2; dir: linear; delay: 4000; dur: 8000; loop: false"
-    animation-mixer
-    shadow="receive: false">
-      <a-entity
-    id="car"
-    gltf-model="#vfx"
-    rotation="0 0 0"
-    scale="2 2 2"
-    xrextras-hold-drag="rise-height: 0"
-    xrextras-two-finger-rotate
-    absolute-pinch-scale
-    proximity
-    animation="property: scale; from: 2 2 2; to: 0 0 0; dir: linear; delay: 16000; dur: 1000; loop: false"
-    animation-mixer>
-  </a-entity>
-  </a-entity>
+    <a-light xr-light="max: 0.5" type="ambient">
+    </a-light>
 
-  <a-plane
-    id="ground"
-    rotation="-90 0 0"
-    width="100"
-    height="100"
-    material="shader: shadow; opacity: 0.5;"
-    shadow
-  ></a-plane>
+    <a-entity id="car" gltf-model="#carModel" rotation="0 0 0" scale="2 2 2" xrextras-hold-drag="rise-height: 0"
+      xrextras-two-finger-rotate absolute-pinch-scale proximity
+      animation="property: position; from: 0 -10 0; to: 0 0 0; dir: linear; delay: 4000; dur: 8000; loop: false"
+      animation__1="property: scale; from: 0 0 0; to: 2 2 2; dir: linear; delay: 4000; dur: 8000; loop: false"
+      animation-mixer shadow="receive: false">
+      <a-entity id="car" gltf-model="#vfx" rotation="0 0 0" scale="2 2 2" xrextras-hold-drag="rise-height: 0"
+        xrextras-two-finger-rotate absolute-pinch-scale proximity
+        animation="property: scale; from: 2 2 2; to: 0 0 0; dir: linear; delay: 16000; dur: 1000; loop: false"
+        animation-mixer>
+      </a-entity>
+    </a-entity>
+
+    <a-plane id="ground" rotation="-90 0 0" width="100" height="100" material="shader: shadow; opacity: 0.5;"
+      shadow></a-plane>
 
   </a-scene>
-  
+
   <div id="custom-ui-layer" class="hidden">
-  
-  <div id="preview-screen" class="screen hidden">
-    <div class="media-container">
-      <!--button class="preview-close" onclick="resetUI()">×</button-->
-      <img id="preview-image" class="media-content hidden" />
-      <video id="preview-video" class="media-content hidden" autoplay loop muted playsinline></video>
-      
-      <div class="info-overlay">
-        <h3 id="lighthouse-name">📍 호미곶 등대</h3>
-        <p id="capture-time"></p>
+
+    <div id="preview-screen" class="screen hidden">
+      <div class="media-container">
+        <!--button class="preview-close" onclick="resetUI()">×</button-->
+        <img id="preview-image" class="media-content hidden" />
+        <video id="preview-video" class="media-content hidden" autoplay loop muted playsinline></video>
+
+        <div class="info-overlay">
+          <h3 id="lighthouse-name">📍 호미곶 등대</h3>
+          <p id="capture-time"></p>
+        </div>
+      </div>
+
+      <div class="bottom-action">
+        <button id="btn-cancel" class="cancel-btn" style="background: linear-gradient(to right, #f0d7a6, #f0d7a6);"
+          onclick="resetUI()">다시 촬영</button>
+        <button id="btn-save-stamp" class="action-btn"
+          style="background: linear-gradient(to right, #9AD28B, #37BBA3);">스탬프북 저장</button>
       </div>
     </div>
-    
-    <div class="bottom-action">
-      <button id="btn-cancel" class="cancel-btn" style="background: linear-gradient(to right, #f0d7a6, #f0d7a6);" onclick="resetUI()">다시 촬영</button>
-      <button id="btn-save-stamp" class="action-btn" style="background: linear-gradient(to right, #9AD28B, #37BBA3);">스탬프북 저장</button>
-    </div>
-  </div>
 
-  <div id="modal-confirm" class="modal hidden">
-    <div class="modal-content">
-      <button class="modal-close"
-        onclick="document.getElementById('modal-confirm').classList.add('hidden')">×
-      </button>
-      <p>현재 등대의 스탬프를 획득하고<br>사진을 저장하시겠습니까?</p>
-      <div class="modal-buttons">
-        <button id="btn-confirm-cancel" class="btn-cancel">취소</button>
-        <button id="btn-confirm-save" class="btn-primary">확인</button>
+    <div id="modal-confirm" class="modal hidden">
+      <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('modal-confirm').classList.add('hidden')">×
+        </button>
+        <p>현재 등대의 스탬프를 획득하고<br>사진을 저장하시겠습니까?</p>
+        <div class="modal-buttons">
+          <button id="btn-confirm-cancel" class="btn-cancel">취소</button>
+          <button id="btn-confirm-save" class="btn-primary">확인</button>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div id="modal-share" class="modal hidden">
-    <div class="modal-content">
-      <button class="modal-close"
-        onclick="document.getElementById('modal-share').classList.add('hidden')">×
-      </button>
-      <p class="share-text">
-        사진을 등대 커뮤니티에만 게시하려면 좌측의 <strong>'사진후기 게시'</strong> 버튼을,<br>
-        게시 후 SNS 에 공유하려면 우측의 <strong>'게시 후 SNS 공유'</strong> 버튼을 눌러주세요.
-      </p>
-      <div class="modal-buttons flex-row">
-        <button id="btn-post-review" class="btn-secondary">사진후기 게시</button>
-        <button id="btn-post-share" class="btn-primary">게시 후 SNS 공유</button>
+    <div id="modal-share" class="modal hidden">
+      <div class="modal-content">
+        <button class="modal-close" onclick="document.getElementById('modal-share').classList.add('hidden')">×
+        </button>
+        <p class="share-text">
+          사진을 등대 커뮤니티에만 게시하려면 좌측의 <strong>'사진후기 게시'</strong> 버튼을,<br>
+          게시 후 SNS 에 공유하려면 우측의 <strong>'게시 후 SNS 공유'</strong> 버튼을 눌러주세요.
+        </p>
+        <div class="modal-buttons flex-row">
+          <button id="btn-post-review" class="btn-secondary">사진후기 게시</button>
+          <button id="btn-post-share" class="btn-primary">게시 후 SNS 공유</button>
+        </div>
       </div>
     </div>
+
   </div>
 
-</div>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const captureBtn = document.querySelector('xrextras-capture-button');
 
-<script>
-AFRAME.registerComponent('auto-hide-overlay', {
-    init: function() {
-        // 모델 애니메이션 딜레이(4000ms)와 동일한 시점에 오버레이 제거
-        setTimeout(() => {
-            // A-Frame 씬에서 컴포넌트 기능 해제
-            this.el.removeAttribute('coaching-overlay');
-            
-            // DOM에 남아있는 UI 요소 강제 숨김 처리 (사진에 찍히지 않도록)
-            const overlayUI = document.getElementById('coachingOverlay') || document.querySelector('.coaching-overlay');
-            if (overlayUI) {
-                overlayUI.style.display = 'none';
-            }
-        }, 4000); 
-    }
-});
-
-// 1. 사진 촬영이 완료된 순간 캡처 버튼 컨테이너 숨기기
-window.addEventListener('mediarecorder-photocomplete', () => {
-    const recorder = document.getElementById('recorder');
-    if (recorder) {
-        recorder.style.display = 'none';
-    }
-});
-
-// 2. 미리보기 창을 닫거나 취소했을 때 캡처 버튼 다시 나타나게 하기
-window.addEventListener('mediarecorder-previewclosed', () => {
-    const recorder = document.getElementById('recorder');
-    if (recorder) {
-        recorder.style.display = 'flex'; // 8th Wall 기본 display 속성 복구
-    }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  const captureBtn = document.querySelector('xrextras-capture-button');
-  
-  if (captureBtn && captureBtn.shadowRoot) {
-    const style = document.createElement('style');
-    style.textContent = `
+      if (captureBtn && captureBtn.shadowRoot) {
+        const style = document.createElement('style');
+        style.textContent = `
       :host {
         bottom: 120px !important;
       }
     `;
-    captureBtn.shadowRoot.appendChild(style);
-  }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  const scene = document.querySelector('a-scene');
-  const uiLayer = document.getElementById('custom-ui-layer');
-  
-  // 미리보기 요소
-  const previewScreen = document.getElementById('preview-screen');
-  const previewImg = document.getElementById('preview-image');
-  const previewVid = document.getElementById('preview-video');
-  const captureTimeText = document.getElementById('capture-time');
-  const btnSaveStamp = document.getElementById('btn-save-stamp');
-
-  // 모달 요소
-  const modalConfirm = document.getElementById('modal-confirm');
-  const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
-  const btnConfirmSave = document.getElementById('btn-confirm-save');
-
-  const modalShare = document.getElementById('modal-share');
-  const btnPostReview = document.getElementById('btn-post-review');
-  const btnPostShare = document.getElementById('btn-post-share');
-
-  // 임시 저장용 데이터 변수
-  let capturedDataUrl = null;
-  let capturedFile = null;
-
-  // --- [1] 사진/영상 촬영 완료 이벤트 감지 ---  
- window.addEventListener('mediarecorder-photocomplete', (e) => {
-  console.log('📸 photo 이벤트 발생!', e.detail);
-  
-  const reader = new FileReader();
-  reader.onload = (ev) => {
-    addTimestampToImage(ev.target.result, (composed) => {
-      capturedDataUrl = composed;
-
-      fetch(composed)
-        .then(r => r.blob())
-        .then(blob => {
-          capturedFile = new File([blob], 'lighthouse-stamp.jpg', { type: 'image/jpeg' });
-        });
-
-      showPreview(composed, 'photo');
+        captureBtn.shadowRoot.appendChild(style);
+      }
     });
-  };
-  reader.readAsDataURL(e.detail.blob);
-});
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const scene = document.querySelector('a-scene');
+      const uiLayer = document.getElementById('custom-ui-layer');
+
+      // 미리보기 요소
+      const previewScreen = document.getElementById('preview-screen');
+      const previewImg = document.getElementById('preview-image');
+      const previewVid = document.getElementById('preview-video');
+      const captureTimeText = document.getElementById('capture-time');
+      const btnSaveStamp = document.getElementById('btn-save-stamp');
+
+      // 모달 요소
+      const modalConfirm = document.getElementById('modal-confirm');
+      const btnConfirmCancel = document.getElementById('btn-confirm-cancel');
+      const btnConfirmSave = document.getElementById('btn-confirm-save');
+
+      const modalShare = document.getElementById('modal-share');
+      const btnPostReview = document.getElementById('btn-post-review');
+      const btnPostShare = document.getElementById('btn-post-share');
+
+      // 임시 저장용 데이터 변수
+      let capturedDataUrl = null;
+      let capturedFile = null;
+
+      // --- [1] 사진/영상 촬영 완료 이벤트 감지 ---  
+      window.addEventListener('mediarecorder-photocomplete', (e) => {
+        console.log('📸 photo 이벤트 발생!', e.detail);
+
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          addTimestampToImage(ev.target.result, (composed) => {
+            capturedDataUrl = composed;
+
+            fetch(composed)
+              .then(r => r.blob())
+              .then(blob => {
+                capturedFile = new File([blob], 'lighthouse-stamp.jpg', { type: 'image/jpeg' });
+              });
+
+            showPreview(composed, 'photo');
+          });
+        };
+        reader.readAsDataURL(e.detail.blob);
+      });
 
 
-  // ✅ 핵심 함수: Canvas로 시간 합성
-function addTimestampToImage(dataUrl, callback) {
-  const img = new Image();
+      // ✅ 핵심 함수: Canvas로 시간 합성
+      function addTimestampToImage(dataUrl, callback) {
+        const img = new Image();
 
-  img.onload = () => {
+        img.onload = () => {
 
-    // ===== 최종 출력 크기 =====
-    const targetWidth  = 1080;
-    const targetHeight = 1350;   // 4:5 비율
+          // ===== 최종 출력 크기 =====
+          const targetWidth = 1080;
+          const targetHeight = 1350;   // 4:5 비율
 
-    const canvas = document.createElement('canvas');
-    canvas.width  = targetWidth;
-    canvas.height = targetHeight;
+          const canvas = document.createElement('canvas');
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
 
-    const ctx = canvas.getContext('2d');
+          const ctx = canvas.getContext('2d');
 
-    // ===== 중앙 크롭 계산 =====
-    const targetRatio = targetWidth / targetHeight;
-    const imageRatio  = img.width / img.height;
+          // ===== 중앙 크롭 계산 =====
+          const targetRatio = targetWidth / targetHeight;
+          const imageRatio = img.width / img.height;
 
-    let sx, sy, sw, sh;
+          let sx, sy, sw, sh;
 
-    if (imageRatio > targetRatio) {
-      // 사진이 더 넓음
-      sh = img.height;
-      sw = sh * targetRatio;
+          if (imageRatio > targetRatio) {
+            // 사진이 더 넓음
+            sh = img.height;
+            sw = sh * targetRatio;
 
-      sx = (img.width - sw) / 2;
-      sy = 0;
+            sx = (img.width - sw) / 2;
+            sy = 0;
 
-    } else {
-      // 사진이 더 길쭉함
-      sw = img.width;
-      sh = sw / targetRatio;
+          } else {
+            // 사진이 더 길쭉함
+            sw = img.width;
+            sh = sw / targetRatio;
 
-      sx = 0;
-      sy = (img.height - sh) * 0.35;
-    }
+            sx = 0;
+            sy = (img.height - sh) * 0.35;
+          }
 
-    // ===== 중앙 크롭 후 1080x1350으로 그림 =====
-    ctx.drawImage(
-      img,
-      sx, sy,
-      sw, sh,
-      0, 0,
-      targetWidth,
-      targetHeight
-    );
+          // ===== 중앙 크롭 후 1080x1350으로 그림 =====
+          ctx.drawImage(
+            img,
+            sx, sy,
+            sw, sh,
+            0, 0,
+            targetWidth,
+            targetHeight
+          );
 
-    // ===== 시간 스탬프 =====
-    const now = new Date();
+          // ===== 시간 스탬프 =====
+          const now = new Date();
 
-    const timeStr =
-      `${now.getFullYear()}.` +
-      `${String(now.getMonth()+1).padStart(2,'0')}.` +
-      `${String(now.getDate()).padStart(2,'0')} ` +
-      `${String(now.getHours()).padStart(2,'0')}:` +
-      `${String(now.getMinutes()).padStart(2,'0')}`;
+          const timeStr =
+            `${now.getFullYear()}.` +
+            `${String(now.getMonth() + 1).padStart(2, '0')}.` +
+            `${String(now.getDate()).padStart(2, '0')} ` +
+            `${String(now.getHours()).padStart(2, '0')}:` +
+            `${String(now.getMinutes()).padStart(2, '0')}`;
 
-    const lighthouseName =
-      document.getElementById('lighthouse-name').innerText;
+          const lighthouseName =
+            document.getElementById('lighthouse-name').innerText;
 
-    const fontSize = 42;
+          const fontSize = 42;
 
-    ctx.font = `bold ${fontSize}px Arial`;
+          ctx.font = `bold ${fontSize}px Arial`;
 
-    ctx.shadowColor = 'rgba(0,0,0,0.8)';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetX = 2;
-    ctx.shadowOffsetY = 2;
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.shadowBlur = 8;
+          ctx.shadowOffsetX = 2;
+          ctx.shadowOffsetY = 2;
 
-    ctx.fillStyle = 'white';
+          ctx.fillStyle = 'white';
 
-    // 등대명
-    ctx.textAlign = 'left';
-    ctx.fillText(
-      lighthouseName,
-      40,
-      targetHeight - 50
-    );
+          // 등대명
+          ctx.textAlign = 'left';
+          ctx.fillText(
+            lighthouseName,
+            40,
+            targetHeight - 50
+          );
 
-    // 시간
-    ctx.textAlign = 'right';
-    ctx.fillText(
-      timeStr,
-      targetWidth - 40,
-      targetHeight - 50
-    );
+          // 시간
+          ctx.textAlign = 'right';
+          ctx.fillText(
+            timeStr,
+            targetWidth - 40,
+            targetHeight - 50
+          );
 
-    callback(canvas.toDataURL('image/jpeg', 0.92));
-  };
+          callback(canvas.toDataURL('image/jpeg', 0.92));
+        };
 
-  img.src = dataUrl;
-}
+        img.src = dataUrl;
+      }
 
-  function showPreview(mediaUrl, type) {
-    uiLayer.classList.remove('hidden');
-    previewScreen.classList.remove('hidden');
+      function showPreview(mediaUrl, type) {
+        uiLayer.classList.remove('hidden');
+        previewScreen.classList.remove('hidden');
 
-    document.querySelector('.info-overlay').classList.add('hidden');    
-    
-    if (type === 'photo') {
-      previewImg.src = mediaUrl;
-      previewImg.classList.remove('hidden');
-      previewVid.classList.add('hidden');
-    } else {
-      previewVid.src = mediaUrl;
-      previewVid.classList.remove('hidden');
-      previewImg.classList.add('hidden');
-      previewVid.play();
-    }
-  }
+        document.querySelector('.info-overlay').classList.add('hidden');
 
-  // --- [2] 스탬프북 저장 (확인 모달 띄우기) ---
-  btnSaveStamp.addEventListener('click', () => {
-    modalConfirm.classList.remove('hidden');
-  });
+        if (type === 'photo') {
+          previewImg.src = mediaUrl;
+          previewImg.classList.remove('hidden');
+          previewVid.classList.add('hidden');
+        } else {
+          previewVid.src = mediaUrl;
+          previewVid.classList.remove('hidden');
+          previewImg.classList.add('hidden');
+          previewVid.play();
+        }
+      }
 
-  // 저장 취소
-  btnConfirmCancel.addEventListener('click', () => {
-    modalConfirm.classList.add('hidden');
-  });
+      // --- [2] 스탬프북 저장 (확인 모달 띄우기) ---
+      btnSaveStamp.addEventListener('click', () => {
+        modalConfirm.classList.remove('hidden');
+      });
 
-  // DB 임시 저장 및 공유 모달 띄우기
-  btnConfirmSave.addEventListener('click', () => {
-    // TODO: 서버 API 통신 로직 추가 (여권번호, 등대위치, 촬영시간, 사진 데이터 전송)
-    console.log("DB 저장 완료: 스탬프 획득 처리됨!");
-    
-    modalConfirm.classList.add('hidden');
-    modalShare.classList.remove('hidden'); // 3번 프로세스로 넘어감
-  });
+      // 저장 취소
+      btnConfirmCancel.addEventListener('click', () => {
+        modalConfirm.classList.add('hidden');
+      });
 
-  // --- [4] 사진후기 게시 버튼 로직 ---
-  btnPostReview.addEventListener('click', () => {
-    // TODO: 사용자 DB 정보에서 게시 flag = true 처리 로직
-    console.log("게시 flag true 업데이트 완료 (game-process.html에 반영)");
-    alert("사진 후기가 성공적으로 게시되었습니다.");
-    resetUI();
-  });
+      // DB 임시 저장 및 공유 모달 띄우기
+      btnConfirmSave.addEventListener('click', () => {
+        // TODO: 서버 API 통신 로직 추가 (여권번호, 등대위치, 촬영시간, 사진 데이터 전송)
+        console.log("DB 저장 완료: 스탬프 획득 처리됨!");
 
-  // --- [5] 게시 후 SNS 공유 버튼 로직 ---
-  btnPostShare.addEventListener('click', async () => {
-  if (!capturedFile) {
-    alert("사진 준비 중입니다. 잠시 후 다시 눌러주세요.");
-    return;
-  }
+        modalConfirm.classList.add('hidden');
+        modalShare.classList.remove('hidden'); // 3번 프로세스로 넘어감
+      });
 
-  if (navigator.canShare && navigator.canShare({ files: [capturedFile] })) {
-    navigator.share({
-      files: [capturedFile],
-      title: '등대 스탬프 투어',
-      text: '호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!',
-    }).then(() => { resetUI(); })
-     .catch((err) => { console.log('공유 취소 또는 실패', err); resetUI(); });
+      // --- [4] 사진후기 게시 버튼 로직 ---
+      btnPostReview.addEventListener('click', () => {
+        // TODO: 사용자 DB 정보에서 게시 flag = true 처리 로직
+        console.log("게시 flag true 업데이트 완료 (game-process.html에 반영)");
+        alert("사진 후기가 성공적으로 게시되었습니다.");
+        resetUI();
+      });
 
-  } else if (navigator.share) {
-    navigator.share({
-      title: '등대 스탬프 투어',
-      text: '호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!',
-    }).then(() => resetUI()).catch(() => resetUI());
+      // --- [5] 게시 후 SNS 공유 버튼 로직 ---
+      btnPostShare.addEventListener('click', async () => {
+        if (!capturedFile) {
+          alert("사진 준비 중입니다. 잠시 후 다시 눌러주세요.");
+          return;
+        }
 
-  } else {
-    alert("해당 브라우저에서는 공유 기능을 지원하지 않습니다.");
-    resetUI();
-  }
-});
+        if (navigator.canShare && navigator.canShare({ files: [capturedFile] })) {
+          navigator.share({
+            files: [capturedFile],
+            title: '등대 스탬프 투어',
+            text: '호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!',
+          }).then(() => { resetUI(); })
+            .catch((err) => { console.log('공유 취소 또는 실패', err); resetUI(); });
 
-// UI 초기화 및 AR 화면 복귀
-  function resetUI() {
-    uiLayer.classList.add('hidden');
-    previewScreen.classList.add('hidden');
-    modalConfirm.classList.add('hidden');
-    modalShare.classList.add('hidden');
+        } else if (navigator.share) {
+          navigator.share({
+            title: '등대 스탬프 투어',
+            text: '호미곶 등대에서 멋진 사진을 찍고 스탬프를 획득했어요!',
+          }).then(() => resetUI()).catch(() => resetUI());
 
-    previewImg.src = "";
-    previewVid.src = "";
+        } else {
+          alert("해당 브라우저에서는 공유 기능을 지원하지 않습니다.");
+          resetUI();
+        }
+      });
 
-    capturedDataUrl = null;
-    capturedFile = null;
-}
+      // UI 초기화 및 AR 화면 복귀
+      function resetUI() {
+        uiLayer.classList.add('hidden');
+        previewScreen.classList.add('hidden');
+        modalConfirm.classList.add('hidden');
+        modalShare.classList.add('hidden');
 
-window.resetUI = resetUI;
+        previewImg.src = "";
+        previewVid.src = "";
 
-});
+        capturedDataUrl = null;
+        capturedFile = null;
+      }
 
-</script>
+      window.resetUI = resetUI;
+
+    });
+
+  </script>
 
 </body>
+
 </html>
