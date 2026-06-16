@@ -2692,6 +2692,12 @@ body.ar-mode .a-canvas {
   z-index: 10;
 }
 
-#recorder {
-  bottom: 110px !important; /* 하단 네비게이션(72px)을 고려해 여백 확보 */
+/* 8th Wall 캡처 버튼 위치 조정 (숨겨짐 상태가 아닐 때만 적용) */
+#recorder:not(.hidden) {
+  bottom: 110px !important; 
+}
+
+/* 혹시 모를 충돌을 대비해 hidden 상태일 때는 확실히 안 보이게 처리 */
+#recorder.hidden {
+  display: none !important;
 }
