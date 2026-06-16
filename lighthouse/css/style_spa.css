@@ -2692,7 +2692,9 @@ body.ar-mode .a-canvas {
   z-index: 10;
 }
 
-xrextras-capture-button {
-  position: fixed !important;
-  bottom: 120px !important; /* 기본값보다 높게 조정 */
+.recorder-container {
+  position: fixed;
+  bottom: 120px; /* 이 값을 올려서 조정 */
+  /* 또는 */
+  transform: translateY(-50px); /* 현재 위치에서 50px 위로 */
 }
