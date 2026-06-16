@@ -4,7 +4,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta charset="UTF-8">
-  <title>포토존 인증샷</title>
+  <title>curved-aframe</title>
 
   <script src="./js/8frame-1.5.0.min.js"></script>
   <script src="./js/xrextras.js"></script>
@@ -151,6 +151,7 @@
   <div id="container"></div>
 
   <a-scene
+    auto-hide-overlay
     responsive-immersive
     coaching-overlay
     landing-page
@@ -296,6 +297,52 @@
 </div>
 
 <script>
+AFRAME.registerComponent('auto-hide-overlay', {
+    init: function() {
+        // 모델 애니메이션 딜레이(4000ms)와 동일한 시점에 오버레이 제거
+        setTimeout(() => {
+            // A-Frame 씬에서 컴포넌트 기능 해제
+            this.el.removeAttribute('coaching-overlay');
+            
+            // DOM에 남아있는 UI 요소 강제 숨김 처리 (사진에 찍히지 않도록)
+            const overlayUI = document.getElementById('coachingOverlay') || document.querySelector('.coaching-overlay');
+            if (overlayUI) {
+                overlayUI.style.display = 'none';
+            }
+        }, 4000); 
+    }
+});
+
+// 1. 사진 촬영이 완료된 순간 캡처 버튼 컨테이너 숨기기
+window.addEventListener('mediarecorder-photocomplete', () => {
+    const recorder = document.getElementById('recorder');
+    if (recorder) {
+        recorder.style.display = 'none';
+    }
+});
+
+// 2. 미리보기 창을 닫거나 취소했을 때 캡처 버튼 다시 나타나게 하기
+window.addEventListener('mediarecorder-previewclosed', () => {
+    const recorder = document.getElementById('recorder');
+    if (recorder) {
+        recorder.style.display = 'flex'; // 8th Wall 기본 display 속성 복구
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const captureBtn = document.querySelector('xrextras-capture-button');
+  
+  if (captureBtn && captureBtn.shadowRoot) {
+    const style = document.createElement('style');
+    style.textContent = `
+      :host {
+        bottom: 120px !important;
+      }
+    `;
+    captureBtn.shadowRoot.appendChild(style);
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   const scene = document.querySelector('a-scene');
   const uiLayer = document.getElementById('custom-ui-layer');
