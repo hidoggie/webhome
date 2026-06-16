@@ -2692,9 +2692,6 @@ body.ar-mode .a-canvas {
   z-index: 10;
 }
 
-.recorder-container {
-  position: fixed;
-  bottom: 120px; /* 이 값을 올려서 조정 */
-  /* 또는 */
-  transform: translateY(-50px); /* 현재 위치에서 50px 위로 */
+#recorder {
+  bottom: 110px !important; /* 하단 네비게이션(72px)을 고려해 여백 확보 */
 }
