@@ -2690,3 +2690,8 @@ body.ar-mode .a-canvas {
   align-items: center;
   z-index: 10;
 }
+
+xrextras-capture-button {
+  position: fixed !important;
+  bottom: 120px !important; /* 기본값보다 높게 조정 */
+}
