@@ -14,6 +14,20 @@ AFRAME.registerComponent('auto-hide-overlay', {
     }
 });
 
+document.addEventListener('DOMContentLoaded', () => {
+  const captureBtn = document.querySelector('xrextras-capture-button');
+  
+  if (captureBtn && captureBtn.shadowRoot) {
+    const style = document.createElement('style');
+    style.textContent = `
+      :host {
+        bottom: 120px !important;
+      }
+    `;
+    captureBtn.shadowRoot.appendChild(style);
+  }
+});
+
 // 1. 전역 변수 선언 (naverMap, map 혼용을 map 하나로 통일)
 let map = null;
 let myLocationMarker = null;
