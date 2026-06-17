@@ -132,11 +132,20 @@ function routeTo(pageId) {
     targetPage.classList.add("active");
   }
 
-  if (pageId === "photoauth") {
-        document.getElementById("iframe-photoauth").src = "photo-auth.html";
-    } else if (pageId === "arnavi") {
-        document.getElementById("iframe-arnavi").src = "lh-navi.html";
+  const iframeMap = {
+    "photoauth": "photo-auth.html",
+    "arnavi": "lh-navi.html",
+    "hero": "hero.html"
+    // "newarpage": "new-ar-page.html" // 예시
+  };
+
+  // pageId가 매핑 객체에 존재한다면 해당 iframe의 src를 변경
+  if (iframeMap[pageId]) {
+    const targetIframe = document.getElementById(`iframe-${pageId}`);
+    if (targetIframe) {
+      targetIframe.src = iframeMap[pageId];
     }
+  }
 
   const bottomNav = document.getElementById("global-bottom-nav");
   if (pageId === "intro") {
