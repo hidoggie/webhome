@@ -477,8 +477,10 @@ function triggerGameOver() {
   setTimeout(() => {
     if (G.score >= GOAL_SCORE) {
       sfxLevelClear();
-      if (confirm(`🎉 목표 달성! (최종 점수: ${G.score}점)\n\n인증 맵으로 이동하시겠습니까?\n'취소'를 누르면 다시 플레이합니다.`)) {
-        window.location.href = AUTH_REDIRECT_URL;
+      if (confirm(`🎉 목표 달성! (최종 점수: ${G.score}점)\n\n다음 단계로 이동하시겠습니까?\n'취소'를 누르면 다시 플레이합니다.`)) {
+        if (window.parent && typeof window.parent.routeTo === 'function') {
+            window.parent.routeTo('mission');
+            }
       } else {
         restartGame();
       }
