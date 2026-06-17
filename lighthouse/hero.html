@@ -426,9 +426,10 @@
         // [수정 5] 모두 수집 완료 시 부모 창(index-spa.html)의 routeTo 호출
         setTimeout(() => {
           alert('모든 아이템을 찾았습니다!'); // 원하시는 알림창 디자인으로 변경 가능합니다.
-          if (window.parent && typeof window.parent.routeTo === 'function') {
-            window.parent.routeTo('mission');
-          }
+  //        if (window.parent && typeof window.parent.routeTo === 'function') {
+  //          window.parent.routeTo('mission');
+  //          }
+            location.reload(); 
         }, 2200); // 팝업 애니메이션이 끝난 후 실행
       }
     }
