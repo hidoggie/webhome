@@ -135,8 +135,9 @@ function routeTo(pageId) {
   const iframeMap = {
     "photoauth": "photo-auth.html",
     "arnavi": "lh-navi.html",
-    "hero": "hero.html"
-    // "newarpage": "new-ar-page.html" // 예시
+    "hero": "hero.html",
+    "catchcrab": "catch_crab.html",
+    "angrylumi": "angry_lumi2.html"
   };
 
   // pageId가 매핑 객체에 존재한다면 해당 iframe의 src를 변경
