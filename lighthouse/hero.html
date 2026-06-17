@@ -287,8 +287,7 @@
     <!--xrextras-capture-button></xrextras-capture-button>
     <xrextras-capture-preview></xrextras-capture-preview-->
 
-    <a-camera position="0 1 1" raycaster="objects: .cantap" cursor="fuse: false; rayOrigin: mouse;">
-    </a-camera>
+    <a-camera id="camera" position="0 1 1"></a-camera>
 
     <a-light type="directional" intensity="0.5" position="0 1 0"></a-light>
     <a-light type="ambient" intensity="0.1"></a-light>
@@ -302,14 +301,10 @@
       </a-entity>
       <!-- 초기 visible: false로 대기 -->
       <a-entity id="model-hero" gltf-model="#compass-glb" position="0 0.5 0.2" rotation="0 0 0" scale="0.5 0.5 0.5"
-        visible="false" shadow="receive: false"
+        visible="false" shadow="receive: false" class="touchable"
         animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
         animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
         animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000" animation-mixer>
-        <a-box class="cantap" visible="false"
-          position="0 0 0" 
-          width="2" height="2" depth="2">
-        </a-box>     
       </a-entity>
     </xrextras-named-image-target>
 
@@ -321,14 +316,10 @@
         animation="property: scale; from: 0 0 0; to: 1 1 1; loop: false; dur: 5000">
       </a-entity>
       <a-entity id="model-hero1" gltf-model="#anchor-glb" scale="0.5 0.5 0.5" rotation="0 0 0" position="0 0.5 0.2"
-        visible="false" shadow="receive: false"
+        visible="false" shadow="receive: false" class="touchable"
         animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
         animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
         animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000" animation-mixer>
-        <a-box class="cantap" visible="false"
-          position="0 0 0" 
-          width="2" height="2" depth="2">
-        </a-box>     
       </a-entity>
     </xrextras-named-image-target>
 
@@ -353,6 +344,7 @@
 
     const overlay = document.getElementById('scanning-overlay');
     let activeTarget = null;
+    let isPlayingSequence = false;
 
     const targetOrder = ['hero_target', 'hero_target1'];
     let currentTargetIndex = 0;
@@ -378,8 +370,6 @@
       }
     };
 
-    const boundTargets = new Set();
-
     const collected = {};
 
     overlay.style.opacity = targetMap['hero_target'].overlayOpacity;
@@ -391,6 +381,8 @@
 
     function collectItem(targetName) {
       if (collected[targetName]) return;
+      console.log('collectItem:', targetName);
+
       collected[targetName] = true;
 
       const slot = document.getElementById('slot-' + targetName);
@@ -419,7 +411,7 @@
       video.pause();
 
       currentTargetIndex++;
-      
+
       if (currentTargetIndex < targetOrder.length) {
         // 다음 타겟이 남아있다면 다음 오버레이 표시
         const nextTarget = targetOrder[currentTargetIndex];
@@ -436,17 +428,11 @@
           alert('모든 아이템을 찾았습니다!'); // 원하시는 알림창 디자인으로 변경 가능합니다.
           if (window.parent && typeof window.parent.routeTo === 'function') {
             window.parent.routeTo('mission');
-            }
-  //          location.reload(); 
+          }
+          //          location.reload(); 
         }, 2200); // 팝업 애니메이션이 끝난 후 실행
       }
-    }
-
-    function enableModelTouch(modelEntity, targetName) {
-      modelEntity.classList.add('cantap');
-      modelEntity.addEventListener('click', () => {
-        collectItem(targetName);
-      });
+      isPlayingSequence = false;
     }
 
     function fadeInModel(modelEntity) {
@@ -479,16 +465,12 @@
     }
 
     function bindVideoEnded(targetName) {
-      if (boundTargets.has(targetName)) return;
-      boundTargets.add(targetName);
-
       const { video, modelId } = targetMap[targetName];
       video.addEventListener('ended', () => {
         if (activeTarget !== targetName) return;
         const modelEntity = document.getElementById(modelId);
         if (modelEntity) {
           fadeInModel(modelEntity);
-          enableModelTouch(modelEntity, targetName);
           document.getElementById('touch-hint').style.display = 'block';
         }
         video.loop = true;
@@ -497,15 +479,19 @@
     }
 
     document.querySelector('a-scene').addEventListener('xrimagefound', (event) => {
+      if (isPlayingSequence) return;
+
       const name = event.detail.name;
       if (!targetMap[name]) return;
-      if (name !== targetOrder[currentTargetIndex]) return; 
+      if (name !== targetOrder[currentTargetIndex]) return;
       if (collected[name]) return;
 
       activeTarget = name;
       if (overlay) {
         overlay.style.animation = 'fadeOut 0.5s forwards';
-        setTimeout(() => { overlay.style.display = 'none'; }, 500);
+        setTimeout(() => { overlay.style.display = 'none'; startVideoSequence(name); }, 500);
+      } else {
+        startVideoSequence(name);
       }
 
       const { video, modelId } = targetMap[name];
@@ -529,6 +515,7 @@
         }
       }
       bindVideoEnded(name);
+      isPlayingSequence = true;
     });
 
     document.querySelector('a-scene').addEventListener('xrimagelost', (event) => {
@@ -536,15 +523,129 @@
       if (!targetMap[name]) return;
 
       if (name === targetOrder[currentTargetIndex] && !collected[name]) {
-      if (overlay) {
-        const overlayImgEl = overlay.querySelector('img');
-        if (overlayImgEl) overlayImgEl.src = targetMap[name].overlayImg;
-        overlay.style.display = 'flex';
-        overlay.style.animation = 'none';
-        overlay.style.opacity = targetMap[name].overlayOpacity || '1';
+        if (overlay) {
+          const overlayImgEl = overlay.querySelector('img');
+          if (overlayImgEl) overlayImgEl.src = targetMap[name].overlayImg;
+          overlay.style.display = 'flex';
+          overlay.style.animation = 'none';
+          overlay.style.opacity = targetMap[name].overlayOpacity || '1';
+        }
+      }
+    });
+
+    document.getElementById('model-hero')
+      .addEventListener('model-loaded', () => {
+
+        console.log('model-hero loaded');
+
+        const mesh =
+          document.getElementById('model-hero')
+            .getObject3D('mesh');
+
+        console.log('mesh=', mesh);
+
+      });
+
+    document.getElementById('model-hero1')
+      .addEventListener('model-loaded', () => {
+
+        console.log('model-hero1 loaded');
+
+        const mesh =
+          document.getElementById('model-hero1')
+            .getObject3D('mesh');
+
+        console.log('mesh=', mesh);
+
+      });
+
+    function startVideoSequence(name) {
+
+      const { video, modelId } = targetMap[name];
+
+      const modelEntity =
+        document.getElementById(modelId);
+
+      video.loop = false;
+      video.currentTime = 0;
+
+      video.play();
+
+      if (modelEntity) {
+
+        modelEntity.setAttribute('visible', false);
+
       }
     }
-    });
+
+    const cameraEl = document.getElementById('camera');
+
+    document.addEventListener('touchstart', (e) => {
+
+      if (!activeTarget) return;
+
+      const touch = e.touches[0];
+
+      const mouse = new THREE.Vector2(
+        (touch.clientX / window.innerWidth) * 2 - 1,
+        -(touch.clientY / window.innerHeight) * 2 + 1
+      );
+
+      const raycaster = new THREE.Raycaster();
+
+      raycaster.setFromCamera(
+        mouse,
+        cameraEl.getObject3D('camera')
+      );
+
+      checkModelTouch('model-hero');
+      checkModelTouch('model-hero1');
+
+  function checkModelTouch(targetName) {
+
+    if (targetName !== activeTarget)
+      return;
+
+    const modelId =
+      targetMap[targetName].modelId;
+
+    const model =
+      document.getElementById(modelId);
+
+    if (!model) return;
+
+    if (!model.getAttribute('visible'))
+      return;
+
+    const mesh =
+      model.getObject3D('mesh');
+
+    if (!mesh) {
+      console.log('mesh not ready');
+      return;
+    }
+
+    const hits =
+      raycaster.intersectObject(mesh, true);
+
+    console.log(
+      targetName,
+      'hits:',
+      hits.length
+    );
+
+    if (hits.length > 0) {
+
+      console.log(
+        'COLLECT:',
+        targetName
+      );
+
+      collectItem(targetName);
+    }
+  }
+});
+
   </script>
 </body>
 
