@@ -530,10 +530,10 @@
       if (name === targetOrder[currentTargetIndex] && !collected[name]) {
       if (overlay) {
         const overlayImgEl = overlay.querySelector('img');
-        if (overlayImgEl) overlayImgEl.src = targetMap[nextTarget].overlayImg;
+        if (overlayImgEl) overlayImgEl.src = targetMap[name].overlayImg;
         overlay.style.display = 'flex';
         overlay.style.animation = 'none';
-        overlay.style.opacity = targetMap[nextTarget].overlayOpacity || '1';
+        overlay.style.opacity = targetMap[name].overlayOpacity || '1';
       }
     }
     });
