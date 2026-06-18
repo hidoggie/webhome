@@ -14,8 +14,8 @@
   <script async src="./js/xr.js" data-preload-chunks="slam"></script>
   <script crossorigin="anonymous" src="./js/aframe-chromakey-material-1.1.4.min.js"></script>
 
-  <!--script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-  <script>var vConsole = new window.VConsole();</script-->
+  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
+  <script>var vConsole = new window.VConsole();</script>
 
   <script>
     const onxrloaded = async () => {
@@ -30,6 +30,7 @@
     }
     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
   </script>
+  <script src="./js/ar-hunt-common.js"></script> 
   <style>
     #start_area {
       position: absolute;
@@ -346,12 +347,6 @@
       document.getElementById('start_area').style.display = 'none';
     }
 
-    const overlay = document.getElementById('scanning-overlay');
-    let activeTarget = null;
-
-    const targetOrder = ['hero_target', 'hero_target1'];
-    let currentTargetIndex = 0;
-
     const targetMap = {
       'hero_target': {
         video: document.getElementById('portal-video'),
@@ -373,173 +368,8 @@
       }
     };
 
-    const boundTargets = new Set();
+   window.initArHunt(targetMap, { nextRoute: 'mission' });
 
-    const collected = {};
-
-    overlay.style.opacity = targetMap['hero_target'].overlayOpacity;
-
-    function toggleCollection() {
-      const panel = document.getElementById('collection-panel');
-      panel.style.display = (panel.style.display === 'flex') ? 'none' : 'flex';
-    }
-
-    function collectItem(targetName) {
-      if (collected[targetName]) return;
-      collected[targetName] = true;
-
-      const slot = document.getElementById('slot-' + targetName);
-      if (slot) slot.classList.add('collected');
-
-      const count = Object.keys(collected).length;
-      const badge = document.getElementById('collection-badge');
-      badge.textContent = count;
-      badge.style.display = 'flex';
-
-      const popup = document.getElementById('collect-popup');
-      const popupImg = document.getElementById('collect-popup-img');
-      const popupMsg = document.getElementById('collect-popup-msg');
-      popupImg.src = targetMap[targetName].thumbImg;
-      popupMsg.textContent = targetMap[targetName].itemName + ' 수집 완료!';
-      popup.classList.add('show');
-      setTimeout(() => { popup.classList.remove('show'); }, 2000);
-
-      document.getElementById('touch-hint').style.display = 'none';
-
-      const { modelId, videoPlaneId, video } = targetMap[targetName];
-      const modelEntity = document.getElementById(modelId);
-      const videoPlane = document.getElementById(videoPlaneId);
-      if (modelEntity) modelEntity.setAttribute('visible', false);
-      if (videoPlane) videoPlane.setAttribute('visible', false);
-      video.pause();
-
-      currentTargetIndex++;
-      
-      if (currentTargetIndex < targetOrder.length) {
-        // 다음 타겟이 남아있다면 다음 오버레이 표시
-        const nextTarget = targetOrder[currentTargetIndex];
-        if (overlay) {
-          const overlayImgEl = overlay.querySelector('img');
-          if (overlayImgEl) overlayImgEl.src = targetMap[nextTarget].overlayImg;
-          overlay.style.display = 'flex';
-          overlay.style.animation = 'none';
-          overlay.style.opacity = targetMap[nextTarget].overlayOpacity || '1';
-        }
-      } else {
-        // [수정 5] 모두 수집 완료 시 부모 창(index-spa.html)의 routeTo 호출
-        setTimeout(() => {
-          alert('모든 아이템을 찾았습니다!'); // 원하시는 알림창 디자인으로 변경 가능합니다.
-          if (window.parent && typeof window.parent.routeTo === 'function') {
-            window.parent.routeTo('mission');
-            }
-  //          location.reload(); 
-        }, 2200); // 팝업 애니메이션이 끝난 후 실행
-      }
-    }
-
-    function enableModelTouch(modelEntity, targetName) {
-      modelEntity.classList.add('cantap');
-      modelEntity.addEventListener('click', () => {
-        collectItem(targetName);
-      });
-    }
-
-    function fadeInModel(modelEntity) {
-      modelEntity.setAttribute('visible', true);
-      function startFade() {
-        const mesh = modelEntity.getObject3D('mesh');
-        if (!mesh) { setTimeout(startFade, 100); return; }
-        mesh.traverse((node) => {
-          if (node.material) {
-            const mats = Array.isArray(node.material) ? node.material : [node.material];
-            mats.forEach((mat) => { mat.transparent = true; mat.opacity = 0; });
-          }
-        });
-        function easeInOutQuad(t) { return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; }
-        const duration = 1500, start = performance.now();
-        function fade(now) {
-          const progress = Math.min((now - start) / duration, 1);
-          const eased = easeInOutQuad(progress);
-          mesh.traverse((node) => {
-            if (node.material) {
-              const mats = Array.isArray(node.material) ? node.material : [node.material];
-              mats.forEach((mat) => { mat.opacity = eased; });
-            }
-          });
-          if (progress < 1) requestAnimationFrame(fade);
-        }
-        requestAnimationFrame(fade);
-      }
-      startFade();
-    }
-
-    function bindVideoEnded(targetName) {
-      if (boundTargets.has(targetName)) return;
-      boundTargets.add(targetName);
-
-      const { video, modelId } = targetMap[targetName];
-      video.addEventListener('ended', () => {
-        if (activeTarget !== targetName) return;
-        const modelEntity = document.getElementById(modelId);
-        if (modelEntity) {
-          fadeInModel(modelEntity);
-          enableModelTouch(modelEntity, targetName);
-          document.getElementById('touch-hint').style.display = 'block';
-        }
-        video.loop = true;
-        video.play();
-      });
-    }
-
-    document.querySelector('a-scene').addEventListener('xrimagefound', (event) => {
-      const name = event.detail.name;
-      if (!targetMap[name]) return;
-      if (name !== targetOrder[currentTargetIndex]) return; 
-      if (collected[name]) return;
-
-      activeTarget = name;
-      if (overlay) {
-        overlay.style.animation = 'fadeOut 0.5s forwards';
-        setTimeout(() => { overlay.style.display = 'none'; }, 500);
-      }
-
-      const { video, modelId } = targetMap[name];
-      const modelEntity = document.getElementById(modelId);
-      video.loop = false;
-      video.currentTime = 0;
-      video.play().catch(() => {
-        document.addEventListener('click', () => video.play(), { once: true });
-        document.addEventListener('touchstart', () => video.play(), { once: true });
-      });
-      if (modelEntity) {
-        modelEntity.setAttribute('visible', false);
-        const mesh = modelEntity.getObject3D('mesh');
-        if (mesh) {
-          mesh.traverse((node) => {
-            if (node.material) {
-              const mats = Array.isArray(node.material) ? node.material : [node.material];
-              mats.forEach((mat) => { mat.transparent = true; mat.opacity = 0; });
-            }
-          });
-        }
-      }
-      bindVideoEnded(name);
-    });
-
-    document.querySelector('a-scene').addEventListener('xrimagelost', (event) => {
-      const name = event.detail.name;
-      if (!targetMap[name]) return;
-
-      if (name === targetOrder[currentTargetIndex] && !collected[name]) {
-      if (overlay) {
-        const overlayImgEl = overlay.querySelector('img');
-        if (overlayImgEl) overlayImgEl.src = targetMap[name].overlayImg;
-        overlay.style.display = 'flex';
-        overlay.style.animation = 'none';
-        overlay.style.opacity = targetMap[name].overlayOpacity || '1';
-      }
-    }
-    });
   </script>
 </body>
 
