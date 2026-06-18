@@ -79,7 +79,19 @@
           options.onAllCollected();
         } else {
           setTimeout(() => {
-            alert("모든 아이템을 찾았습니다!");
+            //       alert("모든 아이템을 찾았습니다!");
+
+            const popup = document.getElementById("collect-popup");
+            const popupImg = document.getElementById("collect-popup-img");
+            const popupMsg = document.getElementById("collect-popup-msg");
+            if (popupImg) popupImg.src = "./img/lumi-thumb.png";
+            if (popupMsg)
+              popupMsg.textContent = "모든 아이템을 찾았습니다.\n다음 미션으로 이동!";
+            if (popup) popup.classList.add("show");
+            setTimeout(() => {
+              if (popup) popup.classList.remove("show");
+            }, 2000);
+
             if (options.reloadOnComplete) {
               location.reload();
             } else if (
