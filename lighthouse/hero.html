@@ -80,8 +80,8 @@
     renderer="colorManagement: true; physicallyBasedRendering: true;" xrweb="disableWorldTracking: true">
 
     <a-assets>
-      <a-asset-item id="compass-glb" src="./models/compass-blue.glb"></a-asset-item>
-      <a-asset-item id="anchor-glb" src="./models/blue-anchor.glb"></a-asset-item>
+      <a-asset-item id="compass-glb" src="./models/blue-compass-ani.glb"></a-asset-item>
+      <a-asset-item id="anchor-glb" src="./models/blue-anchor-ani.glb"></a-asset-item>
 
       <!-- loop 제거: 1회 재생 후 마지막 프레임 유지 -->
       <video id="portal-video" muted autoplay loop="true" playsinline webkit-playsinline crossorigin="anonymous"
@@ -108,8 +108,8 @@
       <!-- 초기 visible: false로 대기 -->
       <a-entity id="model-hero" gltf-model="#compass-glb" position="0 0.5 0.2" rotation="0 0 0" scale="0.5 0.5 0.5"
         visible="false" shadow="receive: false"
-        animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
-        animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
+        animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 5000"
+        animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; dur: 5000"
         animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000" animation-mixer>
         <a-cylinder class="cantap" position="0 2 0" radius="2" height="6" material="transparent: true; opacity: 0; depthWrite: false"></a-cylinder>
       </a-entity>
@@ -123,11 +123,11 @@
       </a-entity>
       <a-entity id="model-hero1" gltf-model="#anchor-glb" scale="0.5 0.5 0.5" rotation="0 0 0" position="0 0.5 0.2"
         visible="false" shadow="receive: false"
-        animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
-        animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
+        animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 5000"
+        animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; dur: 5000"
         animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000" animation-mixer>
         <a-cylinder class="cantap" position="0 2 0" radius="2" height="6" material="transparent: true; opacity: 0; depthWrite: false"></a-cylinder>
-      </a-entity>
+       </a-entity>
     </xrextras-named-image-target>
 
     <a-plane id="ground" rotation="-90 0 0" width="1000" height="1000" material="shader: shadow" shadow>
