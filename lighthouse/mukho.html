@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta charset="UTF-8">
-  <title>간절곶등대 이미지 인식</title>
+  <title>묵호등대 이미지 인식</title>
 
   <script src="./js/8frame-1.5.0.min.js"></script>
   <script src="./js/xrextras.js"></script>
@@ -13,15 +13,11 @@
   <script src="./js/aframe-extras-7.2.0.min.js"></script>
   <script async src="./js/xr.js" data-preload-chunks="slam"></script>
   <script crossorigin="anonymous" src="./js/aframe-chromakey-material-1.1.4.min.js"></script>
-
-  <!--script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-  <script>var vConsole = new window.VConsole();</script-->
-
   <script>
     const onxrloaded = async () => {
-      const res = await fetch('./json/hero.json')
+      const res = await fetch('./json/mukho.json')
       const json = await res.json()
-      const res1 = await fetch('./json/hero1.json')
+      const res1 = await fetch('./json/mukho1.json')
       const json1 = await res1.json()
 
       XR8.XrController.configure({
@@ -38,13 +34,13 @@
 <body>
   <div id="start_area">
     <img src="./img/lh-hunt-t.png" alt="AR 등대 탐험대" width="200">
-    <img src="./img/hunt-spot.jpg" alt="AR 등대 보물 찾기" width="400">
+    <img src="./img/hunt-spot-mukho.jpg" alt="AR 등대 보물 찾기" width="400">
     <p style="color: #066265; font-weight:bold;">등대 주면에서 <br>위의 2개 장면에 숨겨진,<br>항해에 도움이 되는 아이템을 찾으세요.</p>
     <button id="start_btn" onclick="startNavigation()">찾기 시작</button>
   </div>
   <div id="scanning-overlay"
-    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -70%); z-index: 10; pointer-events: none;">
-    <img src="./img/hero-illust-s.svg" alt="스마트폰을 흔들어 스캔하세요" />
+    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none;">
+    <img src="./img/mukho-illust.svg" alt="스마트폰을 흔들어 스캔하세요" />
   </div>
   <!-- 수집도감 토글 버튼 -->
   <div id="collection-toggle" onclick="toggleCollection()">
@@ -57,14 +53,14 @@
     <div id="collection-panel-title">
       등대 탐험대<span>수집도감</span>
     </div>
-    <div class="collection-slot" id="slot-hero_target">
+    <div class="collection-slot" id="slot-mukho_target">
       <span class="question">?</span>
-      <img src="./img/compass-thumb.png" alt="나침반">
+      <img src="./img/ship-steering-thumb.png" alt="조타륜">
     </div>
     <hr class="collection-divider">
-    <div class="collection-slot" id="slot-hero_target1">
+    <div class="collection-slot" id="slot-mukho_target1">
       <span class="question">?</span>
-      <img src="./img/anchor-thumb.png" alt="닻">
+      <img src="./img/lifebuoy-thumb.png" alt="구명튜브">
     </div>
   </div>
 
@@ -80,8 +76,8 @@
     renderer="colorManagement: true; physicallyBasedRendering: true;" xrweb="disableWorldTracking: true">
 
     <a-assets>
-      <a-asset-item id="compass-glb" src="./models/compass-blue.glb"></a-asset-item>
-      <a-asset-item id="anchor-glb" src="./models/blue-anchor.glb"></a-asset-item>
+      <a-asset-item id="shipwheel-glb" src="./models/blue-shipwheel.glb"></a-asset-item>
+      <a-asset-item id="lifebuoy-glb" src="./models/watercolor-lifebuoy.glb"></a-asset-item>
 
       <!-- loop 제거: 1회 재생 후 마지막 프레임 유지 -->
       <video id="portal-video" muted autoplay loop="true" playsinline webkit-playsinline crossorigin="anonymous"
@@ -99,36 +95,33 @@
     <a-light type="ambient" intensity="0.1"></a-light>
 
     <!-- hero_target: 비디오 종료 후 3D 모델 등장 -->
-    <xrextras-named-image-target name="hero_target">
+    <xrextras-named-image-target name="mukho_target">
       <a-entity id="video-plane-hero" xrextras-play-video="video: #portal-video; canstop: true"
         material="shader: chromakey; src: #portal-video; color: 0 0 0; blending: additive; side: front"
         geometry="primitive: plane; height: 1; width: 1;"
         animation="property: scale; from: 0 0 0; to: 1 1 1; loop: false; dur: 5000">
       </a-entity>
       <!-- 초기 visible: false로 대기 -->
-      <a-entity id="model-hero" gltf-model="#compass-glb" position="0 0.5 0.2" rotation="0 0 0" scale="0.5 0.5 0.5"
+      <a-entity id="model-hero" gltf-model="#shipwheel-glb" position="0 0.5 0.2" rotation="0 0 0" scale="0.5 0.5 0.5"
         visible="false" shadow="receive: false"
         animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
         animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
         animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000" animation-mixer>
-        <a-cylinder class="cantap" position="0 2 0" radius="2" height="6" material="transparent: true; opacity: 0; depthWrite: false"></a-cylinder>
       </a-entity>
     </xrextras-named-image-target>
 
     <!-- w1-engine -->
-    <xrextras-named-image-target name="hero_target1">
+    <xrextras-named-image-target name="mukho_target1">
       <a-entity id="video-plane-hero1" xrextras-play-video="video: #portal-video; canstop: true"
         material="shader: chromakey; src: #portal-video; color: 0 0 0; blending: additive; side: front"
         geometry="primitive: plane; height: 1; width: 1;"
         animation="property: scale; from: 0 0 0; to: 1 1 1; loop: false; dur: 5000">
       </a-entity>
-      <a-entity id="model-hero1" gltf-model="#anchor-glb" scale="0.5 0.5 0.5" rotation="0 0 0" position="0 0.5 0.2"
+      <a-entity id="model-hero1" gltf-model="#lifebuoy-glb" scale="0.5 0.5 0.5" rotation="0 0 0" position="0 0.5 0.2"
         visible="false" shadow="receive: false"
         animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
         animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
         animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000" animation-mixer>
-        <a-cylinder class="cantap" position="0 2 0" radius="2" height="6" material="transparent: true; opacity: 0; depthWrite: false"></a-cylinder>
-        </a-box>     
       </a-entity>
     </xrextras-named-image-target>
 
@@ -152,28 +145,25 @@
     }
 
     const targetMap = {
-      'hero_target': {
+      'mukho_target': {
         video: document.getElementById('portal-video'),
-        videoPlaneId: 'video-plane-hero',
         modelId: 'model-hero',
-        overlayImg: './img/hero-illust-s.svg',
-        overlayOpacity: '0.5',
-        thumbImg: './img/compass-b-thumb.png',
-        itemName: '나침반'
+        overlayImg: './img/mukho-illust-s.svg',
+        overlayOpacity: '0.5',                           
+        thumbImg: './img/steering-b.png',
+        itemName: '조타륜'
       },
-      'hero_target1': {
+      'mukho_target1': {
         video: document.getElementById('portal-video'),
-        videoPlaneId: 'video-plane-hero1',
         modelId: 'model-hero1',
-        overlayImg: './img/stone-illust-s.svg',
-        overlayOpacity: '0.5',
-        thumbImg: './img/anchor-b-thumb.png',
-        itemName: '닻'
+        overlayImg: './assets/Media/mukho-illust1-s.svg',
+        overlayOpacity: '0.5',                           
+        thumbImg: './img/lifebuoy-b.png',
+        itemName: '구명튜브'
       }
     };
 
-   window.initArHunt(targetMap, { nextRoute: 'mission' });
-
+  window.initArHunt(targetMap, { nextRoute: 'mission' });
   </script>
 </body>
 
