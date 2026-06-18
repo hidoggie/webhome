@@ -588,7 +588,7 @@ a:visited {
 /* ── 마스코트 캐릭터 ── */
 .mascot {
   position: absolute;
-  bottom: 15%;
+  bottom: 12%;
   left: 50%;
   transform: translateX(-50%);
   width: 240px;
