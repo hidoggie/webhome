@@ -13,10 +13,6 @@
   <script src="./js/aframe-extras-7.2.0.min.js"></script>
   <script async src="./js/xr.js" data-preload-chunks="slam"></script>
   <script crossorigin="anonymous" src="./js/aframe-chromakey-material-1.1.4.min.js"></script>
-
-  <script src="https://unpkg.com/vconsole@latest/dist/vconsole.min.js"></script>
-  <script>var vConsole = new window.VConsole();</script>
-  
   <script>
     const onxrloaded = async () => {
       const res = await fetch('./json/mukho.json')
@@ -30,7 +26,7 @@
     }
     window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
   </script>
-  <script src="./js/ar-hunt-common.js"></script> 
+  <script src="./js/ar-hunt-common.js"></script>
   <link rel="stylesheet" href="./css/ar-hunt-style.css">
 
 </head>
@@ -153,7 +149,7 @@
         video: document.getElementById('portal-video'),
         modelId: 'model-hero',
         overlayImg: './img/mukho-illust-s.svg',
-        overlayOpacity: '0.5',                           
+        overlayOpacity: '0.5',
         thumbImg: './img/steering-b.png',
         itemName: '조타륜'
       },
@@ -161,13 +157,18 @@
         video: document.getElementById('portal-video'),
         modelId: 'model-hero1',
         overlayImg: './assets/Media/mukho-illust1-s.svg',
-        overlayOpacity: '0.5',                           
+        overlayOpacity: '0.5',
         thumbImg: './img/lifebuoy-b.png',
         itemName: '구명튜브'
       }
     };
 
-  window.initArHunt(targetMap, { nextRoute: 'mission' });
+    window.initArHunt(targetMap, {
+      targetOrder: ['hero_target', 'hero_target1'],
+      nextRoute: 'mission'
+    });
+
+    window.initArHunt(targetMap, { nextRoute: 'mission' });
   </script>
 </body>
 
