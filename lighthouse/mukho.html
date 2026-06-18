@@ -29,6 +29,12 @@
   <script src="./js/ar-hunt-common.js"></script>
   <link rel="stylesheet" href="./css/ar-hunt-style.css">
 
+  <style>
+    .mukho-overlay {
+      opacity: 0.5;
+    }
+  </style>
+
 </head>
 
 <body>
@@ -40,7 +46,7 @@
   </div>
   <div id="scanning-overlay"
     style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none;">
-    <img src="./img/mukho-illust-s.svg" alt="스마트폰을 흔들어 스캔하세요" />
+    <img src="./img/mukho-illust-s.svg" class="mukho-overlay" alt="스마트폰을 흔들어 스캔하세요" />
   </div>
   <!-- 수집도감 토글 버튼 -->
   <div id="collection-toggle" onclick="toggleCollection()">
@@ -149,7 +155,7 @@
         video: document.getElementById('portal-video'),
         modelId: 'model-hero',
         overlayImg: './img/mukho-illust-s.svg',
-        overlayOpacity: '0.5',
+        overlayOpacity: '0.2',
         thumbImg: './img/steering-b.png',
         itemName: '조타륜'
       },
