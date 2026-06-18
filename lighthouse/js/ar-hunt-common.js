@@ -86,21 +86,23 @@
             const popupMsg = document.getElementById("collect-popup-msg");
             if (popupImg) popupImg.src = "./img/lumi-thumb.png";
             if (popupMsg)
-              popupMsg.textContent = "모든 아이템을 찾았습니다.\n다음 미션으로 이동!";
+              popupMsg.textContent =
+                "모든 아이템을 찾았습니다.\n다음 미션으로 이동!";
             if (popup) popup.classList.add("show");
+
             setTimeout(() => {
               if (popup) popup.classList.remove("show");
-            }, 2000);
 
-            if (options.reloadOnComplete) {
-              location.reload();
-            } else if (
-              window.parent &&
-              typeof window.parent.routeTo === "function"
-            ) {
-              window.parent.routeTo(options.nextRoute || "mission");
-            }
-          }, 2200);
+              if (options.reloadOnComplete) {
+                location.reload();
+              } else if (
+                window.parent &&
+                typeof window.parent.routeTo === "function"
+              ) {
+                window.parent.routeTo(options.nextRoute || "mission");
+              }
+            }, 2200);
+          });
         }
       }
     }
