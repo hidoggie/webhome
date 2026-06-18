@@ -87,7 +87,7 @@
             if (popupImg) popupImg.src = "./img/lumi-thumb.png";
             if (popupMsg)
               popupMsg.textContent =
-                "모든 아이템을 찾았습니다.\n다음 미션으로 이동!";
+                "모든 아이템을 \n 찾았습니다.\n 다음 미션으로 이동!";
             if (popup) popup.classList.add("show");
 
             setTimeout(() => {
@@ -101,7 +101,7 @@
               ) {
                 window.parent.routeTo(options.nextRoute || "mission");
               }
-            }, 2200);
+            }, 2500);
           });
         }
       }
