@@ -1,0 +1,195 @@
+    #start_area {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 93%;
+      background: #ffffff;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    #start_btn {
+      padding: 15px 30px;
+      font-size: 18px;
+      font-weight: bold;
+      background: #066265;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+
+    /* 수집도감 버튼 (우측 하단 토글) */
+    #collection-toggle {
+      position: fixed;
+      bottom: 120px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      background: #1a5fa8;
+      border: 3px solid #ffffff;
+      border-radius: 50%;
+      z-index: 100;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+
+    #collection-toggle img {
+      width: 38px;
+      height: 38px;
+      object-fit: contain;
+    }
+
+    #collection-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #e74c3c;
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      display: none;
+    }
+
+    /* 수집도감 패널 */
+    #collection-panel {
+      position: fixed;
+      bottom: 180px;
+      right: 20px;
+      width: 160px;
+      background: #f5f0e8;
+      border: 4px solid #1a5fa8;
+      border-radius: 16px;
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 12px;
+      overflow: hidden;
+    }
+
+    #collection-panel-title {
+      background: #1a5fa8;
+      width: 100%;
+      text-align: center;
+      padding: 8px 0 4px;
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      letter-spacing: 1px;
+    }
+
+    #collection-panel-title span {
+      display: block;
+      color: #FFD700;
+      font-size: 15px;
+      font-weight: bold;
+    }
+
+    .collection-slot {
+      width: 110px;
+      height: 110px;
+      background: #f5c842;
+      border-radius: 50%;
+      border: 3px dashed #ffffff;
+      margin: 12px auto 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .collection-slot .question {
+      font-size: 40px;
+      font-weight: bold;
+      color: #ffffff;
+      opacity: 0.85;
+    }
+
+    .collection-slot img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      display: none;
+    }
+
+    .collection-slot.collected .question {
+      display: none;
+    }
+
+    .collection-slot.collected img {
+      display: block;
+    }
+
+    .collection-divider {
+      width: 90%;
+      border: none;
+      border-top: 2px dashed #ccbbaa;
+      margin: 10px auto 0;
+    }
+
+    /* 3D 모델 터치 힌트 */
+    #touch-hint {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      z-index: 100;
+      display: none;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    /* 수집 완료 팝업 */
+    #collect-popup {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      background: white;
+      border: 4px solid #1a5fa8;
+      border-radius: 20px;
+      z-index: 200;
+      padding: 24px 32px;
+      text-align: center;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      pointer-events: none;
+    }
+
+    #collect-popup.show {
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    #collect-popup img {
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+    }
+
+    #collect-popup p {
+      margin: 8px 0 0;
+      font-size: 14px;
+      font-weight: bold;
+      color: #1a5fa8;
+    }
