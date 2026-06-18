@@ -1,5 +1,5 @@
 {
-  "imagePath": "assets/Media/mukho_target1.jpg",
+  "imagePath": "./json/target/mukho_target1.jpg",
   "name": "mukho_target1",
   "type": "PLANAR",
   "properties": {
