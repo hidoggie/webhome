@@ -1,0 +1,18 @@
+{
+  "imagePath": "assets/Media/mukho_target.jpg",
+  "name": "mukho_target",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 1365,
+    "height": 2048,
+    "isRotated": false,
+    "originalWidth": 1365,
+    "originalHeight": 2048
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156802,
+  "updated": 1646873156802
+}
