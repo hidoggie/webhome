@@ -1,60 +1,14 @@
 /**
  * ar-hunt-common.js
- * --------------------------------------------------------
- * AR 이미지 타겟 기반 "보물찾기" 공통 로직 모듈.
- * hero.html 등 4개의 개별 페이지에서 동일하게 사용하던
- * <script> 하단 로직을 공통화한 파일입니다.
- *
- * 각 페이지는 자신만의 targetMap(과 필요 시 옵션)을 정의하고,
- * window.initArHunt(targetMap, options) 를 호출해서 초기화합니다.
- *
- * 사용 예 (각 html 파일의 <script> 안):
- *
- *   const targetMap = {
- *     'hero_target': {
- *       video: document.getElementById('portal-video'),
- *       videoPlaneId: 'video-plane-hero',
- *       modelId: 'model-hero',
- *       overlayImg: './img/hero-illust-s.svg',
- *       overlayOpacity: '0.5',
- *       thumbImg: './img/compass-b-thumb.png',
- *       itemName: '나침반'
- *     },
- *     'hero_target1': { ... }
- *   };
- *
- *   window.initArHunt(targetMap);
- * --------------------------------------------------------
  */
 (function () {
-
-  /**
-   * AR 보물찾기 로직을 초기화합니다.
-   *
-   * @param {Object} targetMap - 타겟별 설정 객체.
-   *   key: 이미지 타겟 이름 (xrextras-named-image-target의 name과 동일)
-   *   value: {
-   *     video: HTMLVideoElement,
-   *     videoPlaneId: string,
-   *     modelId: string,
-   *     overlayImg: string,
-   *     overlayOpacity: string,
-   *     thumbImg: string,
-   *     itemName: string
-   *   }
-   * @param {Object} [options] - 선택적 옵션
-   *   @param {string[]} [options.targetOrder] - 타겟 진행 순서. 기본값: Object.keys(targetMap)
-   *   @param {string} [options.overlaySelector] - 스캔 오버레이 엘리먼트 셀렉터. 기본값: '#scanning-overlay'
-   *   @param {string} [options.nextRoute] - 모두 수집 완료 후 window.parent.routeTo() 에 전달할 값. 기본값: 'mission'
-   *   @param {boolean} [options.reloadOnComplete] - 완료 후 routeTo 대신 location.reload() 사용 여부. 기본값: false
-   *   @param {Function} [options.onAllCollected] - 모두 수집 완료 시 실행할 커스텀 콜백 (지정 시 기본 동작 대체)
-   */
   function initArHunt(targetMap, options) {
     options = options || {};
 
     const overlay = document.querySelector(options.overlaySelector || '#scanning-overlay');
     let activeTarget = null;
 
+    // ★ 옵션으로 전달받은 타겟 순서를 최우선으로 사용
     const targetOrder = options.targetOrder || Object.keys(targetMap);
     let currentTargetIndex = 0;
 
@@ -103,10 +57,10 @@
       if (videoPlane) videoPlane.setAttribute('visible', false);
       if (video) video.pause();
 
+      // ★ 기획 의도: 다음 타겟으로 인덱스 이동
       currentTargetIndex++;
 
       if (currentTargetIndex < targetOrder.length) {
-        // 다음 타겟이 남아있다면 다음 오버레이 표시
         const nextTarget = targetOrder[currentTargetIndex];
         if (overlay) {
           const overlayImgEl = overlay.querySelector('img');
@@ -116,7 +70,6 @@
           overlay.style.opacity = targetMap[nextTarget].overlayOpacity || '1';
         }
       } else {
-        // 모두 수집 완료
         if (typeof options.onAllCollected === 'function') {
           options.onAllCollected();
         } else {
@@ -127,7 +80,7 @@
             } else if (window.parent && typeof window.parent.routeTo === 'function') {
               window.parent.routeTo(options.nextRoute || 'mission');
             }
-          }, 2200); // 팝업 애니메이션이 끝난 후 실행
+          }, 2200);
         }
       }
     }
@@ -189,60 +142,72 @@
 
     const sceneEl = document.querySelector('a-scene');
 
-    sceneEl.addEventListener('xrimagefound', (event) => {
-      const name = event.detail.name;
-      if (!targetMap[name]) return;
-      if (name !== targetOrder[currentTargetIndex]) return;
-      if (collected[name]) return;
+    // 이벤트 부착 로직 분리
+    function attachEvents() {
+      sceneEl.addEventListener('xrimagefound', (event) => {
+        const name = event.detail.name;
+        if (!targetMap[name]) return;
+        
+        // ★ 순서 제어 로직 복구 (현재 찾아야 할 타겟이 아니면 무시)
+        if (name !== targetOrder[currentTargetIndex]) return; 
+        
+        if (collected[name]) return;
 
-      activeTarget = name;
-      if (overlay) {
-        overlay.style.animation = 'fadeOut 0.5s forwards';
-        setTimeout(() => { overlay.style.display = 'none'; }, 500);
-      }
-
-      const { video, modelId } = targetMap[name];
-      const modelEntity = document.getElementById(modelId);
-      video.loop = false;
-      video.currentTime = 0;
-      video.play().catch(() => {
-        document.addEventListener('click', () => video.play(), { once: true });
-        document.addEventListener('touchstart', () => video.play(), { once: true });
-      });
-      if (modelEntity) {
-        modelEntity.setAttribute('visible', false);
-        const mesh = modelEntity.getObject3D('mesh');
-        if (mesh) {
-          mesh.traverse((node) => {
-            if (node.material) {
-              const mats = Array.isArray(node.material) ? node.material : [node.material];
-              mats.forEach((mat) => { mat.transparent = true; mat.opacity = 0; });
-            }
-          });
-        }
-      }
-      bindVideoEnded(name);
-    });
-
-    sceneEl.addEventListener('xrimagelost', (event) => {
-      const name = event.detail.name;
-      if (!targetMap[name]) return;
-
-      if (name === targetOrder[currentTargetIndex] && !collected[name]) {
+        activeTarget = name;
         if (overlay) {
-          const overlayImgEl = overlay.querySelector('img');
-          if (overlayImgEl) overlayImgEl.src = targetMap[name].overlayImg;
-          overlay.style.display = 'flex';
-          overlay.style.animation = 'none';
-          overlay.style.opacity = targetMap[name].overlayOpacity || '1';
+          overlay.style.animation = 'fadeOut 0.5s forwards';
+          setTimeout(() => { overlay.style.display = 'none'; }, 500);
         }
-      }
-    });
 
-    // toggleCollection은 HTML의 onclick="toggleCollection()"에서 호출되므로 전역에 노출
+        const { video, modelId } = targetMap[name];
+        const modelEntity = document.getElementById(modelId);
+        video.loop = false;
+        video.currentTime = 0;
+        video.play().catch(() => {
+          document.addEventListener('click', () => video.play(), { once: true });
+          document.addEventListener('touchstart', () => video.play(), { once: true });
+        });
+        
+        if (modelEntity) {
+          modelEntity.setAttribute('visible', false);
+          const mesh = modelEntity.getObject3D('mesh');
+          if (mesh) {
+            mesh.traverse((node) => {
+              if (node.material) {
+                const mats = Array.isArray(node.material) ? node.material : [node.material];
+                mats.forEach((mat) => { mat.transparent = true; mat.opacity = 0; });
+              }
+            });
+          }
+        }
+        bindVideoEnded(name);
+      });
+
+      sceneEl.addEventListener('xrimagelost', (event) => {
+        const name = event.detail.name;
+        if (!targetMap[name]) return;
+
+        if (name === targetOrder[currentTargetIndex] && !collected[name]) {
+          if (overlay) {
+            const overlayImgEl = overlay.querySelector('img');
+            if (overlayImgEl) overlayImgEl.src = targetMap[name].overlayImg;
+            overlay.style.display = 'flex';
+            overlay.style.animation = 'none';
+            overlay.style.opacity = targetMap[name].overlayOpacity || '1';
+          }
+        }
+      });
+    }
+
+    // A-Frame 로드 완료 후 안전하게 이벤트 바인딩
+    if (sceneEl.hasLoaded) {
+      attachEvents();
+    } else {
+      sceneEl.addEventListener('loaded', attachEvents);
+    }
+
     window.toggleCollection = toggleCollection;
   }
 
   window.initArHunt = initArHunt;
-
 })();
