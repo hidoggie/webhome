@@ -1,0 +1,18 @@
+{
+  "imagePath": "assets/Media/yd_target1.jpg",
+  "name": "yd_target1",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 765,
+    "height": 1020,
+    "isRotated": false,
+    "originalWidth": 765,
+    "originalHeight": 1020
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156802,
+  "updated": 1646873156802
+}

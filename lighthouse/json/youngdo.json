@@ -1,0 +1,18 @@
+{
+  "imagePath": "./json/target/yd_target.jpg",
+  "name": "yd_target",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 400,
+    "height": 602,
+    "isRotated": false,
+    "originalWidth": 400,
+    "originalHeight": 602
+  },
+  "userMetadataIsJson": true,
+  "loadAutomatically": true,
+  "created": 1646873156802,
+  "updated": 1646873156802
+}
