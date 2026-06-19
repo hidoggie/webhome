@@ -1,5 +1,5 @@
 {
-  "imagePath": "assets/Media/yd_target1.jpg",
+  "imagePath": "./json/target/yd_target1.jpg",
   "name": "yd_target1",
   "type": "PLANAR",
   "properties": {
