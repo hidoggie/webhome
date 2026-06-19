@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta charset="UTF-8">
+  <title>curved-aframe</title>
+
+  <script src="./js/8frame-1.5.0.min.js"></script>
+  <script src="./js/xrextras.js"></script>
+  <script src="./js/landing-page.js"></script>
+  <script src="./js/aframe-extras-7.2.0.min.js"></script>
+  <script async src="./js/xr.js" data-preload-chunks="slam"></script>
+  <script crossorigin="anonymous" src="./js/aframe-chromakey-material-1.1.4.min.js"></script>
+  <script>
+    const onxrloaded = async () => {
+      const res = await fetch('./json/youngdo.json')
+      const json = await res.json()
+      const res1 = await fetch('./json/youngdo1.json')
+      const json1 = await res1.json()
+
+      XR8.XrController.configure({
+        imageTargetData: [json, json1],
+      })
+    }
+    window.XR8 ? onxrloaded() : window.addEventListener('xrloaded', onxrloaded)
+  </script>
+  <script src="./js/ar-hunt-common.js"></script>
+  <link rel="stylesheet" href="./css/ar-hunt-style.css">
+
+</head>
+
+<body>
+  <div id="start_area">
+    <img src="./img/lh-hunt-t.png" alt="AR 등대 탐험대" width="200">
+    <img src="./img/hunt-spot-yd.jpg" alt="AR 등대 보물 찾기" width="400">
+    <p style="color: #066265; font-weight:bold;">등대 주면에서 <br>위의 2개 장면에 숨겨진,<br>항해에 도움이 되는 아이템을 찾으세요.</p>
+    <button id="start_btn" onclick="startNavigation()">찾기 시작</button>
+  </div>
+  <div id="scanning-overlay"
+    style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; pointer-events: none;">
+    <img src="./img/yd-illust-s.svg" alt="스마트폰을 흔들어 스캔하세요" />
+  </div>
+  <!-- 수집도감 토글 버튼 -->
+  <div id="collection-toggle" onclick="toggleCollection()">
+    <img src="./img/lh-hunt-t.png" alt="수집도감">
+    <div id="collection-badge">0</div>
+  </div>
+
+  <!-- 수집도감 패널 -->
+  <div id="collection-panel">
+    <div id="collection-panel-title">
+      등대 탐험대<span>수집도감</span>
+    </div>
+    <div class="collection-slot" id="slot-yd_target">
+      <span class="question">?</span>
+      <img src="./img/ship-thumb.png" alt="보트">
+    </div>
+    <hr class="collection-divider">
+    <div class="collection-slot" id="slot-yd_target1">
+      <span class="question">?</span>
+      <img src="./img/flyer-thumb.png" alt="비행기">
+    </div>
+  </div>
+
+  <!-- 터치 힌트 -->
+  <div id="touch-hint">아이템을 터치해서 수집하세요!</div>
+
+  <!-- 수집 완료 팝업 -->
+  <div id="collect-popup">
+    <img id="collect-popup-img" src="" alt="">
+    <p id="collect-popup-msg">수집 완료!</p>
+  </div>
+  <a-scene landing-page xrextras-loading xrextras-runtime-error
+    renderer="colorManagement: true; physicallyBasedRendering: true;" xrweb="disableWorldTracking: true">
+
+    <a-assets>
+      <a-asset-item id="ship-glb" src="./models/green-ship-ani.glb"></a-asset-item>
+      <a-asset-item id="flyer-glb" src="./models/starbound-flyer-ani.glb"></a-asset-item>
+      
+      <!-- loop 제거: 1회 재생 후 마지막 프레임 유지 -->
+      <video id="portal-video" muted autoplay loop="true" playsinline webkit-playsinline crossorigin="anonymous"
+        src="./video/portal-video-s.mp4">
+      </video>
+    </a-assets>
+
+    <!--xrextras-capture-button></xrextras-capture-button>
+    <xrextras-capture-preview></xrextras-capture-preview-->
+
+    <a-camera position="0 1 1" raycaster="objects: .cantap" cursor="fuse: false; rayOrigin: mouse;">
+    </a-camera>
+
+    <a-light type="directional" intensity="0.5" position="0 1 0"></a-light>
+    <a-light type="ambient" intensity="0.1"></a-light>
+
+    <!-- hero_target: 비디오 종료 후 3D 모델 등장 -->
+    <xrextras-named-image-target name="yd_target">
+      <a-entity id="video-plane-hero" xrextras-play-video="video: #portal-video; canstop: true"
+        material="shader: chromakey; src: #portal-video; color: 0 0 0; blending: additive; side: front"
+        geometry="primitive: plane; height: 1; width: 1;"
+        animation="property: scale; from: 0 0 0; to: 1 1 1; loop: false; dur: 5000">
+      </a-entity>
+      <!-- 초기 visible: false로 대기 -->
+      <a-entity id="model-hero" gltf-model="#ship-glb" position="0 0.5 0.2" rotation="0 0 0" scale="0.5 0.5 0.5"
+        visible="false" shadow="receive: false"
+        animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
+        animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
+        animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000" animation-mixer>
+      </a-entity>
+    </xrextras-named-image-target>
+
+    <xrextras-named-image-target name="yd_target1">
+      <a-entity id="video-plane-hero1" xrextras-play-video="video: #portal-video; canstop: true"
+        material="shader: chromakey; src: #portal-video; color: 0 0 0; blending: additive; side: front"
+        geometry="primitive: plane; height: 1; width: 1;"
+        animation="property: scale; from: 0 0 0; to: 1 1 1; loop: false; dur: 5000">
+      </a-entity>
+      <a-entity id="model-hero1" gltf-model="#flyer-glb" scale="0.5 0.5 0.5" rotation="0 0 0" position="0 0.5 0.2"
+        visible="false" shadow="receive: false"
+        animation="property: position; from: 0 -0.5 -10; to: 0 0.5 0.2; loop: false; dur: 15000"
+        animation__1="property: scale; from: 0 0 0; to: 0.5 0.5 0.5; loop: false; delay: 5000; dur: 10000"
+        animation__2="property: rotation; from: 0 0 0; to: 0 0 360; loop: true; dur: 10000" animation-mixer>
+      </a-entity>
+    </xrextras-named-image-target>
+  
+    <a-plane id="ground" rotation="-90 0 0" width="1000" height="1000" material="shader: shadow" shadow>
+    </a-plane>
+  </a-scene>
+  <script>
+    async function startNavigation() {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission !== 'granted') {
+            alert("AR을 위해 기기 방향 센서 권한이 필요합니다.");
+          }
+        } catch (e) {
+          console.error("방향 센서 권한 요청 에러:", e);
+        }
+      }
+      document.getElementById('start_area').style.display = 'none';
+    }
+
+    const targetMap = {
+      'yd_target': {
+        video: document.getElementById('portal-video'),
+        modelId: 'model-hero',
+        overlayImg: './img/yd-illust-s.png',
+        overlayOpacity: '0.5',                          
+        thumbImg: './img/ship-b.png',
+        itemName: '보트'
+      },
+      'yd_target1': {
+        video: document.getElementById('portal-video'),
+        modelId: 'model-hero1',
+        overlayImg: './img/yd-illust1-s.png',
+        overlayOpacity: '0.5',                           
+        thumbImg: './img/biplane-b.png',
+        itemName: '비행기'
+      }
+    };
+
+    window.initArHunt(targetMap, { 
+      targetOrder: ['yd_target', 'yd_target1'], 
+      nextRoute: 'mission' 
+    });
+
+  </script>
+</body>
+
+</html>
