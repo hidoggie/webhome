@@ -2,7 +2,7 @@
 let map = null;
 let myLocationMarker = null;
 let isMapZoomedIn = false;
-const initialCenter = new naver.maps.LatLng(35.6956, 127.6670);
+const initialCenter = new naver.maps.LatLng(35.5060, 127.6625);
 const initialZoom = 7;
 
 // 10개 이벤트 지역 배열 (전역)
@@ -108,8 +108,8 @@ const eventLocations = [
   },
   {
     title: "속초등대",
-    lat: 38.071536,
-    lng: 128.615561,
+    lat: 38.0498,
+    lng: 128.6179,
     img: "img/sokcho_icon_240.png",
     stamp: "img/stamp-sokcho.png",
     desc: "등대 전망대에서 속초를 들여다보다",
