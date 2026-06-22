@@ -1580,7 +1580,7 @@ a:visited {
 
 /* 배경 이미지 */
 .bg {
-  height: 91%;
+  height: 100%;
   position: absolute;
   inset: 0;
   background-image: url("../img/bg-lighthouse-passport.png");
