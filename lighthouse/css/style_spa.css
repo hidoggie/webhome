@@ -957,10 +957,10 @@ a:visited {
   padding: 20px 0 0 0;
 }
 .header-top {
-  display: flex; 
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 20px; 
+  padding: 0 20px;
 }
 
 .header-top button {
@@ -974,7 +974,7 @@ a:visited {
 }
 
 .header-top button img {
-  width: 35px;   /* 아이콘 크기 */
+  width: 35px; /* 아이콘 크기 */
   height: 35px;
 }
 
@@ -995,7 +995,7 @@ a:visited {
 
 .spacer {
   width: 24px;
-} 
+}
 /* 타이틀 중앙 정렬용 */
 .map-subtitle {
   color: #1e385b;
@@ -1583,7 +1583,7 @@ a:visited {
   height: 100%;
   position: absolute;
   inset: 0;
-  background-image: url("../img/bg-lighthouse-passport.png");
+  background-image: url("../img/bg-lh-new1.jpg");
   background-size: cover;
   background-position: center;
 }
@@ -1597,7 +1597,7 @@ a:visited {
   border: none;
   padding: 0;
 }
-.backBtn img{
+.backBtn img {
   width: 50px;
   height: 50px;
   display: block;
@@ -1619,36 +1619,59 @@ a:visited {
 
 /* 아이콘 */
 .swipe-icon {
-  width: 95px;
+  width: 45px; /* 아이콘 크기 조절 */
   height: auto;
-  filter: drop-shadow(0 5px 12px rgba(0, 0, 0, 0.35));
-  animation: swipeMove 1.8s ease-in-out infinite;
+  margin-bottom: 12px;
+  opacity: 0.9;
+  /* 좌우로 부드럽게 움직이는 애니메이션 추가 */
+  animation: swipeMove 2.5s ease-in-out infinite;
 }
 
 /* 안내문구 */
 .guide-text {
-  margin-top: 22px;
-  font-size: 22px;
+  color: #ffffff;
+  font-size: 15px;
   font-weight: 500;
-  line-height: 1.5;
-  text-align: center;
-  color: white;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-  padding: 0 40px;
-  animation: fadeIn 1.2s ease;
+  margin: 0;
+  line-height: 1.4;
+  /* 텍스트가 배경에 묻히지 않도록 그림자 효과 추가 */
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.6);
+  letter-spacing: -0.3px;
+}
+/* 빔 회전 애니메이션 */
+@keyframes spin {
+  0% {
+    transform: translateY(-50%) rotate(0deg);
+  }
+  100% {
+    transform: translateY(-50%) rotate(360deg);
+  }
+}
+
+/* 중심 광원 깜빡임 애니메이션 */
+@keyframes pulse {
+  0% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
 }
 
 /* 스와이프 애니메이션 */
 @keyframes swipeMove {
-  0% {
-    transform: translateX(-35px);
-  }
-  50% {
-    transform: translateX(35px);
-  }
+  0%,
   100% {
-    transform: translateX(-35px);
+    transform: translateX(0);
   }
+  20% {
+    transform: translateX(-8px);
+  } /* 왼쪽으로 약간 이동 */
+  80% {
+    transform: translateX(8px);
+  } /* 오른쪽으로 약간 이동 */
 }
 
 /* 등장 효과 */
@@ -1661,6 +1684,59 @@ a:visited {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 상단 중앙 로고 스타일 */
+.passport-logo {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 55%;
+  max-width: 250px;
+  z-index: 20;
+}
+
+/* 등대 광원 위치 (중심점 잡기) */
+.light-center {
+  position: absolute;
+  top: 40.6%; /* 광원 Y축 위치 */
+  left: 50%;
+  width: 0;
+  height: 0;
+  z-index: 10;
+}
+
+/* 360도 회전하는 빔 (Beam) */
+.rotating-beam {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 150vw;
+  height: 120px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 246, 179, 0.8) 0%,
+    rgba(255, 246, 179, 0) 70%
+  );
+  clip-path: polygon(0 50%, 100% 0, 100% 100%);
+  transform-origin: 0% 50%;
+  mix-blend-mode: screen;
+  animation: spin 8s linear infinite;
+}
+
+/* 광원 중심부 반짝임 효과 */
+.center-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 24px;
+  height: 24px;
+  background-color: #fffac2;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 20px 8px rgba(255, 242, 168, 0.9);
+  animation: pulse 2s ease-in-out infinite alternate;
 }
 
 /* =========================================
@@ -2362,16 +2438,25 @@ a:visited {
 
 /* 현재 해야 할 미션 버튼 강조 (반짝임 및 테두리 효과) */
 @keyframes highlightBlink {
-    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.8); transform: scale(1); }
-    70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); transform: scale(1.05); }
-    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); transform: scale(1); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.8);
+    transform: scale(1);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 215, 0, 0);
+    transform: scale(1.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0);
+    transform: scale(1);
+  }
 }
 .step-active .round-btn {
-    animation: highlightBlink 1.5s infinite;
-    border: 3px solid #FFD700; /* 황금색 테두리 */
+  animation: highlightBlink 1.5s infinite;
+  border: 3px solid #ffd700; /* 황금색 테두리 */
 }
 /* 아직 비활성화된(접근 불가) 버튼 흐리게 처리 */
 .step-locked {
-    opacity: 0.5;
-    filter: grayscale(80%);
+  opacity: 0.5;
+  filter: grayscale(80%);
 }
