@@ -1629,6 +1629,7 @@ a:visited {
 
 /* 안내문구 */
 .guide-text {
+  text-align: center;
   color: #ffffff;
   font-size: 15px;
   font-weight: 500;
