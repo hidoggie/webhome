@@ -945,7 +945,7 @@ a:visited {
 /* 1. 헤더 스타일 */
 
 .header {
-  color: white;
+  color: #1e385b;
   padding: 20px 20px 50px 20px; /* 하단 패딩 50px로 물결 공간 확보 */
   position: absolute;
   top: 0;
@@ -974,7 +974,7 @@ a:visited {
   width: 24px;
 } /* 타이틀 중앙 정렬용 */
 .map-subtitle {
-  color: #8fa6c1;
+  color: #1e385b;
   font-size: 14px;
   margin-top: 5px;
 }
