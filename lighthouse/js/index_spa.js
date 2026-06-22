@@ -2,7 +2,7 @@
 let map = null;
 let myLocationMarker = null;
 let isMapZoomedIn = false;
-const initialCenter = new naver.maps.LatLng(36.484881, 127.949252);
+const initialCenter = new naver.maps.LatLng(36.3030, 127.9600);
 const initialZoom = 7;
 
 // 10개 이벤트 지역 배열 (전역)
