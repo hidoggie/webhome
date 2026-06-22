@@ -2,7 +2,7 @@
 let map = null;
 let myLocationMarker = null;
 let isMapZoomedIn = false;
-const initialCenter = new naver.maps.LatLng(35.5219, 127.8925);
+const initialCenter = new naver.maps.LatLng(35.5619, 128.0736);
 const initialZoom = 7;
 
 // 10개 이벤트 지역 배열 (전역)
@@ -20,8 +20,8 @@ const eventLocations = [
   },
   {
     title: "영도등대",
-    lat: 35.0523,
-    lng: 129.0921,
+    lat: 35.0522,
+    lng: 129.0840,
     img: "img/youngdo_icon_240.png",
     stamp: "img/stamp-youngdo.png",
     desc: "바다를 디자인하다, 명승지 안의 명소",
@@ -86,8 +86,8 @@ const eventLocations = [
   },
   {
     title: "울기등대",
-    lat: 35.4928,
-    lng: 129.443,
+    lat: 35.5822,
+    lng: 129.4447,
     img: "img/ulgi_icon_240.png",
     stamp: "img/stamp-ulgi.png",
     desc: "동해안의 첫 등대",
