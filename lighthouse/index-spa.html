@@ -253,16 +253,22 @@
 
         <section id="page-mission" class="page">
             <div class="mission-bg">
-                <nav class="top-nav">
-                    <button class="top-item" onclick="switchTab('smap', this)">
+                <header class="header-trans">
+                    <div class="header-top">
+                        <button class="left-btn" onclick="routeTo('passport')"><img src="./img/passport-btn-white.png"></button>
+                        <button class="right-btn"><img src="./img/info-btn-white.png"></button>
+                    </div>
+                </header>
+                <nav class="right-nav">
+                    <button class="right-item" onclick="switchTab('smap', this)">
                         <span class="icon"><img src="./img/location-ico.png"></span>
                         <span class="label">등대 위치</span>
                     </button>
-                    <button class="top-item active" onclick="switchTab('mission', this)">
+                    <button class="right-item active" onclick="switchTab('mission', this)">
                         <span class="icon"><img src="./img/mission-ico.png"></span>
                         <span class="label">미션 안내</span>
                     </button>
-                    <button class="top-item" onclick="switchTab('review', this)">
+                    <button class="right-item" onclick="switchTab('review', this)">
                         <span class="icon"><img src="./img/photo-place-ico.png"></span>
                         <span class="label">사진 후기</span>
                     </button>
