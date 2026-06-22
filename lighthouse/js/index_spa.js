@@ -148,29 +148,6 @@ function routeTo(pageId) {
     }
   }
 
-  const bottomNav = document.getElementById("global-bottom-nav");
-  if (pageId === "intro") {
-    bottomNav.style.display = "none";
-  } else {
-    bottomNav.style.display = "flex";
-    // 하단 네비게이션 활성화 UI 업데이트
-    document
-      .querySelectorAll("#global-bottom-nav .nav-item")
-      .forEach((item) => item.classList.remove("active"));
-    if (pageId === "map")
-      document
-        .querySelectorAll("#global-bottom-nav .nav-item")[0]
-        .classList.add("active");
-    if (pageId === "mission")
-      document
-        .querySelectorAll("#global-bottom-nav .nav-item")[1]
-        .classList.add("active");
-    if (pageId === "passport")
-      document
-        .querySelectorAll("#global-bottom-nav .nav-item")[2]
-        .classList.add("active");
-  }
-
   const arVideo = document.getElementById("arjs-video");
   const targets = ["arnavi", "photoauth"];
   const photoContainer = document.getElementById("photoauth-ar-container");
