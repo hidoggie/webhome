@@ -17,10 +17,10 @@
     <script type="text/javascript" src="https://openapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=eb9mai2ikc"></script>
 
     <script src="./js/CSS2DRenderer.js"></script>
- 
+
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/Pretendard/dist/web/static/pretendard.css">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
- 
+
 </head>
 
 <body>
@@ -91,7 +91,7 @@
                 <div class="mascot">
                     <div class="mascot-inner"><img src="./img/lumi-wink-2.gif" alt="AR 등대 스탬프투어 마스코트 루미"></div>
                 </div>
-                
+
             </div>
 
             <div id="passportModal" class="modal-overlay">
@@ -130,7 +130,7 @@
             <header class="header">
                 <div class="header-top">
                     <button class="left-btn" onclick="routeTo('passport')"><img src="./img/passport-btn.png"></button>
-                    <div class="map-title">AR 등대 스탬프 투어</div> 
+                    <div class="map-title">AR 등대 스탬프 투어</div>
                     <button class="right-btn"><img src="./img/info-btn.png"></button>
                 </div>
             </header>
@@ -255,7 +255,8 @@
             <div class="mission-bg">
                 <header class="header-trans">
                     <div class="header-top">
-                        <button class="left-btn" onclick="routeTo('passport')"><img src="./img/passport-btn-white.png"></button>
+                        <button class="left-btn" onclick="routeTo('passport')"><img
+                                src="./img/passport-btn-white.png"></button>
                         <button class="right-btn"><img src="./img/info-btn-white.png"></button>
                     </div>
                 </header>
@@ -367,6 +368,13 @@
         <section id="page-passport" class="page">
             <div class="bg"></div>
             <div class="backBtn"><button onclick="routeTo('map')"><img src="./img/back-btn-white.png"></button></div>
+            <img src="./img/ar-passport-logo.png" alt="AR 등대여권 로고" class="passport-logo">
+
+            <div class="light-center">
+                <div class="rotating-beam"></div>
+                <div class="center-glow"></div>
+            </div>
+
             <div class="swipe-guide">
                 <img class="swipe-icon" src="./img/swipe-white.png" alt="좌우 스와이프">
                 <div class="guide-text">
@@ -555,8 +563,7 @@
         </section>
 
         <section id="page-hero" class="page">
-            <iframe id="iframe-hero"
-                allow="camera; microphone; geolocation; gyroscope; accelerometer; magnetometer"
+            <iframe id="iframe-hero" allow="camera; microphone; geolocation; gyroscope; accelerometer; magnetometer"
                 style="width: 100%; height: 100vh; border: none; display: block;">
             </iframe>
         </section>
