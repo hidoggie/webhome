@@ -228,7 +228,7 @@ function initNaverMap() {
   eventLocations.forEach(function (loc) {
     var isCompleted = loc.title === "간절곶등대"; // 테스트용 조건
     var contentHtml = isCompleted
-      ? `<div class="comp-pin" style="background-image: url('img/stamp-complete-red.png');"></div><div class="stamp-pin" style="background-image: url('${loc.img}');"></div>`
+      ? `<div class="stamp-pin" style="background-image: url('${loc.img}');"></div>`
       : `<div class="stamp-pin" style="background-image: url('${loc.img}');"></div>`;
 
     var marker = new naver.maps.Marker({
