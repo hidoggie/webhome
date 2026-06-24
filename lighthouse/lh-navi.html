@@ -231,23 +231,21 @@
   bottom: 0;
   left: 0;
   right: 0;
+  background: transparent;
 }
 
 .bottom-btn {
-  padding: 10px 20px;
-  font-size: 16px;
+  background: transparent;
   border: none;
-  border-radius: 6px;         /* 둥근 모서리 */
-  background-color: #4CAF50;  /* 버튼 색상 */
-  color: white;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center; 
 }
 .bottom-btn img{
-  width: 40px;
-    height: auto;
-    cursor: pointer;
-  transition: transform 0.3s ease;
+  display: block;
+  width: 50px;
+    height: auto;   
 }
 .btn img:hover {
   transform: scale(1.1); /* 호버 시 확대 효과 */
@@ -275,7 +273,7 @@
 <body>
 
     <div id="start_area">     
-<button id="arNavi-back-btn" class="arNavi-back-btn" onclick="routeTo("mission")">
+<button id="arNavi-back-btn" class="arNavi-back-btn" onclick="routeTo('mission')">
                 <img src="./img/back-btn.png" alt="뒤로가기">
             </button>
         <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
