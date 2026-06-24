@@ -243,17 +243,31 @@
 .bottom-btn:hover {
   background-color: #45a049;  /* 호버 시 색상 변경 */
 }
+        .arNavi-back-btn {
+    position: fixed;
+    top: 25px;
+    left: 20px;
+    z-index: 999999 !important; /* 어떤 요소보다 무조건 위에 띄움 */
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    pointer-events: auto !important; /* 다른 레이어가 덮어도 터치를 강제로 활성화 */
+}
+.arNavi-back-btn img {
+    width: 45px;
+    height: 45px;
+    display: block;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5));
+}
     </style>
 </head>
 <body>
 
     <div id="start_area">     
-                <header class="arNavi-header-trans">
-                    <div class="arNavi-header-top">
-                        <button class="arNavi-left-btn" onclick="routeTo('mission')"><img src="./img/back-btn-white.png"></button>
-                        <!--button class="arNavi-right-btn" onclick="openPopup()"><img src="./img/info-btn-white.png"></button-->
-                    </div>
-                </header>
+<button id="arNavi-back-btn" class="arNavi-back-btn" onclick="routeTo('mission')">
+                <img src="./img/back-btn.png" alt="뒤로가기">
+            </button>
         <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
         <img src="./img/ar-navi-text.png" alt="AR 등대 길찾기" width="200">
         <p style="color: #066265; font-weight:bold;">증강현실(AR) 사용시,<br>주변 사물과 부딪치지 않도록 주의하세요.</p> 
