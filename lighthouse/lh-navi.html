@@ -188,11 +188,72 @@
             height: 45px;
             border-radius: 25px;
         }
+        .arNavi-header-trans {
+  color: #1e385b;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  text-align: center;
+  z-index: 10;
+  padding: 20px 0 0 0;
+}
+        .arNavi-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.arNavi-header-top button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.arNavi-header-top button img {
+  width: 35px; /* 아이콘 크기 */
+  height: 35px;
+}
+        .bottom-button-container {
+  display: flex;              /* 가로 배치 */
+  justify-content: space-between; /* 양쪽 끝으로 정렬 */
+  align-items: center;        /* 세로 가운데 정렬 */
+  width: 100%;                /* 부모 영역 전체 사용 */
+  padding: 10px 20px;         /* 여백 */
+  box-sizing: border-box;
+}
+
+.bottom-btn {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;         /* 둥근 모서리 */
+  background-color: #4CAF50;  /* 버튼 색상 */
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.bottom-btn:hover {
+  background-color: #45a049;  /* 호버 시 색상 변경 */
+}
     </style>
 </head>
 <body>
 
     <div id="start_area">     
+                <header class="arNavi-header-trans">
+                    <div class="arNavi-header-top">
+                        <button class="arNavi-left-btn" onclick="routeTo('mission')"><img src="./img/back-btn-white.png"></button>
+                        <!--button class="arNavi-right-btn" onclick="openPopup()"><img src="./img/info-btn-white.png"></button-->
+                    </div>
+                </header>
         <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
         <img src="./img/ar-navi-text.png" alt="AR 등대 길찾기" width="200">
         <p style="color: #066265; font-weight:bold;">증강현실(AR) 사용시,<br>주변 사물과 부딪치지 않도록 주의하세요.</p> 
@@ -216,6 +277,12 @@
 
     <div class="ar-overlay" id="ar-container">
     </div>
+
+                    <div class="bottom-button-container">
+                       <button class="bottom-button left"><img src="./img/back-btn-white.png"></button>
+                       <button class="bottom-button right" onclick="openPopup()"><img src="./img/info-sw.png"></button>
+                    </div>
+
 
         <!--nav class="bottom-nav">
               <a href="lighthouse_map.html" class="nav-item active">
@@ -423,6 +490,10 @@
 
         function closeModal() {
             document.getElementById('alert-modal').style.display = 'none';
+        }
+        
+        function openPopup() {
+            document.getElementById('popup').style.display = 'block';
         }
         function closePopup() {
             document.getElementById('popup').style.display = 'none';
