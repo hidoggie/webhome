@@ -220,13 +220,17 @@
   width: 35px; /* 아이콘 크기 */
   height: 35px;
 }
-        .bottom-button-container {
+.bottom-button-container {
   display: flex;              /* 가로 배치 */
   justify-content: space-between; /* 양쪽 끝으로 정렬 */
   align-items: center;        /* 세로 가운데 정렬 */
   width: 100%;                /* 부모 영역 전체 사용 */
   padding: 10px 20px;         /* 여백 */
   box-sizing: border-box;
+  position: fixed;                 /* 화면 하단 고정 */
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 
 .bottom-btn {
@@ -239,10 +243,16 @@
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
-
-.bottom-btn:hover {
-  background-color: #45a049;  /* 호버 시 색상 변경 */
+.bottom-btn img{
+  width: 40px;
+    height: auto;
+    cursor: pointer;
+  transition: transform 0.3s ease;
 }
+.btn img:hover {
+  transform: scale(1.1); /* 호버 시 확대 효과 */
+}
+        
         .arNavi-back-btn {
     position: fixed;
     top: 25px;
@@ -293,8 +303,8 @@
     </div>
 
                     <div class="bottom-button-container">
-                       <button class="bottom-button left"><img src="./img/back-btn-white.png"></button>
-                       <button class="bottom-button right" onclick="openPopup()"><img src="./img/info-sw.png"></button>
+                       <button class="bottom-btn left"><img src="./img/back-btn-white.png"></button>
+                       <button class="bottom-btn right" onclick="openPopup()"><img src="./img/info-sw.png"></button>
                     </div>
 
 
