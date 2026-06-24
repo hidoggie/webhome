@@ -290,7 +290,7 @@
 <body>
 
     <div id="start_area">     
-<button id="arNavi-back-btn" class="arNavi-back-btn" onclick="routeTo('mission')">
+<button id="arNavi-back-btn" class="arNavi-back-btn" onclick="goBackToMain()">
                 <img src="./img/back-btn.png" alt="뒤로가기">
             </button>
         <img src="./img/lumi-wink-2.gif" alt="아이콘" width="100">
@@ -318,7 +318,7 @@
     </div>
 
                     <div class="bottom-button-container">
-                       <button class="bottom-btn left"><img src="./img/back-btn-white.png"></button>
+                       <button class="bottom-btn left" onclick="goBackToMain()"><img src="./img/back-btn-white.png"></button>
                        <button class="bottom-btn right" onclick="openPopup()"><img src="./img/info-sw.png"></button>
                     </div>
 
@@ -539,6 +539,15 @@
         function closePopup() {
             document.getElementById('popup').style.display = 'none';
         }
+        function goBackToMain() {
+           if (window.parent) {
+        // 부모 창(SPA 메인)으로 'GO_BACK_MISSION' 이라는 신호를 발사합니다!
+        window.parent.postMessage({ type: 'GO_BACK_MISSION' }, '*');
+         } else {
+        // 혹시나 단독 실행 중일 때를 대비한 안전장치
+        window.location.href = 'index.html'; 
+        }
+    }
     </script>
 </body>
 </html>
