@@ -240,15 +240,11 @@
   height: 35px;
 }
 .bottom-button-container {
-   display: flex;
-    justify-content: space-between;
-    align-items: center;
+    display: none;   /* 처음엔 숨김 */
     position: fixed;
+    bottom: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    padding: 10px 20px;
-    background: rgba(26,51,80,0.95);
     z-index: 99999;
 }
 
@@ -320,7 +316,7 @@
 
                     <div class="bottom-button-container">
                        <button class="bottom-btn left"><img src="./img/back-btn-white.png"></button>
-                       <button class="bottom-btn right" onclick="openPopup()"><img src="./img/info-sw.png"></button>
+                       <button class="bottom-btn right" onclick="alert('clicked')"><img src="./img/info-sw.png"></button>
                     </div>
 
 
@@ -393,6 +389,7 @@
             document.getElementById("start_area").style.display = "none";
             document.getElementById("minimap-wrapper").style.display = "block";
             document.getElementById("info-panel").style.display = "block";
+            document.querySelector('.bottom-button-container').style.display = 'flex';
 
             const themeMeta = document.getElementById("theme-color-meta");
             if (themeMeta) {
@@ -533,6 +530,7 @@
         }
         
         function openPopup() {
+            console.log("popup click");
             document.getElementById('popup').style.display = 'block';
         }
         function closePopup() {
