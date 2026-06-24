@@ -238,17 +238,16 @@
   height: 35px;
 }
 .bottom-button-container {
-  display: flex;              /* 가로 배치 */
-  justify-content: space-between; /* 양쪽 끝으로 정렬 */
-  align-items: center;        /* 세로 가운데 정렬 */
-  width: 100%;                /* 부모 영역 전체 사용 */
-  padding: 10px 20px;         /* 여백 */
-  box-sizing: border-box;
-  position: fixed;                 /* 화면 하단 고정 */
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: transparent;
+   display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 10px 20px;
+    background: rgba(26,51,80,0.95);
+    z-index: 99999;
 }
 
 .bottom-btn {
