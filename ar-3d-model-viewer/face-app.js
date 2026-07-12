@@ -20,6 +20,7 @@ const applyFaceTextureComponent = {
               const newMaterial = new THREE.MeshStandardMaterial({
               map: texture,
               color: 0xffffff, // 텍스처 본연의 색상을 살리기 위해 베이스는 흰색
+              skinning: true,
               roughness: node.material.roughness || 0.5, // 기존 거칠기 유지
               metalness: node.material.metalness || 0.0  // 기존 금속성 유지
             });
