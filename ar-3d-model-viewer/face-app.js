@@ -54,31 +54,42 @@ document.addEventListener('DOMContentLoaded', () => {
       .then(stream => { video.srcObject = stream; })
       .catch(err => alert("카메라 권한을 허용해 주세요: " + err));
 
-    captureBtn.addEventListener('click', () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
+captureBtn.addEventListener('click', () => {
+  const canvas = document.createElement('canvas');
+  // 텍스처 해상도는 512x512 고정
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
 
-      const size = Math.min(video.videoWidth, video.videoHeight);
-      const startX = (video.videoWidth - size) / 2;
-      const startY = (video.videoHeight - size) / 2;
+  // 1. 얼굴 부분만 타이트하게 확대해서 자르기 위한 계산
+  const minDimension = Math.min(video.videoWidth, video.videoHeight);
+  // 전체 비디오 화면의 60% 크기만 얼굴로 간주 (필요시 0.5 ~ 0.7 사이로 조절하세요)
+  const faceSize = minDimension * 0.6; 
+  
+  const startX = (video.videoWidth - faceSize) / 2;
+  const startY = (video.videoHeight - faceSize) / 2;
 
-  // 2. 캔버스에 동그란 구멍(마스크) 뚫기 -> 이 영역 바깥은 투명해짐
-      ctx.beginPath();
-      ctx.arc(256, 256, 256, 0, Math.PI * 2); // 중심좌표(256,256), 반지름 256
-      ctx.clip();
+  // 2. 캔버스 전체를 캐릭터의 기본 피부색으로 칠하기 (뒷배경 가리기)
+  ctx.fillStyle = '#ffccb6'; // 살구색(캐릭터 피부톤에 맞춰 수정 가능)
+  ctx.fillRect(0, 0, 512, 512);
 
-  // 3. 계산된 비디오의 정중앙 영역만 가져와서 512x512 캔버스 꽉 차게 그리기
-      ctx.drawImage(video, startX, startY, size, size, 0, 0, 512, 512);
+  // 3. 동그란 구멍(마스크) 뚫기
+  ctx.beginPath();
+  ctx.arc(256, 256, 256, 0, Math.PI * 2); // 캔버스 정중앙에 꽉 차는 원
+  ctx.closePath();
+  ctx.clip(); // 이 선언 이후에는 붓질이나 사진이 무조건 '원형 안쪽'에만 그려집니다.
 
-      // 이미지를 문자열 데이터로 임시 저장
-      sessionStorage.setItem('capturedFace', canvas.toDataURL('image/png'));
+  // 4. 계산해둔 얼굴 중앙(faceSize) 영역만 가져와서 캔버스 전체에 꽉 차게 그리기
+  ctx.drawImage(video, startX, startY, faceSize, faceSize, 0, 0, 512, 512);
 
-      const stream = video.srcObject;
-      stream.getTracks().forEach(track => track.stop());
-      window.location.reload();
-    });
+  // 5. 이미지를 세션 스토리지에 저장
+  sessionStorage.setItem('capturedFace', canvas.toDataURL('image/jpeg'));
+
+  // 카메라 하드웨어 종료 및 페이지 새로고침
+  const stream = video.srcObject;
+  stream.getTracks().forEach(track => track.stop());
+  window.location.reload();
+});
 
   } else {
     // ----------------------------------------------------
