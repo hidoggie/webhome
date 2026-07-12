@@ -15,10 +15,15 @@ const applyFaceTextureComponent = {
         if (modelMesh) {
           modelMesh.traverse((node) => {
             if (node.isMesh) {
-              node.material.map = texture;
-              node.material.color = new THREE.Color('#ffffff'); // 흰색 베이스로 텍스처 본연의 색 유지
-              node.material.needsUpdate = true;
-            }
+              const newMaterial = new THREE.MeshStandardMaterial({
+              map: texture,
+              color: 0xffffff, // 텍스처 본연의 색상을 살리기 위해 베이스는 흰색
+              roughness: node.material.roughness || 0.5, // 기존 거칠기 유지
+              metalness: node.material.metalness || 0.0  // 기존 금속성 유지
+            });
+
+            node.material = newMaterial;
+            node.material.needsUpdate = true;            }
           });
         }
       });
