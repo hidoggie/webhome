@@ -78,39 +78,47 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 찰칵! 캡처 버튼 이벤트 (이전의 U자형 마스크 로직 그대로 유지)
-    captureBtn.addEventListener('click', () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 512;
-      const ctx = canvas.getContext('2d');
+captureBtn.addEventListener('click', () => {
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+  const ctx = canvas.getContext('2d');
 
-      const minDimension = Math.min(video.videoWidth, video.videoHeight);
-      const faceSize = minDimension * 0.6; 
-      const startX = (video.videoWidth - faceSize) / 2;
-      const startY = (video.videoHeight - faceSize) / 2;
+  // 1. 얼굴 크기 조절 (줌 인 효과)
+  // 0.55를 0.4(더 확대) ~ 0.7(더 축소)로 조절하여 사진이 들어가는 비율을 맞출 수 있습니다.
+  const minDimension = Math.min(video.videoWidth, video.videoHeight);
+  const faceSize = minDimension * 0.55; 
+  const startX = (video.videoWidth - faceSize) / 2;
+  const startY = (video.videoHeight - faceSize) / 2;
 
-      ctx.fillStyle = '#ffccb6'; 
-      ctx.fillRect(0, 0, 512, 512);
+  // 2. 캔버스 배경 피부색 칠하기
+  ctx.fillStyle = '#ffccb6'; 
+  ctx.fillRect(0, 0, 512, 512);
 
-      // 모자에 맞춘 U자형 마스크
-      ctx.beginPath();
-      ctx.moveTo(256 - 200, 256 - 150); 
-      ctx.lineTo(256 + 200, 256 - 150); 
-      ctx.arc(256, 256, 200, 0, Math.PI, false); 
-      ctx.closePath();
-      ctx.clip(); 
+  // 3. 캔버스 전체를 꽉 채우는 마스크로 수정
+  ctx.beginPath();
+  // 모자 챙 밑 직선 (y축을 60으로 설정하여 이마 위쪽만 살짝 직선으로 자름)
+  ctx.moveTo(0, 60); 
+  ctx.lineTo(512, 60); 
+  // 오른쪽 가장자리를 따라 중간까지 선 긋기
+  ctx.lineTo(512, 256);
+  // 아래쪽 턱을 향해 캔버스에 꽉 차는 반원 그리기 (반지름을 256으로 최대화)
+  ctx.arc(256, 256, 256, 0, Math.PI, false); 
+  // 왼쪽 가장자리를 따라 다시 이마 라인으로 올라가기
+  ctx.lineTo(0, 60);
+  ctx.closePath();
+  ctx.clip(); 
 
-      ctx.drawImage(video, startX, startY, faceSize, faceSize, 0, 0, 512, 512);
+  // 4. 잘라낸 얼굴 이미지를 캔버스에 꽉 차게(512x512) 그리기
+  ctx.drawImage(video, startX, startY, faceSize, faceSize, 0, 0, 512, 512);
 
-      sessionStorage.setItem('capturedFace', canvas.toDataURL('image/jpeg'));
-
-      // 캡처 후 카메라 완전히 종료 및 새로고침
-      if (video.srcObject) {
-        video.srcObject.getTracks().forEach(track => track.stop());
-      }
-      window.location.reload();
-    });
+  // 임시 저장 및 새로고침
+  sessionStorage.setItem('capturedFace', canvas.toDataURL('image/jpeg'));
+  if (video.srcObject) {
+    video.srcObject.getTracks().forEach(track => track.stop());
+  }
+  window.location.reload();
+});
 
   } else {
     // [모드 2] AR 모드 (기존과 동일하게 유지)
