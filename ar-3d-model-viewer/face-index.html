@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8">
+  <title>Face-Capture-AR</title>
+  <!-- 기존 8th Wall 스크립트 유지 -->
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script type="module" src="./face-app.js" defer></script>
+  <link rel="stylesheet" href="./index.css">
+
+  <style>
+    /* 얼굴 캡처 UI 스타일 */
+    #capture-ui {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; z-index: 999; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    #video-feed {
+      width: 100%; height: 100%; object-fit: cover; position: absolute;
+    }
+    /* 얼굴 가이드라인 (타원형 아웃라인) */
+    .face-outline {
+      position: absolute;
+      width: 200px; height: 280px;
+      border: 4px dashed #00ff00;
+      border-radius: 50%;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5); /* 주변을 어둡게 */
+      z-index: 1000;
+    }
+    #capture-btn {
+      position: absolute; bottom: 50px; z-index: 1001;
+      padding: 15px 30px; font-size: 18px; border-radius: 30px;
+      background: white; border: none; font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 2D 얼굴 캡처 화면 -->
+  <div id="capture-ui">
+    <video id="video-feed" autoplay playsinline muted></video>
+    <div class="face-outline"></div>
+    <button id="capture-btn">얼굴 캡처하기</button>
+  </div>
+
+  <div id="blackFade" class="absolute-fill" style="z-index: 9"></div>
+
+  <!-- 기존 AR Scene -->
+  <a-scene
+    landing-page
+    xrextras-loading
+    renderer="colorManagement: true"
+    xrweb>
+    <a-assets>
+      <a-asset-item id="faceModel" src="./assets/chibi-face-change-walk.glb"></a-asset-item>
+    </a-assets>
+
+    <a-camera id="camera" position="0 4 4"></a-camera>
+    <a-light xr-light type="ambient"></a-light>
+
+    <!-- face-change 컴포넌트 부착 -->
+    <a-entity
+      id="target"
+      gltf-model="#faceModel"
+      rotation="0 30 0"
+      change-face-texture>
+    </a-entity>
+  </a-scene>
+</body>
+</html>
