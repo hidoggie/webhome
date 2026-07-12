@@ -36,61 +36,90 @@ const applyFaceTextureComponent = {
 // A-Frame 컴포넌트 등록
 AFRAME.registerComponent('apply-face-texture', applyFaceTextureComponent);
 
-// 2. 카메라 충돌 방지를 위한 앱 상태 관리
 document.addEventListener('DOMContentLoaded', () => {
   const captureUi = document.getElementById('capture-ui');
   const savedFace = sessionStorage.getItem('capturedFace');
 
   if (!savedFace) {
-    // ----------------------------------------------------
-    // [모드 1] 저장된 사진이 없다면: 전면 카메라 캡처 모드 실행
-    // ----------------------------------------------------
+    // [모드 1] 캡처 모드 실행
     captureUi.style.display = 'flex';
     const video = document.getElementById('video-feed');
     const captureBtn = document.getElementById('capture-btn');
+    const switchCameraBtn = document.getElementById('switch-camera-btn');
 
-    // 전면 카메라 요청
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } })
-      .then(stream => { video.srcObject = stream; })
+    // 현재 카메라 모드 상태 저장 (기본은 전면)
+    let currentFacingMode = 'user';
+
+    // 📸 카메라 스트림을 시작/재시작하는 함수
+    const startCamera = (facingMode) => {
+      // 이미 켜져 있는 카메라가 있다면 먼저 끕니다
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+      
+      navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: facingMode } 
+      })
+      .then(stream => { 
+        video.srcObject = stream; 
+      })
       .catch(err => alert("카메라 권한을 허용해 주세요: " + err));
+    };
 
-captureBtn.addEventListener('click', () => {
-  const canvas = document.createElement('canvas');
-  // 텍스처 해상도는 512x512 고정
-  canvas.width = 512;
-  canvas.height = 512;
-  const ctx = canvas.getContext('2d');
+    // 처음 화면이 켜질 때 전면 카메라 실행
+    startCamera(currentFacingMode);
 
-  // 1. 얼굴 부분만 타이트하게 확대해서 자르기 위한 계산
-  const minDimension = Math.min(video.videoWidth, video.videoHeight);
-  // 전체 비디오 화면의 60% 크기만 얼굴로 간주 (필요시 0.5 ~ 0.7 사이로 조절하세요)
-  const faceSize = minDimension * 0.6; 
-  
-  const startX = (video.videoWidth - faceSize) / 2;
-  const startY = (video.videoHeight - faceSize) / 2;
+    // 🔄 카메라 전환 버튼 클릭 이벤트
+    if (switchCameraBtn) {
+      switchCameraBtn.addEventListener('click', () => {
+        // user면 environment로, environment면 user로 토글
+        currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+        startCamera(currentFacingMode);
+      });
+    }
 
-  // 2. 캔버스 전체를 캐릭터의 기본 피부색으로 칠하기 (뒷배경 가리기)
-  ctx.fillStyle = '#ffccb6'; // 살구색(캐릭터 피부톤에 맞춰 수정 가능)
-  ctx.fillRect(0, 0, 512, 512);
+    // 찰칵! 캡처 버튼 이벤트 (이전의 U자형 마스크 로직 그대로 유지)
+    captureBtn.addEventListener('click', () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
 
-  // 3. 동그란 구멍(마스크) 뚫기
-  ctx.beginPath();
-  ctx.arc(256, 256, 256, 0, Math.PI * 2); // 캔버스 정중앙에 꽉 차는 원
-  ctx.closePath();
-  ctx.clip(); // 이 선언 이후에는 붓질이나 사진이 무조건 '원형 안쪽'에만 그려집니다.
+      const minDimension = Math.min(video.videoWidth, video.videoHeight);
+      const faceSize = minDimension * 0.6; 
+      const startX = (video.videoWidth - faceSize) / 2;
+      const startY = (video.videoHeight - faceSize) / 2;
 
-  // 4. 계산해둔 얼굴 중앙(faceSize) 영역만 가져와서 캔버스 전체에 꽉 차게 그리기
-  ctx.drawImage(video, startX, startY, faceSize, faceSize, 0, 0, 512, 512);
+      ctx.fillStyle = '#ffccb6'; 
+      ctx.fillRect(0, 0, 512, 512);
 
-  // 5. 이미지를 세션 스토리지에 저장
-  sessionStorage.setItem('capturedFace', canvas.toDataURL('image/jpeg'));
+      // 모자에 맞춘 U자형 마스크
+      ctx.beginPath();
+      ctx.moveTo(256 - 200, 256 - 150); 
+      ctx.lineTo(256 + 200, 256 - 150); 
+      ctx.arc(256, 256, 200, 0, Math.PI, false); 
+      ctx.closePath();
+      ctx.clip(); 
 
-  // 카메라 하드웨어 종료 및 페이지 새로고침
-  const stream = video.srcObject;
-  stream.getTracks().forEach(track => track.stop());
-  window.location.reload();
+      ctx.drawImage(video, startX, startY, faceSize, faceSize, 0, 0, 512, 512);
+
+      sessionStorage.setItem('capturedFace', canvas.toDataURL('image/jpeg'));
+
+      // 캡처 후 카메라 완전히 종료 및 새로고침
+      if (video.srcObject) {
+        video.srcObject.getTracks().forEach(track => track.stop());
+      }
+      window.location.reload();
+    });
+
+  } else {
+    // [모드 2] AR 모드 (기존과 동일하게 유지)
+    captureUi.style.display = 'none';
+    const template = document.getElementById('ar-template');
+    const clone = template.content.cloneNode(true);
+    document.body.appendChild(clone);
+  }
 });
-
   } else {
     // ----------------------------------------------------
     // [모드 2] 저장된 사진이 있다면: AR 엔진 모드 실행
