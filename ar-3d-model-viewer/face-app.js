@@ -120,15 +120,3 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(clone);
   }
 });
-  } else {
-    // ----------------------------------------------------
-    // [모드 2] 저장된 사진이 있다면: AR 엔진 모드 실행
-    // ----------------------------------------------------
-    captureUi.style.display = 'none';
-
-    // 숨겨두었던 <a-scene> 템플릿을 꺼내서 HTML에 추가 (이때 8th Wall 후면 카메라 작동)
-    const template = document.getElementById('ar-template');
-    const clone = template.content.cloneNode(true);
-    document.body.appendChild(clone);
-  }
-});
