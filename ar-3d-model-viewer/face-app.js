@@ -5,6 +5,8 @@ const applyFaceTextureComponent = {
     const imageData = sessionStorage.getItem('capturedFace');
     if (!imageData) return;
 
+    sessionStorage.removeItem('capturedFace');
+
     this.el.addEventListener('model-loaded', () => {
       const textureLoader = new THREE.TextureLoader();
       textureLoader.load(imageData, (texture) => {
@@ -53,21 +55,28 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(err => alert("카메라 권한을 허용해 주세요: " + err));
 
     captureBtn.addEventListener('click', () => {
-      // 비디오 화면 캡처
       const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
+      canvas.width = 512;
+      canvas.height = 512;
       const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const size = Math.min(video.videoWidth, video.videoHeight);
+      const startX = (video.videoWidth - size) / 2;
+      const startY = (video.videoHeight - size) / 2;
+
+  // 2. 캔버스에 동그란 구멍(마스크) 뚫기 -> 이 영역 바깥은 투명해짐
+      ctx.beginPath();
+      ctx.arc(256, 256, 256, 0, Math.PI * 2); // 중심좌표(256,256), 반지름 256
+      ctx.clip();
+
+  // 3. 계산된 비디오의 정중앙 영역만 가져와서 512x512 캔버스 꽉 차게 그리기
+      ctx.drawImage(video, startX, startY, size, size, 0, 0, 512, 512);
 
       // 이미지를 문자열 데이터로 임시 저장
-      sessionStorage.setItem('capturedFace', canvas.toDataURL('image/jpeg'));
+      sessionStorage.setItem('capturedFace', canvas.toDataURL('image/png'));
 
-      // 중요: 전면 카메라 하드웨어 점유 해제
       const stream = video.srcObject;
       stream.getTracks().forEach(track => track.stop());
-
-      // 페이지를 새로고침하여 찌꺼기를 날리고 [모드 2]로 진입
       window.location.reload();
     });
 
