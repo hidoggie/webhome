@@ -121,14 +121,17 @@ const characterMoveComponent = {
       this.el.object3D.rotation.y = -joystickRot - Math.PI / 2
 
       this.el.setAttribute('animation-mixer', {
-        clip: 'Running',
+        clip: 'sunbi_walk_01', // 모델에 있는 실제 걷기 애니메이션 이름
         loop: 'repeat',
+        timeScale: 1,          // 정상 속도로 재생 (조금 더 빨리 걷게 하려면 1.5 등으로 변경 가능)
         crossFadeDuration: 0.4,
       })
     } else {
+      // 👇 2. 조이스틱에서 손을 떼었을 때 (정지 상태)
       this.el.setAttribute('animation-mixer', {
-        clip: 'Idle',
+        clip: 'sunbi_walk_01', // 똑같은 애니메이션 유지
         loop: 'repeat',
+        timeScale: 0,          // 재생 속도를 0으로 만들어 애니메이션을 일시정지 (멈춰 있는 것처럼 보임)
         crossFadeDuration: 0.4,
       })
 
