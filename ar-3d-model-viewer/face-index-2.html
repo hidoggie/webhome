@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta charset="UTF-8">
+  <title>Face-Capture-AR</title>
+
+  <script src="./../xr_st/8frame-1.4.1.min.js"></script>
+  <script src="./../xr_st/xrextras.js"></script>
+  <script async src="./../xr_st/xr.js" data-preload-chunks="slam"></script>
+  <script src="./../xr_st/coaching-overlay.js"></script>
+  <script src="./../xr_st/aframe-extras-6.1.1.min.js"></script>
+
+  <!-- 모듈 스크립트 연결 -->
+  <script type="module" src="./face-app2.js" defer></script>
+
+  <link rel="stylesheet" href="./index.css">
+  <style>
+    /* 캡처 UI 스타일 */
+    #capture-ui {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      z-index: 999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #video-feed {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+    }
+
+    .face-outline {
+      position: absolute;
+      width: 200px;
+      height: 280px;
+      border: 4px dashed #00ff00;
+      border-radius: 50%;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+    }
+
+    #capture-btn {
+      position: absolute;
+      bottom: 50px;
+      z-index: 1001;
+      padding: 15px 30px;
+      font-size: 18px;
+      border-radius: 30px;
+      background: white;
+      border: none;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 1. 캡처 모드 UI -->
+  <div id="capture-ui" style="display: none;">
+    <video id="video-feed" autoplay playsinline muted></video>
+    <div class="face-outline"></div>
+
+    <button id="switch-camera-btn"
+      style="position: absolute; top: 30px; right: 20px; z-index: 1001; padding: 10px 20px; font-size: 16px; border-radius: 20px; background: white; border: none; font-weight: bold;">
+      🔄 카메라 전환
+    </button>
+
+    <button id="capture-btn">얼굴 캡처하기</button>
+  </div>
+
+  <button onclick="window.location.reload()" style="position:fixed; top:20px; right:20px; z-index:9999;">다시 찍기</button>
+
+  <div id="overlay" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;">
+    <button id="recenterBtn" style="position: absolute; bottom: 20px; left: 20px; pointer-events: auto; padding: 10px; z-index: 11;">
+      위치 초기화
+    </button>
+  </div>  
+
+  <!-- 2. AR 씬 템플릿 (초기에는 숨겨져 있음) -->
+  <template id="ar-template">
+    <a-scene 
+      coaching-overlay
+      xrextras-gesture-detector 
+      landing-page 
+      xrextras-loading 
+      renderer="colorManagement: true"
+      xrweb="allowedDevices: any">
+      <a-assets>
+        <!-- 새로 저장하신 그 모델 파일명 -->
+        <a-asset-item id="faceModel" src="./assets/sunbi_walk_optimized_face_change02_with_idle.glb"></a-asset-item>
+      </a-assets>
+
+      <a-camera 
+        id="camera" 
+        position="0 2 4"
+        raycaster="objects: .cantap"
+        cursor="fuse: false; rayOrigin: mouse;">
+      </a-camera>
+      <a-light xr-light type="ambient"></a-light>
+
+      <!-- 컴포넌트 이름 변경 (apply-face-texture) -->
+      <a-entity 
+        id="target" 
+        gltf-model="#faceModel" 
+        rotation="0 15 0"
+        apply-face-texture 
+        animation-mixer="clip: sunbi_walk_01; loop: repeat" 
+        xrextras-hold-drag="rise-height: 0"        
+        xrextras-two-finger-rotate 
+        xrextras-pinch-scale>
+      </a-entity>
+
+      <a-plane
+        id="ground"
+        rotation="-90 0 0"
+        width="100"
+        height="100"
+        material="shader: shadow; opacity: 0.5;"
+        shadow
+      ></a-plane>
+
+    </a-scene>
+  </template>
+
+</body>
+
+</html>
