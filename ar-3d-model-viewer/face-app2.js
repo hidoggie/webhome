@@ -13,7 +13,7 @@ const applyFaceTextureComponent = {
         texture.flipY = false; // 위아래 뒤집힘 방지
 
         // 수정한 UV를 가진 모델 메쉬 찾기
-        const modelMesh = this.el.getObject3D('mesh').getObjectByName('face_change_01');
+        const modelMesh = this.el.getObject3D('mesh').getObjectByName('face_mesh-01');
         if (modelMesh) {
           modelMesh.traverse((node) => {
             if (node.isMesh) {
