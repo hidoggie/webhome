@@ -113,10 +113,14 @@ const characterMoveComponent = {
 
       joystickRot -= camY
 
-      const speed = 0.0055
+      const speed = 0.002
 
       this.el.object3D.position.z -= speed * Math.sin(joystickRot) * timeDelta
       this.el.object3D.position.x -= speed * Math.cos(joystickRot) * timeDelta
+
+      const limit = 5.0; 
+      this.el.object3D.position.z = Math.max(-limit, Math.min(limit, this.el.object3D.position.z));
+      this.el.object3D.position.x = Math.max(-limit, Math.min(limit, this.el.object3D.position.x));     
 
       this.el.object3D.rotation.y = -joystickRot - Math.PI / 2
 
