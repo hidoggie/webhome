@@ -41,7 +41,7 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%); /* 화면 정중앙에 배치 */
-      width: auto;
+      width: 70%;
       height: auto;
       object-fit: contain; /* 이미지가 잘리지 않고 화면에 맞춰짐 */
       z-index: 1000;
