@@ -226,7 +226,7 @@ captureBtn.addEventListener('click', () => {
   // 1. 얼굴 크기 조절 (줌 인 효과)
   // 0.55를 0.4(더 확대) ~ 0.7(더 축소)로 조절하여 사진이 들어가는 비율을 맞출 수 있습니다.
   const minDimension = Math.min(video.videoWidth, video.videoHeight);
-  const faceSize = minDimension * 0.4; 
+  const faceSize = minDimension * 0.35; 
   const startX = (video.videoWidth - faceSize) / 2;
   const startY = (video.videoHeight - faceSize) / 2;
 
