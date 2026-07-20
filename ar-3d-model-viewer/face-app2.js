@@ -238,18 +238,18 @@ captureBtn.addEventListener('click', () => {
   ctx.beginPath();
 
  // 1) 캔버스 최상단 근처(Y=40)부터 넓게 시작하여 이마를 채웁니다.
-  ctx.moveTo(56, 40); 
-  ctx.lineTo(456, 40); 
+  ctx.moveTo(10, 10); 
+  ctx.lineTo(502, 10);
   
   // 2) 캔버스 중간(Y=256)까지 직선으로 내려옵니다.
-  ctx.lineTo(456, 256);
+  ctx.lineTo(502, 256);
   
   // 3) 캔버스 하단을 꽉 채우는 거대한 반원으로 턱선을 그립니다. (반지름 200)
-  ctx.arc(256, 256, 200, 0, Math.PI, false);
+  ctx.arc(256, 256, 246, 0, Math.PI, false);
 
  // 4) 다시 시작점으로 돌아갑니다.
-  ctx.lineTo(56, 40);
-   
+  ctx.lineTo(10, 10);
+
   ctx.closePath();
   ctx.clip(); 
 
