@@ -226,7 +226,7 @@ captureBtn.addEventListener('click', () => {
   // 1. 얼굴 크기 조절 (줌 인 효과)
   // 0.55를 0.4(더 확대) ~ 0.7(더 축소)로 조절하여 사진이 들어가는 비율을 맞출 수 있습니다.
   const minDimension = Math.min(video.videoWidth, video.videoHeight);
-  const faceSize = minDimension * 0.55; 
+  const faceSize = minDimension * 0.95; 
   const startX = (video.videoWidth - faceSize) / 2;
   const startY = (video.videoHeight - faceSize) / 2;
 
@@ -237,19 +237,12 @@ captureBtn.addEventListener('click', () => {
   // 3. 캔버스 전체를 꽉 채우는 마스크로 수정
   ctx.beginPath();
   // 모자 챙 밑 직선 (y축을 60으로 설정하여 이마 위쪽만 살짝 직선으로 자름)
-  //ctx.moveTo(0, 60); 
-  //ctx.lineTo(512, 60);
-  ctx.moveTo(130, 180); // 왼쪽 이마 시작점 (x: 130, y: 180)
-  ctx.lineTo(382, 180); // 오른쪽 이마 끝점 (x: 382, y: 180) 
-  // 오른쪽 가장자리를 따라 중간까지 선 긋기
- // ctx.lineTo(512, 256);
-  // 아래쪽 턱을 향해 캔버스에 꽉 차는 반원 그리기 (반지름을 256으로 최대화)
- // ctx.arc(256, 256, 256, 0, Math.PI, false); 
-  // 왼쪽 가장자리를 따라 다시 이마 라인으로 올라가기
-  //ctx.lineTo(0, 60);
+ 
+  ctx.moveTo(36, 256); 
+  ctx.lineTo(476, 256);
+ 
+  ctx.ellipse(256, 256, 220, 240, 0, 0, Math.PI, false);
 
-  ctx.ellipse(256, 180, 126, 160, 0, 0, Math.PI, false);
-  
   ctx.closePath();
   ctx.clip(); 
 
