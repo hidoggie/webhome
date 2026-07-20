@@ -131,7 +131,7 @@ const characterMoveComponent = {
       })
     } else {
       this.el.setAttribute('animation-mixer', {
-        clip: 'sunbi_idle_01',
+        clip: 'Idle_4',
         loop: 'repeat',
         crossFadeDuration: 0.4,
       })
