@@ -153,7 +153,6 @@ AFRAME.registerComponent('no-cull', {
 })
 AFRAME.registerComponent('game-manager', {
   init: function () {
-    // 점수 변수 초기화
     this.currentScore = 0;
     this.targetScore = 100;
     this.scorePerStar = 10;
@@ -167,7 +166,6 @@ AFRAME.registerComponent('game-manager', {
     this.successSound = new Audio('./assets/success.mp3');
     this.failSound = new Audio('./assets/fail.mp3');
 
-    // DOM 요소 연결
     this.scoreText = document.getElementById('current-score');
     this.timeText = document.getElementById('time-left');
     this.successPopup = document.getElementById('success-popup');
@@ -177,16 +175,64 @@ AFRAME.registerComponent('game-manager', {
     this.player = document.getElementById('target');
     
     this.startBtn.addEventListener('click', () => {
-      this.startPopup.style.display = 'none'; // 시작 팝업 숨기기
-      this.isGameStarted = true;              // 게임 상태를 시작으로 변경
+      this.startPopup.style.display = 'none'; 
+      this.isGameStarted = true;              
       
-      this.spawnStar();                       // 첫 번째 별 생성
-      this.startTimer();                      // 타이머 작동 시작
+      this.spawnStar();                       
+      this.startTimer();                      
     });
   },
 
+  startTimer: function () {
+    this.timerInterval = setInterval(() => {
+      if (this.isGameOver) {
+        clearInterval(this.timerInterval);
+        return;
+      }
+
+      this.timeLeft--;
+      this.timeText.innerText = this.timeLeft;
+
+      if (this.timeLeft <= 0) {
+        this.timeOver();
+      }
+    }, 1000);
+  },
+
+  timeOver: function () {
+    this.isGameOver = true;
+    clearInterval(this.timerInterval);
+    
+    this.failPopup.style.display = 'block';
+
+    if (this.failSound) {
+      this.failSound.currentTime = 0;
+      this.failSound.play().catch(e => console.log(e));
+    }
+  },
+
+  spawnStar: function () {
+    if (this.isGameOver) return;
+
+    this.currentStar = document.createElement('a-entity');
+    this.currentStar.setAttribute('gltf-model', '#starModel');
+    this.currentStar.setAttribute('scale', '2 2 2');
+
+    // 🌟 캐릭터 바로 근처에 스폰되어 시작하자마자 먹어지는 현상 방지
+    const playerPos = this.player.object3D.position;
+    let randomX, randomZ;
+    do {
+      randomX = (Math.random() - 0.5) * 6;
+      randomZ = (Math.random() - 0.5) * 6;
+    } while (Math.abs(randomX - playerPos.x) < 2 && Math.abs(randomZ - playerPos.z) < 2);
+
+    this.currentStar.setAttribute('position', `${randomX} 0 ${randomZ}`);
+    this.el.appendChild(this.currentStar);
+    this.isStarCaught = false;
+  },
+
+  // 🌟 중복되었던 tick 함수를 하나로 완벽하게 통합
   tick: function () {
-    // 🌟 게임이 아직 시작되지 않았다면 거리 체크 로직(충돌 판정)을 무시합니다.
     if (!this.isGameStarted || this.isGameOver || !this.currentStar || this.isStarCaught) return;
 
     const playerPos = this.player.object3D.position;
@@ -198,83 +244,13 @@ AFRAME.registerComponent('game-manager', {
     }
   },
 
-  // 🌟 타이머 작동 로직 추가
-  startTimer: function () {
-    this.timerInterval = setInterval(() => {
-      // 이미 게임이 종료되었다면 카운트 다운 중지
-      if (this.isGameOver) {
-        clearInterval(this.timerInterval);
-        return;
-      }
-
-      this.timeLeft--;
-      this.timeText.innerText = this.timeLeft;
-
-      // 0초가 되면 실패 처리
-      if (this.timeLeft <= 0) {
-        this.timeOver();
-      }
-    }, 1000); // 1000ms = 1초마다 실행
-  },
-
-  // 🌟 시간 초과 시 실행될 함수 추가
-  timeOver: function () {
-    this.isGameOver = true;
-    clearInterval(this.timerInterval); // 타이머 멈춤
-    
-    // 실패 팝업 띄우기
-    this.failPopup.style.display = 'block';
-
-    // 실패 효과음 재생 (파일이 있다면)
-    if (this.failSound) {
-      this.failSound.currentTime = 0;
-      this.failSound.play().catch(e => console.log(e));
-    }
-  },
-
-  spawnStar: function () {
-    if (this.isGameOver) return;
-
-    // 별 오브젝트 생성
-    this.currentStar = document.createElement('a-entity');
-    this.currentStar.setAttribute('gltf-model', '#starModel');
-    this.currentStar.setAttribute('scale', '2 2 2');
-
-    // 플레이어 주변 랜덤한 위치에 배치 (x, z 좌표 설정)
-    const randomX = (Math.random() - 0.5) * 6; // -3 ~ 3 범위
-    const randomZ = (Math.random() - 0.5) * 6; // -3 ~ 3 범위
-    this.currentStar.setAttribute('position', `${randomX} 0 ${randomZ}`);
-
-    // 씬에 별 추가
-    this.el.appendChild(this.currentStar);
-    this.isStarCaught = false;
-  },
-
-  tick: function () {
-    if (this.isGameOver || !this.currentStar || this.isStarCaught) return;
-
-    // 플레이어와 별의 현재 위치 가져오기
-    const playerPos = this.player.object3D.position;
-    const starPos = this.currentStar.object3D.position;
-
-    // 두 오브젝트 간의 거리 계산
-    const distance = playerPos.distanceTo(starPos);
-
-    // 충돌 판정 (거리가 1.5 이하로 가까워지면 잡은 것으로 판정, 수치 조절 가능)
-    if (distance < 1.5) {
-      this.catchStar();
-    }
-  },
-
   catchStar: function () {
     this.isStarCaught = true;
     this.currentScore += this.scorePerStar;
     this.scoreText.innerText = this.currentScore;
 
-    // 3. 목표 점수 도달 체크
     if (this.currentScore >= this.targetScore) {
       this.isGameOver = true;
-
       clearInterval(this.timerInterval);
       
       this.successSound.currentTime = 0; 
@@ -287,15 +263,14 @@ AFRAME.registerComponent('game-manager', {
       this.fireConfetti();
 
       setTimeout(() => {
-        this.successPopup.style.display = 'block'; // 축하 팝업 노출
-      }, 500); // 애니메이션을 볼 수 있도록 약간의 딜레이
+        this.successPopup.style.display = 'block'; 
+      }, 500); 
     } else {
       this.catchSound.currentTime = 0;
       this.catchSound.play().catch(e => console.log(e));
 
       this.currentStar.setAttribute('animation-mixer', 'clip: confettiAction; loop: once;');
 
-      // 4. 애니메이션이 끝날 즈음(예: 1초 후) 별 삭제 후 새 별 스폰
       setTimeout(() => {
         if (this.currentStar.parentNode) {
           this.currentStar.parentNode.removeChild(this.currentStar);
@@ -304,33 +279,14 @@ AFRAME.registerComponent('game-manager', {
       }, 1000);
     }
   },
-// 🌟 새롭게 추가하는 폭죽 애니메이션 함수
+
   fireConfetti: function () {
-    // 3초 동안 폭죽 재생
     const duration = 3000;
     const end = Date.now() + duration;
 
     (function frame() {
-      // 화면 왼쪽에서 발사
-      confetti({
-        particleCount: 5,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 0.8 },
-        colors: ['#7611b7', '#c86dd7', '#ffffff', '#ffd700'], // 팝업 버튼 색상과 맞춤
-        zIndex: 10000 // 팝업창보다 위에 오도록 설정
-      });
-      // 화면 오른쪽에서 발사
-      confetti({
-        particleCount: 5,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 0.8 },
-        colors: ['#7611b7', '#c86dd7', '#ffffff', '#ffd700'],
-        zIndex: 10000
-      });
-
-      // 설정한 시간(3초)이 끝날 때까지 프레임 반복
+      confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#7611b7', '#c86dd7', '#ffffff', '#ffd700'], zIndex: 10000 });
+      confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#7611b7', '#c86dd7', '#ffffff', '#ffd700'], zIndex: 10000 });
       if (Date.now() < end) {
         requestAnimationFrame(frame);
       }
