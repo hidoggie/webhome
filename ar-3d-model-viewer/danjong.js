@@ -157,8 +157,8 @@ AFRAME.registerComponent('game-manager', {
     this.currentScore = 0;
     this.targetScore = 100;
     this.scorePerStar = 10;
-    this.totalTime = 30;
-    this.timeLeft = 30;
+    this.totalTime = 60;
+    this.timeLeft = 60;
 
     this.isGameOver = false;
     this.isGameStarted = false;
