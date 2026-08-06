@@ -4,7 +4,7 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <meta charset="UTF-8">
-  <title>Face-Capture-AR</title>
+  <title>단종의 별</title>
 
   <script src="./../xr_st/8frame-1.4.1.min.js"></script>
   <script src="./../xr_st/xrextras.js"></script>
@@ -29,19 +29,26 @@
   </div>
 
   <!-- 상단 점수 UI -->
-  <div id="score-board"
-    style="position: absolute; top: 20px; left: 20px; z-index: 999; color: white; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8);">
-    점수: <span id="current-score">0</span> / 100
+  <div style="position: absolute; top: 20px; left: 20px; z-index: 999; color: white; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); display: flex; flex-direction: column; gap: 8px;">
+    <div id="score-board">점수: <span id="current-score">0</span> / 100</div>
+    <div id="timer-board">남은 시간: <span id="time-left">30</span>초 / 30초</div>
   </div>
 
   <!-- 최종 목표 달성 팝업 UI (초기에는 숨김 처리) -->
   <div id="success-popup"
     style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
-    <h2 style="margin: 0 0 10px 0; color: #333;">🎉 축하합니다! 🎉</h2>
+    <h2 style="margin: 0 0 10px 0; color: #333; font-size: 1.3rem;">🎉 축하합니다! 🎉</h2>
     <p style="margin: 0 0 20px 0; color: #666; font-size: 18px;">목표 점수 달성!</p>
     <button onclick="window.location.reload()"
       style="padding: 12px 24px; font-size: 16px; border-radius: 8px; background: linear-gradient(90deg,#7611b7,#c86dd7); color: white; border: none; cursor: pointer; font-weight: bold;">다시
       하기</button>
+  </div>
+
+  <!-- (신규) 시간 초과 실패 팝업 UI -->
+  <div id="fail-popup" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+    <h2 style="margin: 0 0 10px 0; color: #333; font-size: 1.3rem;">시간 초과 ⏰</h2>
+    <p style="margin: 0 0 20px 0; color: #666; font-size: 18px;">아쉽지만 목표 점수를 달성하지 못했습니다.</p>
+    <button onclick="window.location.reload()" style="padding: 12px 24px; font-size: 16px; border-radius: 8px; background: #666; color: white; border: none; cursor: pointer; font-weight: bold;">다시 도전하기</button>
   </div>
 
   <a-scene coaching-overlay xrextras-gesture-detector xrextras-loading game-manager renderer="colorManagement: true"

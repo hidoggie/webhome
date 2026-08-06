@@ -1,5 +1,9 @@
 const characterMoveComponent = {
   init() {
+    this.walkSound = new Audio('./assets/walk.mp3');
+    this.walkSound.loop = true; // 이동 중에는 계속 반복
+    this.walkSound.volume = 0.5; // 볼륨 조절 (0.0 ~ 1.0)  
+
     this.handleTouch = (e) => {
       this.positionRaw = e.detail.positionRaw
       this.startPositionRaw = this.startPositionRaw || this.positionRaw
@@ -35,6 +39,11 @@ const characterMoveComponent = {
     const {startPositionRaw, positionRaw, headModel} = this
 
     if (startPositionRaw) {
+      // 🌟 [사운드 재생] 이동 중일 때 소리가 멈춰있다면 재생
+      if (this.walkSound.paused) {
+        this.walkSound.play().catch(e => console.log("Audio play error:", e));
+      }   
+
       const isTablet = window.matchMedia('(min-width: 640px)').matches
       const isDesktop = window.matchMedia('(min-width: 961px)').matches
       
@@ -94,6 +103,11 @@ const characterMoveComponent = {
         crossFadeDuration: 0.4,
       })
     } else {
+    // 🌟 [사운드 정지] 조이스틱에서 손을 뗐을 때 소리 정지
+      if (!this.walkSound.paused) {
+        this.walkSound.pause();
+      }   
+
       this.el.setAttribute('animation-mixer', {
         clip: 'idle_01',
         loop: 'repeat',
@@ -143,17 +157,60 @@ AFRAME.registerComponent('game-manager', {
     this.currentScore = 0;
     this.targetScore = 100;
     this.scorePerStar = 10;
+
+    this.totalTime = 30;
+    this.timeLeft = 30;
+
     this.isGameOver = false;
+
+    this.catchSound = new Audio('./assets/catch.mp3');
+    this.successSound = new Audio('./assets/success.mp3');
+    this.failSound = new Audio('./assets/fail.mp3');
 
     // DOM 요소 연결
     this.scoreText = document.getElementById('current-score');
+    this.timeText = document.getElementById('time-left');
     this.successPopup = document.getElementById('success-popup');
-    
-    // 조이스틱으로 움직이는 메인 캐릭터
+    this.failPopup = document.getElementById('fail-popup');    
     this.player = document.getElementById('target');
     
-    // 첫 번째 별 스폰
     this.spawnStar();
+
+    this.startTimer();    
+  },
+
+  // 🌟 타이머 작동 로직 추가
+  startTimer: function () {
+    this.timerInterval = setInterval(() => {
+      // 이미 게임이 종료되었다면 카운트 다운 중지
+      if (this.isGameOver) {
+        clearInterval(this.timerInterval);
+        return;
+      }
+
+      this.timeLeft--;
+      this.timeText.innerText = this.timeLeft;
+
+      // 0초가 되면 실패 처리
+      if (this.timeLeft <= 0) {
+        this.timeOver();
+      }
+    }, 1000); // 1000ms = 1초마다 실행
+  },
+
+  // 🌟 시간 초과 시 실행될 함수 추가
+  timeOver: function () {
+    this.isGameOver = true;
+    clearInterval(this.timerInterval); // 타이머 멈춤
+    
+    // 실패 팝업 띄우기
+    this.failPopup.style.display = 'block';
+
+    // 실패 효과음 재생 (파일이 있다면)
+    if (this.failSound) {
+      this.failSound.currentTime = 0;
+      this.failSound.play().catch(e => console.log(e));
+    }
   },
 
   spawnStar: function () {
@@ -192,22 +249,33 @@ AFRAME.registerComponent('game-manager', {
 
   catchStar: function () {
     this.isStarCaught = true;
-
-    // 1. 별 획득 애니메이션 재생
-    this.currentStar.setAttribute('animation-mixer', 'clip: confettiAction; loop: once;');
-
-    // 2. 점수 증가 및 UI 업데이트
     this.currentScore += this.scorePerStar;
     this.scoreText.innerText = this.currentScore;
 
     // 3. 목표 점수 도달 체크
     if (this.currentScore >= this.targetScore) {
       this.isGameOver = true;
+
+      clearInterval(this.timerInterval);
+      
+      this.successSound.currentTime = 0; 
+      this.successSound.play().catch(e => console.log(e));
+
+      if (this.currentStar.parentNode) {
+        this.currentStar.parentNode.removeChild(this.currentStar);
+      }
+
       this.fireConfetti();
+      
       setTimeout(() => {
         this.successPopup.style.display = 'block'; // 축하 팝업 노출
       }, 500); // 애니메이션을 볼 수 있도록 약간의 딜레이
     } else {
+      this.catchSound.currentTime = 0;
+      this.catchSound.play().catch(e => console.log(e));
+
+      this.currentStar.setAttribute('animation-mixer', 'clip: confettiAction; loop: once;');
+
       // 4. 애니메이션이 끝날 즈음(예: 1초 후) 별 삭제 후 새 별 스폰
       setTimeout(() => {
         if (this.currentStar.parentNode) {
