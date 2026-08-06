@@ -176,8 +176,6 @@ AFRAME.registerComponent('game-manager', {
     this.startBtn = document.getElementById('start-btn');
     this.player = document.getElementById('target');
     
-    this.spawnStar();
-
     this.startBtn.addEventListener('click', () => {
       this.startPopup.style.display = 'none'; // 시작 팝업 숨기기
       this.isGameStarted = true;              // 게임 상태를 시작으로 변경
