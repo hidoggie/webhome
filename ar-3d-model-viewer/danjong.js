@@ -157,11 +157,11 @@ AFRAME.registerComponent('game-manager', {
     this.currentScore = 0;
     this.targetScore = 100;
     this.scorePerStar = 10;
-
     this.totalTime = 30;
     this.timeLeft = 30;
 
     this.isGameOver = false;
+    this.isGameStarted = false;
 
     this.catchSound = new Audio('./assets/catch.mp3');
     this.successSound = new Audio('./assets/success.mp3');
@@ -172,11 +172,32 @@ AFRAME.registerComponent('game-manager', {
     this.timeText = document.getElementById('time-left');
     this.successPopup = document.getElementById('success-popup');
     this.failPopup = document.getElementById('fail-popup');    
+    this.startPopup = document.getElementById('start-popup');
+    this.startBtn = document.getElementById('start-btn');
     this.player = document.getElementById('target');
     
     this.spawnStar();
 
-    this.startTimer();    
+    this.startBtn.addEventListener('click', () => {
+      this.startPopup.style.display = 'none'; // 시작 팝업 숨기기
+      this.isGameStarted = true;              // 게임 상태를 시작으로 변경
+      
+      this.spawnStar();                       // 첫 번째 별 생성
+      this.startTimer();                      // 타이머 작동 시작
+    });
+  },
+
+  tick: function () {
+    // 🌟 게임이 아직 시작되지 않았다면 거리 체크 로직(충돌 판정)을 무시합니다.
+    if (!this.isGameStarted || this.isGameOver || !this.currentStar || this.isStarCaught) return;
+
+    const playerPos = this.player.object3D.position;
+    const starPos = this.currentStar.object3D.position;
+    const distance = playerPos.distanceTo(starPos);
+
+    if (distance < 1.5) {
+      this.catchStar();
+    }
   },
 
   // 🌟 타이머 작동 로직 추가
@@ -266,7 +287,7 @@ AFRAME.registerComponent('game-manager', {
       }
 
       this.fireConfetti();
-      
+
       setTimeout(() => {
         this.successPopup.style.display = 'block'; // 축하 팝업 노출
       }, 500); // 애니메이션을 볼 수 있도록 약간의 딜레이
