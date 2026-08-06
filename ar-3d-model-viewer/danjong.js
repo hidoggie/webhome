@@ -162,7 +162,7 @@ AFRAME.registerComponent('game-manager', {
     // 별 오브젝트 생성
     this.currentStar = document.createElement('a-entity');
     this.currentStar.setAttribute('gltf-model', '#starModel');
-    this.currentStar.setAttribute('scale', '1 1 1');
+    this.currentStar.setAttribute('scale', '2 2 2');
 
     // 플레이어 주변 랜덤한 위치에 배치 (x, z 좌표 설정)
     const randomX = (Math.random() - 0.5) * 6; // -3 ~ 3 범위
@@ -203,6 +203,7 @@ AFRAME.registerComponent('game-manager', {
     // 3. 목표 점수 도달 체크
     if (this.currentScore >= this.targetScore) {
       this.isGameOver = true;
+      this.fireConfetti();
       setTimeout(() => {
         this.successPopup.style.display = 'block'; // 축하 팝업 노출
       }, 500); // 애니메이션을 볼 수 있도록 약간의 딜레이
@@ -215,5 +216,37 @@ AFRAME.registerComponent('game-manager', {
         this.spawnStar();
       }, 1000);
     }
+  },
+// 🌟 새롭게 추가하는 폭죽 애니메이션 함수
+  fireConfetti: function () {
+    // 3초 동안 폭죽 재생
+    const duration = 3000;
+    const end = Date.now() + duration;
+
+    (function frame() {
+      // 화면 왼쪽에서 발사
+      confetti({
+        particleCount: 5,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.8 },
+        colors: ['#7611b7', '#c86dd7', '#ffffff', '#ffd700'], // 팝업 버튼 색상과 맞춤
+        zIndex: 10000 // 팝업창보다 위에 오도록 설정
+      });
+      // 화면 오른쪽에서 발사
+      confetti({
+        particleCount: 5,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.8 },
+        colors: ['#7611b7', '#c86dd7', '#ffffff', '#ffd700'],
+        zIndex: 10000
+      });
+
+      // 설정한 시간(3초)이 끝날 때까지 프레임 반복
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    }());
   }
 });
