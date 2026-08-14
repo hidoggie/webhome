@@ -109,7 +109,7 @@ const characterMoveComponent = {
       }   
 
       this.el.setAttribute('animation-mixer', {
-        clip: 'idle_01',
+        clip: 'idle_02',
         loop: 'repeat',
         crossFadeDuration: 0.4,
       })
