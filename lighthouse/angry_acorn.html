@@ -416,6 +416,7 @@ function makeMumu3D(tier) {
   sprite.scale.set(s * 2.5, s * 4.5, 1);
   return { mesh: sprite, s, pts };
 }
+const MAT = (color) => new THREE.MeshLambertMaterial({color});
 
 const MAT_TEX = (texture) => new THREE.MeshLambertMaterial({ map: texture, transparent: true }); // transparent: true는 대나무 스킨에 윤기를 줄 수 있습니다.
 const SPH = (r, color, seg=12) => new THREE.Mesh(new THREE.SphereGeometry(r, seg, seg), MAT(color));
