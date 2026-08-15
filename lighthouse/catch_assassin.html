@@ -713,11 +713,13 @@
         holeBottom: new THREE.MeshBasicMaterial({ color: 0x1a0f08 })
       };
 
-      // const crabTex = new THREE.TextureLoader().load('./img/ninja-man.png');
-      // 3D 모델 원본을 담을 전역 변수
       let crabModelTemplate = null;
 
       const crabTex = new THREE.TextureLoader().load('./img/ninja-man-600.png');
+      crabTex.encoding = THREE.sRGBEncoding;
+
+      crabTex.minFilter = THREE.NearestFilter;
+      crabTex.magFilter = THREE.NearestFilter;
 
       function makeCrab() {
 
@@ -775,12 +777,16 @@
 
       // --- 1. 이미지 로드 및 스프라이트 생성 ---
       const malletTex = new THREE.TextureLoader().load('./img/kkebi-stick-600.png');
+      malletTex.encoding = THREE.sRGBEncoding;
+
+      malletTex.minFilter = THREE.NearestFilter;
+      malletTex.magFilter = THREE.NearestFilter;
 
       const malletMat = new THREE.SpriteMaterial({
         map: malletTex,
         transparent: true,
         depthWrite: false, // 투명 이미지 렌더링 최적화
-        rotation: THREE.MathUtils.degToRad(90)
+        rotation: THREE.MathUtils.degToRad(-90)
       });
 
       const malletSprite = new THREE.Sprite(malletMat);
