@@ -528,6 +528,8 @@ function restartGame() {
   $ov.classList.add('off');
   $startHint.classList.remove('hide');
   startCamera();
+
+  if (AC && AC.state === 'suspended') AC.resume();
   startBGM();
   
   G.score = 0; 
@@ -558,6 +560,10 @@ function screenToDir(sx, sy){
 
 function onDragStart(e) {
   if (!G.running || G.ammo <= 0) return;
+
+  if (AC && AC.state === 'suspended') {
+    AC.resume();
+  }
   
   if (!G.hasStarted) {
     G.hasStarted = true;
