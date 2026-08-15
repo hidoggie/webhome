@@ -1093,7 +1093,7 @@
 
     function showHitPop(pts) {
       const el = document.getElementById('hitpop');
-      const emojis = ['💥', '🦀', '✨', '🌊', '💫'];
+      const emojis = ['💥', '🔥', '✨', '🌊', '💫'];
       el.textContent = `${emojis[Math.min(GAME.combo - 1, 4)]} +${pts}`;
       el.style.color = GAME.combo > 2 ? '#ff0000' : '#ffaaaa';
       el.style.opacity = '1'; el.style.transform = 'translate(-50%,-50%) scale(1.2)';
