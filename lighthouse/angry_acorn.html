@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>악당 풍선 맞추기</title>
+<title>자객 풍선 맞추기</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{overflow:hidden;background:#000;font-family:'Arial Black',Arial,sans-serif;touch-action:none;}
@@ -317,12 +317,12 @@ canvas{position:fixed;top:0;left:0;display:block;width:100vw;height:100vh;z-inde
         <button class="top-button right" onclick="openPopup()"><img src="./img/info-sw.png"></button>
       </div>
   <div class="ot">하늘다람쥐 vs 자객</div>
-  <div class="os">✨ 하늘다람쥐의 도토리 공격으로 자객을 물리쳐라!</div>
+  <div class="os">✨ 도토리 공격으로 자객을 물리쳐라!</div>
   <div class="oi">
     ⏱️ <b>제한 시간:</b> 30초 (터치 시 시작)<br>
-    🎯 <b>기회:</b> 총 10번의 루미 발사!<br>
+    🎯 <b>기회:</b> 총 10번의 도토리 발사!<br>
     🔵 <b>작은 풍선일수록 점수가 높습니다.</b><br>
-    ✨ <b>800점</b>을 달성하여 단종을 지키세요!
+    ✨ <b>800점</b>을 달성하여 전투를 승리하세요!
   </div>
   <button class="obtn" id="startBtn">전투 시작! 🚀</button>
       <div class="arGame-popup-overlay" id="popup">
@@ -349,7 +349,7 @@ canvas{position:fixed;top:0;left:0;display:block;width:100vw;height:100vh;z-inde
 // ═══════════════════════════════════════════════════════
 //  게임 설정
 // ═══════════════════════════════════════════════════════
-const currentLhId = localStorage.getItem('return_lh_id');
+const currentLhId = localStorage.getItem('return_yw_id');
 const GOAL_SCORE = 800;
 const MAX_TIME = 30; 
 const MAX_AMMO = 10; 
@@ -387,6 +387,7 @@ const textureLoader = new THREE.TextureLoader();
 const texLumi = textureLoader.load('./img/acorn-600.png'); 
 const texMumu = textureLoader.load('./img/ninja-600.png');
 const texBamboo = textureLoader.load('./img/bamboo-1024.png');
+const MAT_TEX = (texture) => new THREE.MeshLambertMaterial({ map: texture, transparent: true }); 
 
 const D2R = v => v*Math.PI/180;
 
@@ -416,9 +417,8 @@ function makeMumu3D(tier) {
   sprite.scale.set(s * 2.5, s * 4.5, 1);
   return { mesh: sprite, s, pts };
 }
-const MAT = (color) => new THREE.MeshLambertMaterial({color});
 
-const MAT_TEX = (texture) => new THREE.MeshLambertMaterial({ map: texture, transparent: true }); // transparent: true는 대나무 스킨에 윤기를 줄 수 있습니다.
+const MAT = (color) => new THREE.MeshLambertMaterial({color});
 const SPH = (r, color, seg=12) => new THREE.Mesh(new THREE.SphereGeometry(r, seg, seg), MAT(color));
 const CYL = (rt, rb, h, color, seg=10) => new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, seg), MAT(color));
 
@@ -428,45 +428,51 @@ const LEFT_TIP = new THREE.Vector3(-.48, .98, 0);
 const RIGHT_TIP = new THREE.Vector3(.48, .98, 0);
 
 function buildSlingshot() {
-  // 🌟 [수정] 핸들 재질을 대나무 텍스처로 변경
-  // 대나무 텍스처가 핸들 방향으로 래핑되도록 UV를 회전시킵니다.
-  texBamboo.rotation = Math.PI / 2;
+  // 1. 메인 핸들 (대나무 텍스처 적용!)
   const handleGeo = new THREE.CylinderGeometry(.07, .09, 1.0, 8);
   const handle = new THREE.Mesh(handleGeo, MAT_TEX(texBamboo));
   place(slingshotGroup, handle, 0, -.3, 0);
-
-  // 🌟 [수정] 마디(링) 색상을 더 어두운 녹색으로 변경하여 대나무 마디 느낌을 냅니다.
+  
+  // 2. 대나무 마디 (입체감을 위해 텍스처 대신 진한 초록색 단색 사용)
   [-.2, 0, .2].forEach(dy => { 
-    const r = new THREE.Mesh(new THREE.CylinderGeometry(.11, .11, .07, 8), MAT(0x4e6e2f)); // 더 어두운 녹색
-    r.position.set(0, -.3+dy, 0); slingshotGroup.add(r); 
+    const r = CYL(.11, .11, .07, 0x2e7d32, 8); 
+    r.position.set(0, -.3+dy, 0); 
+    slingshotGroup.add(r); 
   });
   
-  // 🌟 [수정] 갈래(팔) 재질을 대나무 텍스처로 변경
-  // 갈래는 마디가 있는 더 얇은 대나무이므로 텍스처가 반복되도록 설정합니다.
-  const armTex = texBamboo.clone(); // 기존 텍스처 클론
-  armTex.wrapT = THREE.RepeatWrapping; armTex.repeat.set(1, 4); // 텍스처를 4번 반복시켜 마디를 시뮬레이션
-  
+  // 3. 왼쪽 갈래 (대나무 텍스처 적용!)
   const leftArm = new THREE.Group(); 
-  const laShaft = new THREE.Mesh(new THREE.CylinderGeometry(.055, .065, 1.1, 8), MAT_TEX(armTex)); // 대나무 텍스처 적용
+  const laShaftGeo = new THREE.CylinderGeometry(.055, .065, 1.1, 8);
+  const laShaft = new THREE.Mesh(laShaftGeo, MAT_TEX(texBamboo)); 
   laShaft.position.y = .55; leftArm.add(laShaft);
-  leftArm.position.set(-.08, .15, 0); leftArm.rotation.z = D2R(28); leftArm.rotation.x = D2R(-5); slingshotGroup.add(leftArm);
+  leftArm.position.set(-.08, .15, 0); 
+  leftArm.rotation.z = D2R(28); 
+  leftArm.rotation.x = D2R(-5); 
+  slingshotGroup.add(leftArm);
   
+  // 4. 오른쪽 갈래 (대나무 텍스처 적용!)
   const rightArm = new THREE.Group(); 
-  const raShaft = new THREE.Mesh(new THREE.CylinderGeometry(.055, .065, 1.1, 8), MAT_TEX(armTex)); // 대나무 텍스처 적용
+  const raShaftGeo = new THREE.CylinderGeometry(.055, .065, 1.1, 8);
+  const raShaft = new THREE.Mesh(raShaftGeo, MAT_TEX(texBamboo)); 
   raShaft.position.y = .55; rightArm.add(raShaft);
-  rightArm.position.set(.08, .15, 0); rightArm.rotation.z = D2R(-28); rightArm.rotation.x = D2R(-5); slingshotGroup.add(rightArm);
+  rightArm.position.set(.08, .15, 0); 
+  rightArm.rotation.z = D2R(-28); 
+  rightArm.rotation.x = D2R(-5); 
+  slingshotGroup.add(rightArm);
   
-  // 🌟 [수정] 끝부분 팁 색상을 대나무 단면 황갈색으로 변경 (참조 이미지 반영)
-  place(slingshotGroup, SPH(.08, 0xd2b48c, 7), -.48, .98, 0); // 대나무 단면 황갈색(Tan)
-  place(slingshotGroup, SPH(.08, 0xd2b48c, 7), .48, .98, 0); // 대나무 단면 황갈색(Tan)
+  // 5. 끝부분 팁 (대나무 단면 느낌의 연한 황갈색)
+  place(slingshotGroup, SPH(.08, 0xd2b48c, 7), -.48, .98, 0);
+  place(slingshotGroup, SPH(.08, 0xd2b48c, 7), .48, .98, 0);
 
-  // 🌟 [수정] 고무줄 색상을 더 자연스러운 미색으로 변경 (참조 이미지 반영)
-  const bandMat = new THREE.MeshLambertMaterial({color: 0xf5f5dc}); // 미색(Beige)
+  // 6. 고무줄 (밝은 미색)
+  const bandMat = new THREE.MeshLambertMaterial({color: 0xf5f5dc});
   bandLMesh = new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1,6), bandMat);
   bandRMesh = new THREE.Mesh(new THREE.CylinderGeometry(.025,.025,1,6), bandMat);
-  slingshotGroup.add(bandLMesh); slingshotGroup.add(bandRMesh);
+  slingshotGroup.add(bandLMesh); 
+  slingshotGroup.add(bandRMesh);
 
-  pouch = makeLumi3D(.14); // 거대해진 장전용 루미
+  // 7. 장전용 도토리 (기존 코드 그대로 유지)
+  pouch = makeLumi3D(.14); 
   slingshotGroup.add(pouch);
   
   slingshotGroup.position.set(0, -1.0, -2.8);
