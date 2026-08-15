@@ -717,7 +717,7 @@
       // 3D 모델 원본을 담을 전역 변수
       let crabModelTemplate = null;
 
-      const crabTex = new THREE.TextureLoader().load('./img/ninja-man.png');
+      const crabTex = new THREE.TextureLoader().load('./img/ninja-man-600.png');
 
       function makeCrab() {
 
@@ -774,12 +774,13 @@
       malletRoot.add(malletPivot);
 
       // --- 1. 이미지 로드 및 스프라이트 생성 ---
-      const malletTex = new THREE.TextureLoader().load('./img/kkebi-stick.png');
+      const malletTex = new THREE.TextureLoader().load('./img/kkebi-stick-600.png');
 
       const malletMat = new THREE.SpriteMaterial({
         map: malletTex,
         transparent: true,
         depthWrite: false, // 투명 이미지 렌더링 최적화
+        rotation: THREE.MathUtils.degToRad(90)
       });
 
       const malletSprite = new THREE.Sprite(malletMat);
